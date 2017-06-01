@@ -1,37 +1,22 @@
-## Welcome to GitHub Pages
+## Welcome
 
-You can use the [editor on GitHub](https://github.com/wecodexyz/wecodexyz.github.io/edit/master/README.md) to maintain and preview the content for your website in Markdown files.
+My name is Milo. This is my personal website.
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+### WeChat Markdown Editor
 
-### Markdown
+If you use WeChat to post articles,this editor will help you!
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+[WeChat Markdown Editor](https://wecodexyz.github.io/wechat-markdown/)
 
-```markdown
-Syntax highlighted code block
+### Gitbooks
 
-# Header 1
-## Header 2
-### Header 3
+Here is my blogs.
 
-- Bulleted
-- List
+[Android填坑指南](https://wecodexyz.gitbooks.io/wecodebook/content/)
 
-1. Numbered
-2. List
+[Python爬虫笔记](https://www.gitbook.com/book/wecodexyz/python/details)
 
-**Bold** and _Italic_ and `Code` text
+### Contact
 
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/wecodexyz/wecodexyz.github.io/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+- Email:wecodexyz@gmail.com
+- Github:https://github.com/wecodexyz
