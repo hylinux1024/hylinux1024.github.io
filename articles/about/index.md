@@ -1,4 +1,7 @@
-## Welcome
+---
+title: about
+date: 2017-08-06 01:00:07
+---
 
 My name is Milo. This is my personal website.
 
