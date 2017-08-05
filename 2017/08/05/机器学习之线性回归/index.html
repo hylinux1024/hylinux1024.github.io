@@ -12,7 +12,7 @@
 <meta property="og:site_name" content="Machine Learning">
 <meta property="og:description" content="线性回归属于监督学习算法中的一种，也是最简单的一种算法。本文将讲述以下内容  Linear Regression 线性回归 Cost Function 成本函数 Gradient Decent 梯度下降法 Normal Equations 正规方程 Probabilistic interpretation 概率论解释  Linear Regression 线性回归简单地  h_\theta(x)=">
 <meta property="og:image" content="http://angrycode.qiniudn.com/1346902099_4852.png">
-<meta property="og:updated_time" content="2017-08-05T16:12:00.000Z">
+<meta property="og:updated_time" content="2017-08-05T16:21:28.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="机器学习之线性回归">
 <meta name="twitter:description" content="线性回归属于监督学习算法中的一种，也是最简单的一种算法。本文将讲述以下内容  Linear Regression 线性回归 Cost Function 成本函数 Gradient Decent 梯度下降法 Normal Equations 正规方程 Probabilistic interpretation 概率论解释  Linear Regression 线性回归简单地  h_\theta(x)=">
@@ -142,17 +142,17 @@ h_\theta(x^{(5)})\\
 <script type="math/tex; mode=display">
 h_\theta(x) = \theta_0 + \theta_1x_1+...+\theta_nx_n</script><p>写成向量的形式</p>
 <script type="math/tex; mode=display">
-h_\theta(x)=\sum_i^m\theta_ix_i=\theta^Tx</script><p>其中$\theta$是权重，$ x_i $ 是feature，$ h_\theta(x) $是 hypothesis。<br>对于有 m 个样本，更一般地为</p>
+h_\theta(x)=\sum_i^m\theta_ix_i=\theta^Tx</script><p>其中 \(\theta\) 是权重，\( x_i \) 是feature，\( h_\theta(x) \)是 hypothesis。<br>对于有 m 个样本，更一般地为</p>
 <script type="math/tex; mode=display">
 h_\theta(x^{(i)})=\theta^Tx^{(i)}</script><h3 id="Cost-Function-成本函数"><a href="#Cost-Function-成本函数" class="headerlink" title="Cost Function 成本函数"></a>Cost Function 成本函数</h3><p>成本函数定义为</p>
 <script type="math/tex; mode=display">
-J(\theta) = \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script><p>其中 y 是真实值，而 h(x) 为机器预测值，i 表示第几个样本，前面的 1/2 是为了后面的计算方便引用的，当 y 和 h 的差的平方和为最小时，这样的直线就是我们要找的最佳拟合直线。</p>
-<p>那如何找到这样$(\theta)$ 呢？这就用到了<strong>Gradient Descent</strong></p>
-<h3 id="Gradient-Descent-梯度下降法"><a href="#Gradient-Descent-梯度下降法" class="headerlink" title="Gradient Descent 梯度下降法"></a>Gradient Descent 梯度下降法</h3><p>假设只有单变量的线性函数，那么 $J(\theta)$ 可以看出是一个碗状的面，如</p>
+J(\theta) = \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script><p>其中 y 是真实值，而 \(h(x)\) 为机器预测值，i 表示第几个样本，前面的 1/2 是为了后面的计算方便引用的，当 y 和 h 的差的平方和为最小时，这样的直线就是我们要找的最佳拟合直线。</p>
+<p>那如何找到这样\(\theta\) 呢？这就用到了<strong>Gradient Descent</strong></p>
+<h3 id="Gradient-Descent-梯度下降法"><a href="#Gradient-Descent-梯度下降法" class="headerlink" title="Gradient Descent 梯度下降法"></a>Gradient Descent 梯度下降法</h3><p>假设只有单变量的线性函数，那么 \(J(\theta)\) 可以看出是一个碗状的面，如</p>
 <p><img src="http://angrycode.qiniudn.com/1346902099_4852.png" alt=""></p>
 <p>我们使用一些迭代公式进行搜索，找到最小值</p>
 <script type="math/tex; mode=display">
-\theta_j:=\theta_j-\alpha\frac{\partial}{\partial \theta_j} J(\theta)</script><p>其中 <strong>:=</strong>表示赋值符号，=表示比较两个值是否相等，$\alpha$ 是学习率。我们需要对 $\theta_j$ 求偏导</p>
+\theta_j:=\theta_j-\alpha\frac{\partial}{\partial \theta_j} J(\theta)</script><p>其中 <strong>:=</strong>表示赋值符号，=表示比较两个值是否相等，\(\alpha\) 是学习率。我们需要对 \(\theta_j\) 求偏导</p>
 <p>为了简单起见，我们考虑只有一个样本的情况，这样可以把<strong>累加符号</strong>去掉</p>
 <script type="math/tex; mode=display">
 \begin{equation}\begin{split}\frac{\partial J(\theta)} {\partial \theta_j}&=\frac{\partial } {\partial \theta_j}\frac 1 2 (h_\theta(x)-y)^2\\
@@ -164,7 +164,7 @@ J(\theta) = \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script><p>其�
 <script type="math/tex; mode=display">
 \theta_j:=\theta_j+\alpha\sum_i^n(y^{(i)}-h_\theta(x^{(i)}))x_j</script><h3 id="Normal-Equations"><a href="#Normal-Equations" class="headerlink" title="Normal Equations"></a>Normal Equations</h3><p>假设X 是一个 m x n 的矩阵，那么可以</p>
 <script type="math/tex; mode=display">
-X=\begin{bmatrix}-{(x^{(1)})}^T-\\-{(x^{(2)})}^T-\\\vdots\\-{(x^{(m)})}^T-\end{bmatrix}</script><p>$\vec y$ 是一个 m 维向量</p>
+X=\begin{bmatrix}-{(x^{(1)})}^T-\\-{(x^{(2)})}^T-\\\vdots\\-{(x^{(m)})}^T-\end{bmatrix}</script><p>\(\vec y\) 是一个 m 维向量</p>
 <script type="math/tex; mode=display">
 \vec y = \begin{bmatrix}y^{(1)}\\y^{(2)}\\\vdots\\y^{(m)}\end{bmatrix}</script><p>由于</p>
 <script type="math/tex; mode=display">
@@ -184,7 +184,7 @@ z^Tz=\sum_iz_i^2</script><p>所以</p>
 <script type="math/tex; mode=display">
 \begin{equation}\begin{split}\frac 1 2(X\theta-\vec y)^T(X\theta-\vec y^)
 &=\frac 1 2 \sum_i^m(h_\theta(x^{i})-y^{(i)})^2\\
-&=J(\theta)\end{split}\end{equation}</script><p>那么要求 $J(\theta)$ 的最小值，那么需要对其求导，求得极值点。</p>
+&=J(\theta)\end{split}\end{equation}</script><p>那么要求 \(J(\theta)\) 的最小值，那么需要对其求导，求得极值点。</p>
 <p>这时候会用到对矩阵的求导公式</p>
 <script type="math/tex; mode=display">
 \begin{equation}\begin{split}\nabla_\theta J(\theta)&=\nabla_\theta\frac 1 2(X\theta-\vec y)^T(X\theta-\vec y^)\\
@@ -206,7 +206,7 @@ trR=R,\text {$R$是实数}</script><p>第5步用到</p>
 <script type="math/tex; mode=display">
 \nabla_{A^T}trABA^TC=B^TA^TC^T+BA^TC\tag 4</script><p>若 C=I，即 C 为单位矩阵，那么</p>
 <script type="math/tex; mode=display">
-\nabla_{A^T}ABA^T=B^TA^T+BA^T\tag 5</script><p>故要求得 $J(\theta)$ 最小值，就令导数等于0</p>
+\nabla_{A^T}ABA^T=B^TA^T+BA^T\tag 5</script><p>故要求得 \(J(\theta)\) 最小值，就令导数等于0</p>
 <script type="math/tex; mode=display">
 X^TX\theta=X^T\vec y</script><p>于是就得到所谓的 <strong>normal equations</strong></p>
 <script type="math/tex; mode=display">
@@ -215,24 +215,24 @@ X^TX\theta=X^T\vec y</script><p>于是就得到所谓的 <strong>normal equation
 J(\theta) = \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script><p>那么为什么会这样定义呢？下文我们来从概率论的角度来说明。</p>
 <p>假设目标变量 y 与输入变量存在以下关系</p>
 <script type="math/tex; mode=display">
-y^{(i)}=\theta^Tx^{(i)}+\epsilon^{(i)}</script><p>$\epsilon^{(i)}$ 表示误差项，例如样本的测量误差等因素。我们再假设这个误差是<strong>独立同分布</strong>的，即它是符合<strong>高斯分布或标准正态分布</strong>，那么</p>
+y^{(i)}=\theta^Tx^{(i)}+\epsilon^{(i)}</script><p>\(\epsilon^{(i)}\) 表示误差项，例如样本的测量误差等因素。我们再假设这个误差是<strong>独立同分布</strong>的，即它是符合<strong>高斯分布或标准正态分布</strong>，那么</p>
 <script type="math/tex; mode=display">
 p(\epsilon^{(i)})=\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {( \epsilon^{(i)})^2}{2\sigma^2}\right)</script><p>于是</p>
 <script type="math/tex; mode=display">
-p(y^{(i)}|x^{(i)};\theta)=\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)</script><p>$p(y^{(i)}|x^{(i)};\theta)$ 表示给定以$\theta$为参数的$x^{(i)} y^{(i)}$的分布。同时需要注意的时，中间的是分号不能写成逗号，因为$\theta$不是随机变量。</p>
-<p>通常我们把$p(y^{(i)}|x^{(i)};\theta)$ 称之为 <strong>Likelihood Function（似然函数）</strong></p>
+p(y^{(i)}|x^{(i)};\theta)=\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)</script><p>\(p(y^{(i)}|x^{(i)};\theta)\) 表示给定以\(\theta\)为参数的\(x^{(i)} y^{(i)}\)的分布。同时需要注意的时，中间的是分号不能写成逗号，因为\(\theta\)不是随机变量。</p>
+<p>通常我们把\(p(y^{(i)}|x^{(i)};\theta)\) 称之为 <strong>Likelihood Function（似然函数）</strong></p>
 <script type="math/tex; mode=display">
 L(\theta)=L(\theta;X,\vec y)=p(\vec y|X;\theta)</script><p>还可以写成</p>
 <script type="math/tex; mode=display">
 \begin{equation}\begin{split}L(\theta)&=\prod_{i=1}^mp(y^{(i)}|x^{(i)};\theta)\\
-&=\prod_{i=1}^m\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\end{split}\end{equation}</script><p>要求 $\theta$ 使得样本中的值出现的概率是最大的，于是要求似然函数的最大值。</p>
+&=\prod_{i=1}^m\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\end{split}\end{equation}</script><p>要求 \(\theta\) 使得样本中的值出现的概率是最大的，于是要求似然函数的最大值。</p>
 <p>把上面的式子的连乘运算转化成加和运算，可以化简计算</p>
 <script type="math/tex; mode=display">
 \begin{equation}\begin{split}l(\theta)&=logL(\theta)\\
 &=log\prod_{i=1}^m\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
 &=\sum_{i=1}^mlog\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
 &=\sum_{i=1}^mlog\frac 1 {\sqrt{2\pi\sigma^2}}+\sum_{i=1}^m\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
-&=m\cdot log \frac 1 {\sqrt{2\pi\sigma^2}}-\frac 1 {\sigma^2}\cdot \frac 1 2\sum_{i=1}^m(y^{(i)}-\theta^Tx^{(i)})^2\end{split}\end{equation}</script><p>于是，要求 $ L(\theta) $ 的最大值，就是要求以下式子的最小值</p>
+&=m\cdot log \frac 1 {\sqrt{2\pi\sigma^2}}-\frac 1 {\sigma^2}\cdot \frac 1 2\sum_{i=1}^m(y^{(i)}-\theta^Tx^{(i)})^2\end{split}\end{equation}</script><p>于是，要求 \( L(\theta) \) 的最大值，就是要求以下式子的最小值</p>
 <script type="math/tex; mode=display">
 \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script><p>而这个就是我们的 <strong>Cost Function（成本函数）</strong>。</p>
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
