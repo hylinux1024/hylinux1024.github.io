@@ -3,16 +3,16 @@
 ## Source: https://github.com/hexojs/hexo/
 
 # Site
-title: Machine Learning Road
-subtitle: The Road to Learning 
+title: Machine Learning
+subtitle: Machine Learning
 description: Machine Learning
-author: wecodexyz@gmail.com
-language: zh-CN
-timezone: Asia/Shanghai
+author: wecodexyz
+language:
+timezone:
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
-url: http://wecodexyz.github.io
+url: http://wecodexyz.github.io
 root: /
 permalink: :year/:month/:day/:title/
 permalink_defaults:
@@ -72,7 +72,7 @@ pagination_dir: page
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: landscape
+theme: typing
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
