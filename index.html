@@ -1,411 +1,114 @@
-<!DOCTYPE html>
 <html>
 <head>
-  <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
-  
-  <title>Machine Learning</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta property="og:type" content="website">
-<meta property="og:title" content="Machine Learning">
-<meta property="og:url" content="https://wecodexyz.github.io/index.html">
-<meta property="og:site_name" content="Machine Learning">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Machine Learning">
-  
-    <link rel="alternate" href="/atom.xml" title="Machine Learning" type="application/atom+xml">
-  
-  
-    <link rel="icon" href="/favicon.png">
-  
-  
-    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
-  
-  <link rel="stylesheet" href="/css/style.css"><!-- hexo-inject:begin --><!-- hexo-inject:end -->
-  
+	
+	<!-- hexo-inject:begin --><!-- hexo-inject:end --><title>Machine Learning</title>
+	<meta name="keywords" content="My Blog, Spider Bitch!" />
 
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+    <link href="/css/home.css?v=2" rel="stylesheet" type="text/css" />
+    <link rel="stylesheet" href="/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
+    
+
+    <link rel="alternate" type="application/atom+xml" href="/atom.xml" title="Atom feed">
+
+    
+	<link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=2"/><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+    
 </head>
 
 <body>
-  <!-- hexo-inject:begin --><!-- hexo-inject:end --><div id="container">
-    <div id="wrap">
-      <header id="header">
-  <div id="banner"></div>
-  <div id="header-outer" class="outer">
-    <div id="header-title" class="inner">
-      <h1 id="logo-wrap">
-        <a href="/" id="logo">Machine Learning</a>
-      </h1>
-      
-        <h2 id="subtitle-wrap">
-          <a href="/" id="subtitle">wecodexyz&#39;s learing notes</a>
-        </h2>
-      
-    </div>
-    <div id="header-inner" class="inner">
-      <nav id="main-nav">
-        <a id="main-nav-toggle" class="nav-icon"></a>
-        
-          <a class="main-nav-link" href="/">Home</a>
-        
-          <a class="main-nav-link" href="/archives">Archives</a>
-        
-      </nav>
-      <nav id="sub-nav">
-        
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
-        
-        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
-      </nav>
-      <div id="search-form-wrap">
-        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://wecodexyz.github.io"></form>
-      </div>
-    </div>
-  </div>
-</header>
-      <div class="outer">
-        <section id="main">
-  
-    <article id="post-机器学习之线性回归" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/08/05/机器学习之线性回归/" class="article-date">
-  <time datetime="2017-08-05T15:12:18.000Z" itemprop="datePublished">2017-08-05</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/08/05/机器学习之线性回归/">机器学习之线性回归</a>
-    </h1>
-  
+<!-- hexo-inject:begin --><!-- hexo-inject:end --><nav class="navbar navbar-default navbar-fixed-top" style="opacity: .9" role="navigation">
+    <div class="container-fluid">
+        <!-- Brand and toggle get grouped for better mobile display -->
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">Machine Learning</a>
+        </div>
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>线性回归属于<strong>监督学习</strong>算法中的一种，也是最简单的一种算法。本文将讲述以下内容</p>
-<ol>
-<li>Linear Regression 线性回归</li>
-<li>Cost Function 成本函数</li>
-<li>Gradient Decent 梯度下降法</li>
-<li>Normal Equations 正规方程</li>
-<li>Probabilistic interpretation 概率论解释</li>
-</ol>
-<h2 id="Linear-Regression-线性回归"><a href="#Linear-Regression-线性回归" class="headerlink" title="Linear Regression 线性回归"></a>Linear Regression 线性回归</h2><p>简单地</p>
-<script type="math/tex; mode=display">
-h_\theta(x)=\theta_0+\theta_1x</script><p>若有5个样本，令 \(x_0=1\) ，那么</p>
-<script type="math/tex; mode=display">
-\begin{bmatrix}h_\theta(x^{(1)})\\
-h_\theta(x^{(2)})\\
-h_\theta(x^{(3)})\\
-h_\theta(x^{(4)})\\
-h_\theta(x^{(5)})\\
-\end{bmatrix}=\begin{bmatrix}
-1&x^{(1)}\\
-1&x^{(2)}\\
-1&x^{(3)}\\
-1&x^{(4)}\\
-1&x^{(5)}\\
-\end{bmatrix}
-\begin{bmatrix}
-\theta_0\\
-\theta_1
-\end{bmatrix}</script><p>若有2个变量</p>
-<script type="math/tex; mode=display">
-h_\theta(x)=\theta_0+\theta_1x_1+\theta_2x_2</script><p>那么</p>
-<script type="math/tex; mode=display">
-\begin{bmatrix}
-h_\theta(x^{(1)})\\
-h_\theta(x^{(2)})\\
-h_\theta(x^{(3)})\\
-h_\theta(x^{(4)})\\
-h_\theta(x^{(5)})\\
-\end{bmatrix}=\begin{bmatrix}
-1&x_1^{(1)}&x_2^{(1)}\\
-1&x_1^{(2)}&x_2^{(2)}\\
-1&x_1^{(3)}&x_2^{(3)}\\
-1&x_1^{(4)}&x_2^{(4)}\\
-1&x_1^{(5)}&x_2^{(5)}\\
-\end{bmatrix}
-\begin{bmatrix}
-\theta_0\\
-\theta_1
-\end{bmatrix}</script><p>一般地</p>
-<script type="math/tex; mode=display">
-h_\theta(x) = \theta_0 + \theta_1x_1+...+\theta_nx_n</script><p>写成向量的形式</p>
-<script type="math/tex; mode=display">
-h_\theta(x)=\sum_i^m\theta_ix_i=\theta^Tx</script><p>其中 \(\theta\) 是权重，\( x_i \) 是feature，\( h_\theta(x) \)是 hypothesis。<br>对于有 m 个样本，更一般地为</p>
-<script type="math/tex; mode=display">
-h_\theta(x^{(i)})=\theta^Tx^{(i)}</script><h3 id="Cost-Function-成本函数"><a href="#Cost-Function-成本函数" class="headerlink" title="Cost Function 成本函数"></a>Cost Function 成本函数</h3><p>成本函数定义为</p>
-<script type="math/tex; mode=display">
-J(\theta) = \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script><p>其中 y 是真实值，而 \(h(x)\) 为机器预测值，i 表示第几个样本，前面的 1/2 是为了后面的计算方便引用的，当 y 和 h 的差的平方和为最小时，这样的直线就是我们要找的最佳拟合直线。</p>
-<p>那如何找到这样\(\theta\) 呢？这就用到了<strong>Gradient Descent</strong></p>
-<h3 id="Gradient-Descent-梯度下降法"><a href="#Gradient-Descent-梯度下降法" class="headerlink" title="Gradient Descent 梯度下降法"></a>Gradient Descent 梯度下降法</h3><p>假设只有单变量的线性函数，那么 \(J(\theta)\) 可以看出是一个碗状的面，如</p>
-<p><img src="http://angrycode.qiniudn.com/1346902099_4852.png" alt=""></p>
-<p>我们使用一些迭代公式进行搜索，找到最小值</p>
-<script type="math/tex; mode=display">
-\theta_j:=\theta_j-\alpha\frac{\partial}{\partial \theta_j} J(\theta)</script><p>其中 <strong>:=</strong>表示赋值符号，=表示比较两个值是否相等，\(\alpha\) 是学习率。我们需要对 \(\theta_j\) 求偏导</p>
-<p>为了简单起见，我们考虑只有一个样本的情况，这样可以把<strong>累加符号</strong>去掉</p>
-<script type="math/tex; mode=display">
-\begin{equation}\begin{split}\frac{\partial J(\theta)} {\partial \theta_j}&=\frac{\partial } {\partial \theta_j}\frac 1 2 (h_\theta(x)-y)^2\\
-&=2 \cdot\frac 1 2 (h_\theta(x)-y)\frac {\partial} {\partial \theta_j}(h_\theta(x)-y)\\
-&= (h_\theta(x)-y)\frac {\partial} {\partial \theta_j}(\sum_i^n\theta_ix_i-y)\\
-&= (h_\theta(x)-y)x_j\end{split}\end{equation}</script><p>于是，当只有一个样本的情况时</p>
-<script type="math/tex; mode=display">
-\theta_j:=\theta_j+\alpha(y^{(i)}-h_\theta(x^{(i)}))x_j</script><p>推广到 n 个样本</p>
-<script type="math/tex; mode=display">
-\theta_j:=\theta_j+\alpha\sum_i^n(y^{(i)}-h_\theta(x^{(i)}))x_j</script><h3 id="Normal-Equations"><a href="#Normal-Equations" class="headerlink" title="Normal Equations"></a>Normal Equations</h3><p>假设X 是一个 m x n 的矩阵，那么可以</p>
-<script type="math/tex; mode=display">
-X=\begin{bmatrix}-{(x^{(1)})}^T-\\-{(x^{(2)})}^T-\\\vdots\\-{(x^{(m)})}^T-\end{bmatrix}</script><p>\(\vec y\) 是一个 m 维向量</p>
-<script type="math/tex; mode=display">
-\vec y = \begin{bmatrix}y^{(1)}\\y^{(2)}\\\vdots\\y^{(m)}\end{bmatrix}</script><p>由于</p>
-<script type="math/tex; mode=display">
-h_\theta(x^{(i)})=(x^{(i)})^T\theta</script><script type="math/tex; mode=display">
-\begin{equation}\begin{split}X\theta-\vec y
-&=\begin{bmatrix}(x^{(1)^T})\\(x^{(2)^T})\\
-\vdots\\
-(x^{(m)^T})\end{bmatrix}
-\begin{bmatrix}y^{(1)}\\
-y^{(2)}\\
-\vdots\\
-y^{(m)}\end{bmatrix}\\
-&=\begin{bmatrix}(x^{(1)})^T-y^{(1)}\\
-x^{(2)})^T-y^{(2)}\\\vdots\\x^{(m)})^T-y^{(m)}\end{bmatrix}\end{split}\end{equation}</script><p>又如果 z 是一个向量，那么有</p>
-<script type="math/tex; mode=display">
-z^Tz=\sum_iz_i^2</script><p>所以</p>
-<script type="math/tex; mode=display">
-\begin{equation}\begin{split}\frac 1 2(X\theta-\vec y)^T(X\theta-\vec y^)
-&=\frac 1 2 \sum_i^m(h_\theta(x^{i})-y^{(i)})^2\\
-&=J(\theta)\end{split}\end{equation}</script><p>那么要求 \(J(\theta)\) 的最小值，那么需要对其求导，求得极值点。</p>
-<p>这时候会用到对矩阵的求导公式</p>
-<script type="math/tex; mode=display">
-\begin{equation}\begin{split}\nabla_\theta J(\theta)&=\nabla_\theta\frac 1 2(X\theta-\vec y)^T(X\theta-\vec y^)\\
-&=\frac 1 2 \nabla_\theta(\theta^T X^T X\theta-\theta^TX^T\vec y-{\vec y}^TX\theta+{\vec y}^T\vec y)\\
-&=\frac 1 2 \nabla_\theta tr(\theta^T X^T X\theta-\theta^TX^T\vec y-{\vec y}^TX\theta+{\vec y}^T\vec y)\\
-&=\frac 1 2\nabla_\theta (tr\theta^TX^TX\theta-tr\theta^TX^T\vec y-tr\vec y^TX\theta)\\
-&=\frac 1 2\nabla_\theta (tr\theta^TX^TX\theta-tr(\vec y^T(X\theta))^T-tr\vec y^TX\theta)\\
-&=\frac 1 2\nabla_\theta (tr\theta^TX^TX\theta-2tr\vec y^TX\theta)\\
-&=\frac 1 2(X^TX\theta+X^TX\theta-2X^T\vec y)\\
-&=X^TX\theta-X^T\vec y\end{split}\end{equation}</script><p>第3步用到</p>
-<script type="math/tex; mode=display">
-trR=R,\text {$R$是实数}</script><p>第5步用到</p>
-<script type="math/tex; mode=display">
- trA=trA^T</script><p>最后用到以下公式</p>
-<script type="math/tex; mode=display">
-\nabla_AtrAB=\nabla_AtrBA=B^T\tag 1</script><script type="math/tex; mode=display">
-\nabla_{A^T}f(A)=(\nabla_Af(A))^T\tag 2</script><script type="math/tex; mode=display">
-\nabla_AtrABA^TC=CAB+C^TAB^T\tag 3</script><p>由公式(2)(3)</p>
-<script type="math/tex; mode=display">
-\nabla_{A^T}trABA^TC=B^TA^TC^T+BA^TC\tag 4</script><p>若 C=I，即 C 为单位矩阵，那么</p>
-<script type="math/tex; mode=display">
-\nabla_{A^T}ABA^T=B^TA^T+BA^T\tag 5</script><p>故要求得 \(J(\theta)\) 最小值，就令导数等于0</p>
-<script type="math/tex; mode=display">
-X^TX\theta=X^T\vec y</script><p>于是就得到所谓的 <strong>normal equations</strong></p>
-<script type="math/tex; mode=display">
-\theta=(X^TX)^{-1}X^T\vec y</script><h3 id="Probabilistic-interpretation-概率论解释"><a href="#Probabilistic-interpretation-概率论解释" class="headerlink" title="Probabilistic interpretation 概率论解释"></a>Probabilistic interpretation 概率论解释</h3><p>从上文可以知道成本函数为</p>
-<script type="math/tex; mode=display">
-J(\theta) = \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script><p>那么为什么会这样定义呢？下文我们来从概率论的角度来说明。</p>
-<p>假设目标变量 y 与输入变量存在以下关系</p>
-<script type="math/tex; mode=display">
-y^{(i)}=\theta^Tx^{(i)}+\epsilon^{(i)}</script><p>\(\epsilon^{(i)}\) 表示误差项，例如样本的测量误差等因素。我们再假设这个误差是<strong>独立同分布</strong>的，即它是符合<strong>高斯分布或标准正态分布</strong>，那么</p>
-<script type="math/tex; mode=display">
-p(\epsilon^{(i)})=\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {( \epsilon^{(i)})^2}{2\sigma^2}\right)</script><p>于是</p>
-<script type="math/tex; mode=display">
-p(y^{(i)}|x^{(i)};\theta)=\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)</script><p>\(p(y^{(i)}|x^{(i)};\theta)\) 表示给定以\(\theta\)为参数的\(x^{(i)} y^{(i)}\)的分布。同时需要注意的时，中间的是分号不能写成逗号，因为\(\theta\)不是随机变量。</p>
-<p>通常我们把\(p(y^{(i)}|x^{(i)};\theta)\) 称之为 <strong>Likelihood Function（似然函数）</strong></p>
-<script type="math/tex; mode=display">
-L(\theta)=L(\theta;X,\vec y)=p(\vec y|X;\theta)</script><p>还可以写成</p>
-<script type="math/tex; mode=display">
-\begin{equation}\begin{split}L(\theta)&=\prod_{i=1}^mp(y^{(i)}|x^{(i)};\theta)\\
-&=\prod_{i=1}^m\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\end{split}\end{equation}</script><p>要求 \(\theta\) 使得样本中的值出现的概率是最大的，于是要求似然函数的最大值。</p>
-<p>把上面的式子的连乘运算转化成加和运算，可以化简计算</p>
-<script type="math/tex; mode=display">
-\begin{equation}\begin{split}l(\theta)&=logL(\theta)\\
-&=log\prod_{i=1}^m\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
-&=\sum_{i=1}^mlog\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
-&=\sum_{i=1}^mlog\frac 1 {\sqrt{2\pi\sigma^2}}+\sum_{i=1}^m\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
-&=m\cdot log \frac 1 {\sqrt{2\pi\sigma^2}}-\frac 1 {\sigma^2}\cdot \frac 1 2\sum_{i=1}^m(y^{(i)}-\theta^Tx^{(i)})^2\end{split}\end{equation}</script><p>于是，要求 \( L(\theta) \) 的最大值，就是要求以下式子的最小值</p>
-<script type="math/tex; mode=display">
-\frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script><p>而这个就是我们的 <strong>Cost Function（成本函数）</strong>。</p>
-<script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
-
-
-</script>
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://wecodexyz.github.io/2017/08/05/机器学习之线性回归/" data-id="cj5zer4oh0002gsqgfx24dcv5" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-hello-world" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/08/05/hello-world/" class="article-date">
-  <time datetime="2017-08-05T14:25:19.000Z" itemprop="datePublished">2017-08-05</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/2017/08/05/hello-world/">Hello World</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Welcome to <a href="https://hexo.io/" target="_blank" rel="external">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/" target="_blank" rel="external">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html" target="_blank" rel="external">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues" target="_blank" rel="external">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo new <span class="string">"My New Post"</span></div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/writing.html" target="_blank" rel="external">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo server</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/server.html" target="_blank" rel="external">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo generate</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/generating.html" target="_blank" rel="external">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">$ hexo deploy</div></pre></td></tr></table></figure>
-<p>More info: <a href="https://hexo.io/docs/deployment.html" target="_blank" rel="external">Deployment</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://wecodexyz.github.io/2017/08/05/hello-world/" data-id="cj5zer4o50000gsqgra47vxuj" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-README" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/2017/08/05/README/" class="article-date">
-  <time datetime="2017-08-05T06:38:07.000Z" itemprop="datePublished">2017-08-05</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="Welcome"><a href="#Welcome" class="headerlink" title="Welcome"></a>Welcome</h2><p>My name is Milo. This is my personal website.</p>
-<h3 id="WeChat-Markdown-Editor"><a href="#WeChat-Markdown-Editor" class="headerlink" title="WeChat Markdown Editor"></a>WeChat Markdown Editor</h3><p>If you use WeChat to post articles,this editor will help you!</p>
-<p><a href="https://wecodexyz.github.io/wechat-markdown/">WeChat Markdown Editor</a></p>
-<h3 id="Gitbooks"><a href="#Gitbooks" class="headerlink" title="Gitbooks"></a>Gitbooks</h3><p>Here is my blogs.</p>
-<p><a href="https://wecodexyz.gitbooks.io/wecodebook/content/" target="_blank" rel="external">Android填坑指南</a></p>
-<p><a href="https://www.gitbook.com/book/wecodexyz/python/details" target="_blank" rel="external">Python爬虫笔记</a></p>
-<h3 id="Contact"><a href="#Contact" class="headerlink" title="Contact"></a>Contact</h3><ul>
-<li>Email:wecodexyz@gmail.com</li>
-<li>Github:<a href="https://github.com/wecodexyz" target="_blank" rel="external">https://github.com/wecodexyz</a></li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="https://wecodexyz.github.io/2017/08/05/README/" data-id="cj5zer4oe0001gsqgcspq664f" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-
-</section>
-        
-          <aside id="sidebar">
-  
-    
-
-  
-    
-
-  
-    
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Archives</h3>
-    <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li></ul>
-    </div>
-  </div>
-
-
-  
-    
-  <div class="widget-wrap">
-    <h3 class="widget-title">Recent Posts</h3>
-    <div class="widget">
-      <ul>
-        
-          <li>
-            <a href="/2017/08/05/机器学习之线性回归/">机器学习之线性回归</a>
-          </li>
-        
-          <li>
-            <a href="/2017/08/05/hello-world/">Hello World</a>
-          </li>
-        
-          <li>
-            <a href="/2017/08/05/README/">(no title)</a>
-          </li>
-        
-      </ul>
-    </div>
-  </div>
-
-  
-</aside>
-        
-      </div>
-      <footer id="footer">
-  
-  <div class="outer">
-    <div id="footer-info" class="inner">
-      &copy; 2017 Machine Learning<br>
-      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
-    </div>
-  </div>
-</footer>
-    </div>
-    <nav id="mobile-nav">
-  
-    <a href="/" class="mobile-nav-link">Home</a>
-  
-    <a href="/archives" class="mobile-nav-link">Archives</a>
-  
+        <!-- Collect the nav links, forms, and other content for toggling -->
+        <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+            <ul class="nav navbar-nav navbar-right">
+            
+                
+                    <li  class="active" >
+                        <a href="/"> Blog</a>
+                    </li>
+                
+                    <li >
+                        <a href="https:github.com/mickeyouyou"> GitHub</a>
+                    </li>
+                
+                    <li >
+                        <a href="/about"> About</a>
+                    </li>
+                
+            
+            </ul>
+        </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
 </nav>
-    
 
-<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+<div class="row" style="padding-top: 70px">
+    <div class="container center-block">
+        <div class="col-md-2"></div>
+        <div class="col-md-8 col-sm-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Blog</h3>
+                </div>
+                <ul class="list-group">
+                    
+                    
+                    
+<li class="list-group-item title">
+    <a target="_blank" href="/2017/08/05/机器学习之线性回归/">机器学习之线性回归</a>
+</li>
 
 
-  <link rel="stylesheet" href="/fancybox/jquery.fancybox.css">
-  <script src="/fancybox/jquery.fancybox.pack.js"></script>
+                    
+                    
+<li class="list-group-item title">
+    <a target="_blank" href="/2017/08/05/hello-world/">Hello World</a>
+</li>
 
 
-<script src="/js/script.js"></script>
+                    
+                    
+<li class="list-group-item title">
+    <a target="_blank" href="/2017/08/05/README/"></a>
+</li>
 
-  </div><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+                    
+                    
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-2">
+        </div>
+<div style="display:none">
+<script src="http://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>
+</div>
+    </div>
+</div>
+
+
+
+<!--加载导航栏所需js文件-->
+<script src="http://apps.bdimg.com/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="http://apps.bdimg.com/libs/bootstrap/3.3.0/js/bootstrap.min.js"></script><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+
+
+
 </body>
 </html>
