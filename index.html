@@ -52,9 +52,9 @@
       </nav>
       <nav id="sub-nav">
         
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="Flux RSS"></a>
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Rechercher"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Søk"></a>
       </nav>
       <div id="search-form-wrap">
         <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="https://wecodexyz.github.io"></form>
@@ -97,7 +97,7 @@
 </ol>
 <h2 id="Linear-Regression-线性回归"><a href="#Linear-Regression-线性回归" class="headerlink" title="Linear Regression 线性回归"></a>Linear Regression 线性回归</h2><p>简单地</p>
 <script type="math/tex; mode=display">
-h_\theta(x)=\theta_0+\theta_1x</script><p>若有5个样本，令 $ x_0=1$，那么</p>
+h_\theta(x)=\theta_0+\theta_1x</script><p>若有5个样本，令 \(x_0=1\) ，那么</p>
 <script type="math/tex; mode=display">
 \begin{bmatrix}h_\theta(x^{(1)})\\
 h_\theta(x^{(2)})\\
@@ -228,14 +228,9 @@ L(\theta)=L(\theta;X,\vec y)=p(\vec y|X;\theta)</script><p>还可以写成</p>
 &=log\prod_{i=1}^m\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
 &=\sum_{i=1}^mlog\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
 &=\sum_{i=1}^mlog\frac 1 {\sqrt{2\pi\sigma^2}}+\sum_{i=1}^m\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
-&=m\cdot log \frac 1 {\sqrt{2\pi\sigma^2}}-\frac 1 {\sigma^2}\cdot \frac 1 2\sum_{i=1}^m(y^{(i)}-\theta^Tx^{(i)})^2\end{split}\end{equation}</script><p>于是，要求$L(\theta)$ 的最大值，就是要求以下式子的最小值</p>
+&=m\cdot log \frac 1 {\sqrt{2\pi\sigma^2}}-\frac 1 {\sigma^2}\cdot \frac 1 2\sum_{i=1}^m(y^{(i)}-\theta^Tx^{(i)})^2\end{split}\end{equation}</script><p>于是，要求 $ L(\theta) $ 的最大值，就是要求以下式子的最小值</p>
 <script type="math/tex; mode=display">
 \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script><p>而这个就是我们的 <strong>Cost Function（成本函数）</strong>。</p>
-<p><script type="text/x-mathjax-config">
-MathJax.Hub.Config({
-  tex2jax: {inlineMath: [['$','$'], ['\\(','\\)']]}
-});
-</script></p>
 <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 
 
@@ -243,7 +238,7 @@ MathJax.Hub.Config({
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://wecodexyz.github.io/2017/08/05/机器学习之线性回归/" data-id="cj5zer4oh0002gsqgfx24dcv5" class="article-share-link">Partager</a>
+      <a data-url="https://wecodexyz.github.io/2017/08/05/机器学习之线性回归/" data-id="cj5zer4oh0002gsqgfx24dcv5" class="article-share-link">Share</a>
       
       
     </footer>
@@ -288,7 +283,7 @@ MathJax.Hub.Config({
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://wecodexyz.github.io/2017/08/05/hello-world/" data-id="cj5zer4o50000gsqgra47vxuj" class="article-share-link">Partager</a>
+      <a data-url="https://wecodexyz.github.io/2017/08/05/hello-world/" data-id="cj5zer4o50000gsqgra47vxuj" class="article-share-link">Share</a>
       
       
     </footer>
@@ -324,7 +319,7 @@ MathJax.Hub.Config({
       
     </div>
     <footer class="article-footer">
-      <a data-url="https://wecodexyz.github.io/2017/08/05/README/" data-id="cj5zer4oe0001gsqgcspq664f" class="article-share-link">Partager</a>
+      <a data-url="https://wecodexyz.github.io/2017/08/05/README/" data-id="cj5zer4oe0001gsqgcspq664f" class="article-share-link">Share</a>
       
       
     </footer>
@@ -349,7 +344,7 @@ MathJax.Hub.Config({
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Archives</h3>
+    <h3 class="widget-title">Arkiv</h3>
     <div class="widget">
       <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/archives/2017/08/">August 2017</a></li></ul>
     </div>
@@ -359,7 +354,7 @@ MathJax.Hub.Config({
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Articles récents</h3>
+    <h3 class="widget-title">Siste innlegg</h3>
     <div class="widget">
       <ul>
         
@@ -388,7 +383,7 @@ MathJax.Hub.Config({
   <div class="outer">
     <div id="footer-info" class="inner">
       &copy; 2017 Machine Learning<br>
-      Propulsé by <a href="http://hexo.io/" target="_blank">Hexo</a>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
 </footer>
