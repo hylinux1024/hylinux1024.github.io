@@ -148,7 +148,7 @@ X^TX\theta=X^T\vec y</script><p>于是就得到所谓的 <strong>normal equation
 J(\theta) = \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script><p>那么为什么会这样定义呢？下文我们来从概率论的角度来说明。</p>
 <p>假设目标变量 y 与输入变量存在以下关系</p>
 <script type="math/tex; mode=display">
-y^{(i)}=\theta^Tx^{(i)}+\epsilon^{(i)}</script><p>\(\epsilon^{(i)}\) 表示误差项，例如样本的测量误差等因素。我们再假设这个误差是<strong>独立同分布</strong>的，即它是符合<strong>高斯分布或标准正态分布</strong>，那么</p>
+y^{(i)}=\theta^Tx^{(i)}+\epsilon^{(i)}</script><p>\(\epsilon^{(i)}\) 表示误差项，例如样本的测量误差等因素。我们再假设这个误差是<strong>独立同分布</strong>的，即它是符合<strong>高斯分布或正态分布</strong>，那么</p>
 <script type="math/tex; mode=display">
 p(\epsilon^{(i)})=\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {( \epsilon^{(i)})^2}{2\sigma^2}\right)</script><p>于是</p>
 <script type="math/tex; mode=display">
@@ -168,6 +168,7 @@ L(\theta)=L(\theta;X,\vec y)=p(\vec y|X;\theta)</script><p>还可以写成</p>
 &=m\cdot log \frac 1 {\sqrt{2\pi\sigma^2}}-\frac 1 {\sigma^2}\cdot \frac 1 2\sum_{i=1}^m(y^{(i)}-\theta^Tx^{(i)})^2\end{split}\end{equation}</script><p>于是，要求 \( L(\theta) \) 的最大值，就是要求以下式子的最小值</p>
 <script type="math/tex; mode=display">
 \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script><p>而这个就是我们的 <strong>Cost Function（成本函数）</strong>。</p>
+<h3 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h3><p><a href="http://cs229.stanford.edu/materials.html" target="_blank" rel="external">http://cs229.stanford.edu/materials.html</a></p>
 <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
 
 
@@ -190,7 +191,24 @@ L(\theta)=L(\theta;X,\vec y)=p(\vec y|X;\theta)</script><p>还可以写成</p>
 
 <div style="display:none">
 <script src="http://s4.cnzz.com/stat.php?id=&web_id=" language="JavaScript"></script>
-</div><!-- hexo-inject:begin --><!-- hexo-inject:end -->
+</div><!-- hexo-inject:begin --><!-- Begin: Injected MathJax -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({"tex2jax":{"inlineMath":[["$","$"],["\\(","\\)"]],"skipTags":["script","noscript","style","textarea","pre","code"],"processEscapes":true},"TeX":{"equationNumbers":{"autoNumber":"AMS"}}});
+</script>
+
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Queue(function() {
+    var all = MathJax.Hub.getAllJax(), i;
+    for(i=0; i < all.length; i += 1) {
+      all[i].SourceElement().parentNode.className += ' has-jax';
+    }
+  });
+</script>
+
+<script type="text/javascript" src="//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+<!-- End: Injected MathJax -->
+<!-- hexo-inject:end -->
 
 
 
