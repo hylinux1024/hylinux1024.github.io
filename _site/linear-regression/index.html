@@ -1,0 +1,439 @@
+<!doctype html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8" lang="en"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"><!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<title>机器学习之线性回归 &#8211; Machine Learning</title>
+<meta name="description" content="线性回归属于监督学习算法中的一种，也是最简单的一种算法。">
+<meta name="keywords" content="线性回归, Linear Regression">
+
+
+
+<!-- Open Graph -->
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:title" content="机器学习之线性回归">
+<meta property="og:description" content="线性回归属于监督学习算法中的一种，也是最简单的一种算法。">
+<meta property="og:url" content="/linear-regression/">
+<meta property="og:site_name" content="Machine Learning">
+
+
+
+
+
+<link rel="canonical" href="/linear-regression/">
+<link href="/feed.xml" type="application/atom+xml" rel="alternate" title="Machine Learning Feed">
+
+<!-- http://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="/assets/css/main.css">
+<!-- Webfonts -->
+<link href="//fonts.googleapis.com/css?family=Lato:300,400,700,300italic,400italic" rel="stylesheet" type="text/css">
+
+<meta http-equiv="cleartype" content="on">
+
+<!-- Load Modernizr -->
+<script src="/assets/js/vendor/modernizr-2.6.2.custom.min.js"></script>
+
+<!-- Icons -->
+<!-- 16x16 -->
+<link rel="shortcut icon" href="/favicon.ico">
+<!-- 32x32 -->
+<link rel="shortcut icon" href="/favicon.png">
+<!-- 57x57 (precomposed) for iPhone 3GS, pre-2011 iPod Touch and older Android devices -->
+<link rel="apple-touch-icon-precomposed" href="/images/apple-touch-icon-precomposed.png">
+<!-- 72x72 (precomposed) for 1st generation iPad, iPad 2 and iPad mini -->
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="/images/apple-touch-icon-72x72-precomposed.png">
+<!-- 114x114 (precomposed) for iPhone 4, 4S, 5 and post-2011 iPod Touch -->
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="/images/apple-touch-icon-114x114-precomposed.png">
+<!-- 144x144 (precomposed) for iPad 3rd and 4th generation -->
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="/images/apple-touch-icon-144x144-precomposed.png">
+
+
+
+</head>
+
+<body id="post" >
+
+<!--[if lt IE 9]><div class="upgrade"><strong><a href="http://whatbrowser.org/">Your browser is quite old!</strong> Why not upgrade to a different browser to better enjoy this site?</a></div><![endif]-->
+<nav id="dl-menu" class="dl-menuwrapper" role="navigation">
+	<button class="dl-trigger">Open Menu</button>
+	<ul class="dl-menu">
+		<li><a href="/">Home</a></li>
+		<li>
+			<a href="#">About</a>
+			<ul class="dl-submenu">
+				<li>
+					<img src="/images/avatar.jpg" alt="wecodexyz photo" class="author-photo">
+					<h4>wecodexyz</h4>
+					<p>Your bio goes here. It shouldn't be super long but a good sentence or two should suffice.</p>
+				</li>
+				<li><a href="/about/"><span class="btn btn-inverse">Learn More</span></a></li>
+				<li>
+					<a href="mailto:wecodexyz@email.com"><i class="fa fa-fw fa-envelope"></i> Email</a>
+				</li>
+				
+				
+				
+				
+				<li>
+					<a href="https://github.com/https://github.com/wecodexyz"><i class="fa fa-fw fa-github"></i> GitHub</a>
+				</li>
+				
+				
+				
+				
+			</ul><!-- /.dl-submenu -->
+		</li>
+		<li>
+			<a href="#">Posts</a>
+			<ul class="dl-submenu">
+				<li><a href="/posts/">All Posts</a></li>
+				<li><a href="/tags/">All Tags</a></li>
+			</ul>
+		</li>
+		
+	    
+	    <li><a href="/theme-setup/" >Theme Setup</a></li>
+	  
+	    
+	    <li><a href="http://mademistakes.com" target="_blank">External Link</a></li>
+	  
+	</ul><!-- /.dl-menu -->
+</nav><!-- /.dl-menuwrapper -->
+
+
+
+
+<div id="main" role="main">
+  <article class="hentry">
+    <header class="header-title">
+      <div class="header-title-wrap">
+        
+          <h1 class="entry-title"><a href="/linear-regression/" rel="bookmark" title="机器学习之线性回归">机器学习之线性回归</a></h1>
+        
+        <h2><span class="entry-date date published"><time datetime="2017-08-07T00:00:00+08:00">August 07, 2017</time></span></h2>
+        
+        <p class="entry-reading-time">
+          <i class="fa fa-clock-o"></i>
+          
+Reading time ~1 minute
+        </p><!-- /.entry-reading-time -->
+        
+      </div><!-- /.header-title-wrap -->
+    </header>
+    <div class="entry-content">
+      <p>线性回归属于<strong>监督学习</strong>算法中的一种，也是最简单的一种算法。本文将讲述以下内容</p>
+
+<ol>
+  <li>Linear Regression 线性回归</li>
+  <li>Cost Function 成本函数</li>
+  <li>Gradient Decent 梯度下降法</li>
+  <li>Normal Equations 正规方程</li>
+  <li>Probabilistic interpretation 概率论解释</li>
+</ol>
+
+<h2 id="linear-regression-">Linear Regression 线性回归</h2>
+
+<p>简单地
+<script type="math/tex">h_\theta(x)=\theta_0+\theta_1x</script></p>
+
+<p>若有5个样本，令 \(x_0=1\) ，那么
+<script type="math/tex">% <![CDATA[
+\begin{bmatrix}h_\theta(x^{(1)})\\
+h_\theta(x^{(2)})\\
+h_\theta(x^{(3)})\\
+h_\theta(x^{(4)})\\
+h_\theta(x^{(5)})\\
+\end{bmatrix}=\begin{bmatrix}
+1&x^{(1)}\\
+1&x^{(2)}\\
+1&x^{(3)}\\
+1&x^{(4)}\\
+1&x^{(5)}\\
+\end{bmatrix}
+\begin{bmatrix}
+\theta_0\\
+\theta_1
+\end{bmatrix} %]]></script></p>
+
+<p>若有2个变量</p>
+
+<script type="math/tex; mode=display">h_\theta(x)=\theta_0+\theta_1x_1+\theta_2x_2</script>
+
+<p>那么</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{bmatrix}
+h_\theta(x^{(1)})\\
+h_\theta(x^{(2)})\\
+h_\theta(x^{(3)})\\
+h_\theta(x^{(4)})\\
+h_\theta(x^{(5)})\\
+\end{bmatrix}=\begin{bmatrix}
+1&x_1^{(1)}&x_2^{(1)}\\
+1&x_1^{(2)}&x_2^{(2)}\\
+1&x_1^{(3)}&x_2^{(3)}\\
+1&x_1^{(4)}&x_2^{(4)}\\
+1&x_1^{(5)}&x_2^{(5)}\\
+\end{bmatrix}
+\begin{bmatrix}
+\theta_0\\
+\theta_1
+\end{bmatrix} %]]></script>
+
+<p>一般地</p>
+
+<script type="math/tex; mode=display">h_\theta(x) = \theta_0 + \theta_1x_1+...+\theta_nx_n</script>
+
+<p>写成向量的形式</p>
+
+<script type="math/tex; mode=display">h_\theta(x)=\sum_i^m\theta_ix_i=\theta^Tx</script>
+
+<p>其中 \(\theta\) 是权重，\( x_i \) 是feature，\( h_\theta(x) \)是 hypothesis。
+对于有 m 个样本，更一般地为</p>
+
+<script type="math/tex; mode=display">h_\theta(x^{(i)})=\theta^Tx^{(i)}</script>
+
+<h3 id="cost-function-">Cost Function 成本函数</h3>
+
+<p>成本函数定义为</p>
+
+<script type="math/tex; mode=display">J(\theta) = \frac 1 {2m} \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script>
+
+<p>其中 y 是真实值，而 \(h(x)\) 为机器预测值，i 表示第几个样本，前面的 1/2 是为了后面的计算方便引用的，当 y 和 h 的差的平方和为最小时，这样的直线就是我们要找的最佳拟合直线。</p>
+
+<p>那如何找到这样\(\theta\) 呢？这就用到了<strong>Gradient Descent</strong></p>
+
+<h3 id="gradient-descent-">Gradient Descent 梯度下降法</h3>
+
+<p>假设只有单变量的线性函数，那么 \(J(\theta)\) 可以看出是一个碗状的面，如</p>
+
+<p><img src="http://angrycode.qiniudn.com/1346902099_4852.png" alt="" /></p>
+
+<p>我们使用一些迭代公式进行搜索，找到最小值</p>
+
+<script type="math/tex; mode=display">\theta_j:=\theta_j-\alpha\frac{\partial}{\partial \theta_j} J(\theta)</script>
+
+<p>其中 <strong>:=</strong>表示赋值符号，=表示比较两个值是否相等，\(\alpha\) 是学习率。我们需要对 \(\theta_j\) 求偏导</p>
+
+<p>为了简单起见，我们考虑只有一个样本的情况，这样可以把<strong>累加符号</strong>去掉</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{equation}\begin{split}\frac{\partial J(\theta)} {\partial \theta_j}&=\frac{\partial } {\partial \theta_j}\frac 1 2 (h_\theta(x)-y)^2\\
+&=2 \cdot\frac 1 2 (h_\theta(x)-y)\frac {\partial} {\partial \theta_j}(h_\theta(x)-y)\\
+&= (h_\theta(x)-y)\frac {\partial} {\partial \theta_j}(\sum_i^n\theta_ix_i-y)\\
+&= (h_\theta(x)-y)x_j\end{split}\end{equation} %]]></script>
+
+<p>于是，当只有一个样本的情况时</p>
+
+<script type="math/tex; mode=display">\theta_j:=\theta_j+\alpha(y^{(i)}-h_\theta(x^{(i)}))x_j</script>
+
+<p>推广到 n 个样本</p>
+
+<script type="math/tex; mode=display">\theta_j:=\theta_j+\alpha\sum_i^n(y^{(i)}-h_\theta(x^{(i)}))x_j</script>
+
+<h3 id="normal-equations">Normal Equations</h3>
+
+<p>假设X 是一个 m x n 的矩阵，那么可以</p>
+
+<script type="math/tex; mode=display">X=\begin{bmatrix}-{(x^{(1)})}^T-\\-{(x^{(2)})}^T-\\\vdots\\-{(x^{(m)})}^T-\end{bmatrix}</script>
+
+<p>\(\vec y\) 是一个 m 维向量</p>
+
+<script type="math/tex; mode=display">\vec y = \begin{bmatrix}y^{(1)}\\y^{(2)}\\\vdots\\y^{(m)}\end{bmatrix}</script>
+
+<p>由于</p>
+
+<script type="math/tex; mode=display">h_\theta(x^{(i)})=(x^{(i)})^T\theta</script>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{equation}\begin{split}X\theta-\vec y
+&=\begin{bmatrix}(x^{(1)^T})\\(x^{(2)^T})\\
+\vdots\\
+(x^{(m)^T})\end{bmatrix}
+\begin{bmatrix}y^{(1)}\\
+y^{(2)}\\
+\vdots\\
+y^{(m)}\end{bmatrix}\\
+&=\begin{bmatrix}(x^{(1)})^T-y^{(1)}\\
+(x^{(2)})^T-y^{(2)}\\\vdots\\(x^{(m)})^T-y^{(m)}\end{bmatrix}\end{split}\end{equation} %]]></script>
+
+<p>又如果 z 是一个向量，那么有</p>
+
+<script type="math/tex; mode=display">z^Tz=\sum_iz_i^2</script>
+
+<p>所以</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{equation}\begin{split}\frac 1 2(X\theta-\vec y)^T(X\theta-\vec y^)
+&=\frac 1 2 \sum_i^m(h_\theta(x^{i})-y^{(i)})^2\\
+&=J(\theta)\end{split}\end{equation} %]]></script>
+
+<p>那么要求 \(J(\theta)\) 的最小值，那么需要对其求导，求得极值点。</p>
+
+<p>这时候会用到对矩阵的求导公式</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{equation}\begin{split}\nabla_\theta J(\theta)&=\nabla_\theta\frac 1 2(X\theta-\vec y)^T(X\theta-\vec y^)\\
+&=\frac 1 2 \nabla_\theta(\theta^T X^T X\theta-\theta^TX^T\vec y-{\vec y}^TX\theta+{\vec y}^T\vec y)\\
+&=\frac 1 2 \nabla_\theta tr(\theta^T X^T X\theta-\theta^TX^T\vec y-{\vec y}^TX\theta+{\vec y}^T\vec y)\\
+&=\frac 1 2\nabla_\theta (tr\theta^TX^TX\theta-tr\theta^TX^T\vec y-tr\vec y^TX\theta)\\
+&=\frac 1 2\nabla_\theta (tr\theta^TX^TX\theta-tr(\vec y^T(X\theta))^T-tr\vec y^TX\theta)\\
+&=\frac 1 2\nabla_\theta (tr\theta^TX^TX\theta-2tr\vec y^TX\theta)\\
+&=\frac 1 2(X^TX\theta+X^TX\theta-2X^T\vec y)\\
+&=X^TX\theta-X^T\vec y\end{split}\end{equation} %]]></script>
+
+<p>第3步用到</p>
+
+<script type="math/tex; mode=display">trR=R,\text {$R$是实数}</script>
+
+<p>第5步用到</p>
+
+<script type="math/tex; mode=display">trA=trA^T</script>
+
+<p>最后用到以下公式</p>
+
+<script type="math/tex; mode=display">\nabla_AtrAB=\nabla_AtrBA=B^T\tag 1</script>
+
+<script type="math/tex; mode=display">\nabla_{A^T}f(A)=(\nabla_Af(A))^T\tag 2</script>
+
+<script type="math/tex; mode=display">\nabla_AtrABA^TC=CAB+C^TAB^T\tag 3</script>
+
+<p>由公式(2)(3)</p>
+
+<script type="math/tex; mode=display">\nabla_{A^T}trABA^TC=B^TA^TC^T+BA^TC\tag 4</script>
+
+<p>若 C=I，即 C 为单位矩阵，那么</p>
+
+<script type="math/tex; mode=display">\nabla_{A^T}ABA^T=B^TA^T+BA^T\tag 5</script>
+
+<p>故要求得 \(J(\theta)\) 最小值，就令导数等于0</p>
+
+<script type="math/tex; mode=display">X^TX\theta=X^T\vec y</script>
+
+<p>于是就得到所谓的 <strong>normal equations</strong></p>
+
+<p><script type="math/tex">\theta=(X^TX)^{-1}X^T\vec y</script>
+### Probabilistic interpretation 概率论解释</p>
+
+<p>从上文可以知道成本函数为</p>
+
+<script type="math/tex; mode=display">J(\theta) = \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script>
+
+<p>那么为什么会这样定义呢？下文我们来从概率论的角度来说明。</p>
+
+<p>假设目标变量 y 与输入变量存在以下关系</p>
+
+<script type="math/tex; mode=display">y^{(i)}=\theta^Tx^{(i)}+\epsilon^{(i)}</script>
+
+<p>\(\epsilon^{(i)}\) 表示误差项，例如样本的测量误差等因素。我们再假设这个误差是<strong>独立同分布</strong>的，即它是符合<strong>高斯分布或正态分布</strong>，那么</p>
+
+<script type="math/tex; mode=display">p(\epsilon^{(i)})=\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {( \epsilon^{(i)})^2}{2\sigma^2}\right)</script>
+
+<p>于是</p>
+
+<script type="math/tex; mode=display">p(y^{(i)}|x^{(i)};\theta)=\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)</script>
+
+<table>
+  <tbody>
+    <tr>
+      <td>\(p(y^{(i)}</td>
+      <td>x^{(i)};\theta)\) 表示给定以\(\theta\)为参数的\(x^{(i)} y^{(i)}\)的分布。同时需要注意的时，中间的是分号不能写成逗号，因为\(\theta\)不是随机变量。</td>
+    </tr>
+  </tbody>
+</table>
+
+<table>
+  <tbody>
+    <tr>
+      <td>通常我们把\(p(y^{(i)}</td>
+      <td>x^{(i)};\theta)\) 称之为 <strong>Likelihood Function（似然函数）</strong></td>
+    </tr>
+  </tbody>
+</table>
+
+<script type="math/tex; mode=display">L(\theta)=L(\theta;X,\vec y)=p(\vec y|X;\theta)</script>
+
+<p>还可以写成</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{equation}\begin{split}L(\theta)&=\prod_{i=1}^mp(y^{(i)}|x^{(i)};\theta)\\
+&=\prod_{i=1}^m\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\end{split}\end{equation} %]]></script>
+
+<p>要求 \(\theta\) 使得样本中的值出现的概率是最大的，于是要求似然函数的最大值。</p>
+
+<p>把上面的式子的连乘运算转化成加和运算，可以化简计算</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{equation}\begin{split}l(\theta)&=logL(\theta)\\
+&=log\prod_{i=1}^m\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
+&=\sum_{i=1}^mlog\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
+&=\sum_{i=1}^mlog\frac 1 {\sqrt{2\pi\sigma^2}}+\sum_{i=1}^m\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
+&=m\cdot log \frac 1 {\sqrt{2\pi\sigma^2}}-\frac 1 {\sigma^2}\cdot \frac 1 2\sum_{i=1}^m(y^{(i)}-\theta^Tx^{(i)})^2\end{split}\end{equation} %]]></script>
+
+<p>于是，要求 \( L(\theta) \) 的最大值，就是要求以下式子的最小值</p>
+
+<script type="math/tex; mode=display">\frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2</script>
+
+<p>而这个就是我们的 <strong>Cost Function（成本函数）</strong>。</p>
+
+<h3 id="section">参考文档</h3>
+
+<p>http://cs229.stanford.edu/materials.html</p>
+
+
+      <footer class="entry-meta">
+        <span class="entry-tags"><a href="/tags/#线性回归" title="Pages tagged 线性回归" class="tag"><span class="term">线性回归</span></a><a href="/tags/#Linear Regression" title="Pages tagged Linear Regression" class="tag"><span class="term">Linear Regression</span></a></span>
+        <span>Updated on <span class="entry-date date updated"><time datetime="2017-08-08">August 08, 2017</time></span></span>
+        <span class="author vcard"><span class="fn">wecodexyz</span></span>
+        
+      </footer>
+    </div><!-- /.entry-content -->
+    
+    <div class="read-more">
+  
+    <div class="read-more-header">
+      <a href="" class="read-more-btn">Read More</a>
+    </div><!-- /.read-more-header -->
+    <div class="read-more-content">
+      <h3><a href="/logisitic-regression/" title="机器学习之逻辑回归">机器学习之逻辑回归</a></h3>
+      <p>逻辑回归（Logistic Regression）是机器学习中的监督学习算法，主要用于分类任务。这些任务预测的标签（label）通常为{0,1}，或者说是一个概率值。 例如我们预测一封邮件是否为垃圾邮件；预测天气是否为晴天、阴天、雨天和雪天等。 <a href="/logisitic-regression/">Continue reading</a></p>
+    </div><!-- /.read-more-content -->
+  
+  <div class="read-more-list">
+    
+      <div class="list-item">
+        <h4><a href="/naive-bayesian/" title="机器学习之朴素贝叶斯">机器学习之朴素贝叶斯</a></h4>
+        <span>Published on August 08, 2017</span>
+      </div><!-- /.list-item -->
+    
+  </div><!-- /.read-more-list -->
+</div><!-- /.read-more -->
+  </article>
+</div><!-- /#main -->
+
+<div class="footer-wrapper">
+  <footer role="contentinfo">
+    <span>&copy; 2017 wecodexyz. Powered by <a href="http://jekyllrb.com" rel="nofollow">Jekyll</a> using the <a href="https://mademistakes.com/work/hpstr-jekyll-theme/" rel="nofollow">HPSTR Theme</a>.</span>
+  </footer>
+</div><!-- /.footer-wrapper -->
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="/assets/js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+<script src="/assets/js/scripts.min.js"></script>
+<script type="text/javascript" async
+  src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+</script>
+
+
+	        
+
+</body>
+</html>

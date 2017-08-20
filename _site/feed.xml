@@ -1,0 +1,529 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.1.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-08-20T21:52:10+08:00</updated><id>/</id><title>Machine Learning</title><subtitle>Mahine Learning Path.</subtitle><entry><title>机器学习之逻辑回归</title><link href="/logisitic-regression/" rel="alternate" type="text/html" title="机器学习之逻辑回归" /><published>2017-08-20T00:00:00+08:00</published><updated>2017-08-20T00:00:00+08:00</updated><id>/logisitic-regression</id><content type="html" xml:base="/logisitic-regression/">&lt;p&gt;本文主要内容&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;逻辑回归（Logistic Regression）模型&lt;/li&gt;
+  &lt;li&gt;决策边界（Decision Boundary）&lt;/li&gt;
+  &lt;li&gt;成本函数（Cost Function）&lt;/li&gt;
+  &lt;li&gt;梯度下降法（Gradient Descent）&lt;/li&gt;
+  &lt;li&gt;多分类问题&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;逻辑回归（Logistic Regression）是机器学习中的监督学习算法，主要用于分类任务。这些任务预测的标签（label）通常为 {0,1}，或者说是一个概率值。 例如我们预测一封邮件是否为垃圾邮件；预测天气是否为晴天、阴天、雨天和雪天等。&lt;/p&gt;
+
+&lt;h3 id=&quot;logistic-regression&quot;&gt;逻辑回归（Logistic Regression）模型&lt;/h3&gt;
+
+&lt;p&gt;从上文《机器学习之线性回归》我们知道线性回归的模型为
+&lt;script type=&quot;math/tex&quot;&gt;h_\theta(x)=\theta_0+\theta_1x_1+...+\theta_nx_n=\theta^Tx&lt;/script&gt;
+可以从上面模型通过函数 g 对线性回归进行变换
+&lt;script type=&quot;math/tex&quot;&gt;h_\theta(x)=g(\theta^Tx) \tag 1&lt;/script&gt;
+其中
+&lt;script type=&quot;math/tex&quot;&gt;g(z)=\frac 1 {1+e^{-z}} \tag 2&lt;/script&gt;
+其中g(z) 是 &lt;strong&gt;sigmoid 函数或者叫逻辑函数&lt;/strong&gt;。可以看出 0&amp;lt;= g(z)&amp;lt;=1&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/sigmoid_functio.jpeg&quot; alt=&quot;sigmoid function&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;由 (1) 和 (2)
+&lt;script type=&quot;math/tex&quot;&gt;h_\theta(x)=\frac 1 {1+e^{-\theta^Tx}} \tag 3&lt;/script&gt;
+这就是&lt;strong&gt;逻辑回归的数学模型&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;p&gt;因为预测值 h(x) 是在{0,1}，故还可以用概率的角度进行解析这个模型的预测结果。&lt;/p&gt;
+
+&lt;p&gt;以预测垃圾邮件为例，如果 y=1 表示这封邮件时垃圾邮件，那么预测模型可以表示
+&lt;script type=&quot;math/tex&quot;&gt;h_\theta(x)=P(y=1|x;\theta) \tag 4&lt;/script&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;decision-boundary&quot;&gt;决策边界（Decision Boundary）&lt;/h3&gt;
+
+&lt;p&gt;我们知道 sigmoid 函数的值是在 {0,1} 范围，当 \(h_\theta(x)\geq0.5\) 时，预测y=1，反之则预测 y=0。&lt;/p&gt;
+
+&lt;p&gt;根据 sigmoid 函数可以知道要预测 \(h_\theta(x)\geq0.5\) 那么等价于 \(\theta^Tx\geq0\)&lt;/p&gt;
+
+&lt;p&gt;我们以这张来自于 Andrew Ng 机器学习课程的 ppt 来说明。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/decision_boundary.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;假设通过训练得出
+&lt;script type=&quot;math/tex&quot;&gt;\theta=\begin{bmatrix}
+-3\\
+1\\
+1
+\end{bmatrix}&lt;/script&gt;
+那么
+&lt;script type=&quot;math/tex&quot;&gt;x_1+x_2=3 \tag 5&lt;/script&gt;
+就是&lt;strong&gt;决策边界&lt;/strong&gt;。当
+&lt;script type=&quot;math/tex&quot;&gt;x_1+x_2\geq3&lt;/script&gt;
+表示预测值 y=1，反之预测值 y=0。&lt;/p&gt;
+
+&lt;p&gt;除了线性决策边界，还可以是曲线的。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/non-linear-decision-boundary.png&quot; alt=&quot;non-linear-decision-boundary&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;这里的决策边界就是
+&lt;script type=&quot;math/tex&quot;&gt;x_1+x_2=1 \tag 6&lt;/script&gt;
+以上两个例子都是简单的边界，当然实际情况下，决策边界有能是复杂的图形，甚至是高维度的。&lt;/p&gt;
+
+&lt;h3 id=&quot;cost-function&quot;&gt;成本函数（Cost Function）&lt;/h3&gt;
+
+&lt;p&gt;回忆一下线性回归中的成本函数
+&lt;script type=&quot;math/tex&quot;&gt;J(\theta)=\frac 1 {2m} \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})^2&lt;/script&gt;
+我们定义函数
+&lt;script type=&quot;math/tex&quot;&gt;Cost(h_\theta(x),y)=\frac 1 2 (h_\theta(x)-y)^2&lt;/script&gt;
+那么成本函数就可以写成
+&lt;script type=&quot;math/tex&quot;&gt;J(\theta)=\frac 1 m \sum_{i=1}^mCost(h_\theta(x),y)&lt;/script&gt;
+&lt;strong&gt;逻辑回归的成本函数（Cost Function）&lt;/strong&gt;
+&lt;script type=&quot;math/tex&quot;&gt;% &lt;![CDATA[
+Cost(h_\theta(x),y)=
+\begin{cases}
+-log(h_\theta(x)) &amp; \text{if $y$ =1} \\
+-log(1-h_\theta(x)) &amp; \text{if $y$ =0}
+\end{cases} \tag 7 %]]&gt;&lt;/script&gt;
+当 y=1 时&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/minus-logx.png?imageView2/2/w/200/h/200&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;当 y=0 时&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/minus-log1-x.png?imageView2/2/w/200/h/200&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;由于 y 取值是{0,1}，我们可以把公式 (7) 写成
+&lt;script type=&quot;math/tex&quot;&gt;Cost(h_\theta(x),y)=-ylog(h_\theta(x))-(1-y)log(1-h_\theta(x)) \\ y\in {\{0,1\}}\tag 8&lt;/script&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;gradient-descent&quot;&gt;梯度下降法（Gradient Descent）&lt;/h3&gt;
+
+&lt;p&gt;由上文可以知道成本函数为
+&lt;script type=&quot;math/tex&quot;&gt;J(\theta)=-\frac 1 m \sum_{i=1}^{m}(y^{(i)}log(h_\theta(x^{(i)}))+(1-y^{(i)})log(1-h_\theta(x^{(i)})))&lt;/script&gt;
+要求\(min_{\theta}J(\theta)\)，需要使用微分求导公式
+&lt;script type=&quot;math/tex&quot;&gt;f(x)&#39;=(log_ax)&#39;=\frac 1 x lna&lt;/script&gt;
+同时为了简单起见，求导时可以假设只有一个样本，这样可以把∑符号去掉，方便推导。&lt;/p&gt;
+
+&lt;p&gt;因为上文中 log 函数默认是以 e 底的
+&lt;script type=&quot;math/tex&quot;&gt;log(h_\theta(x))&#39; =\frac 1 {h_\theta(x)} \frac d {d\theta}h_\theta(x)&lt;/script&gt;
+因为
+&lt;script type=&quot;math/tex&quot;&gt;g(z)=\frac 1 {1+e^{-z}}&lt;/script&gt;
+有
+&lt;script type=&quot;math/tex&quot;&gt;% &lt;![CDATA[
+\begin{equation}\begin{split}g(z)&#39;&amp;=\frac d {dz}(1+e^{-z})^{-1} \\
+&amp;=-(1+e^{-z})^{-2} \cdot (e^{-z})\cdot(-1)\\
+&amp;=\frac {e^{-z}} {(1+e^{-z})^2}\\
+&amp;=g(z) \cdot (\frac {e^{-z}} {1+e^{-z}})\\
+&amp;=g(z)(1-g(z))
+\end{split}\end{equation} %]]&gt;&lt;/script&gt;
+那么有
+&lt;script type=&quot;math/tex&quot;&gt;\frac d {d\theta_j}g(\theta^Tx)=g(\theta^Tx)(1-g(\theta^Tx))\theta_j&lt;/script&gt;
+于是
+&lt;script type=&quot;math/tex&quot;&gt;J(\theta_j)&#39;=\frac 1 m \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
+j \in {\{0,1,2...n\}}
+\tag 9&lt;/script&gt;
+这个式子形式上与线性回归的\(J(\theta)\)的偏导数是很相似的，但是需要注意的是
+\
+预测函数 h(x) 是不一样的。&lt;/p&gt;
+
+&lt;p&gt;根据梯度下降法
+&lt;script type=&quot;math/tex&quot;&gt;% &lt;![CDATA[
+\begin{equation}\begin{split}repeat &amp;\{\\
+&amp;\theta_j := \theta_j-\alpha\sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
+\}
+\end{split}\end{equation} %]]&gt;&lt;/script&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section&quot;&gt;多分类问题&lt;/h3&gt;
+
+&lt;p&gt;对于二分类问题，我们很容易就可以建立模型。如果预测一个多分类问题，我们应该如何做呢？我们还是以Andrew Ng的ppt来说明&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/multi-class.png&quot; alt=&quot;multi-class&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;例如要预测一个三分类的问题，假设要预测class1，那么就可以其他两类class2，class3当做一个分类，这样转换成一个二分类问题。这时候我们就需要根据已有的训练数据构造新的训练数据。预测class2，class3时，以此类推。这样就需要有三个不同训练数据。&lt;/p&gt;
+
+&lt;p&gt;当有一个新的数据进行预测时，我们只要计算下面式子的最大值就可以了
+&lt;script type=&quot;math/tex&quot;&gt;\max_i h_\theta(x^{(i)})\\ i\in\{1,2,3\}&lt;/script&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;section-1&quot;&gt;参考文献&lt;/h3&gt;
+
+&lt;p&gt;Andrew Ng coursera 机器学习课程&lt;/p&gt;</content><category term="逻辑回归" /><category term="Logistic Regression" /><summary>本文主要内容</summary></entry><entry><title>机器学习之朴素贝叶斯</title><link href="/naive-bayesian/" rel="alternate" type="text/html" title="机器学习之朴素贝叶斯" /><published>2017-08-08T00:00:00+08:00</published><updated>2017-08-08T00:00:00+08:00</updated><id>/naive-bayesian</id><content type="html" xml:base="/naive-bayesian/">&lt;p&gt;本文会讲到以下内容&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;贝叶斯定理&lt;/li&gt;
+  &lt;li&gt;垃圾邮件分类器&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h3 id=&quot;section&quot;&gt;贝叶斯定理&lt;/h3&gt;
+
+&lt;p&gt;贝叶斯定理又称贝叶斯法则，它的形式为&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(A|B)=\frac {P(B|A)P(A)} {P(B)} \tag 1&lt;/script&gt;
+
+&lt;p&gt;其中 P(A)、 P(B) 分别为事件 A、B出现的的概率，且 \( P(B) \neq 0 \)&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;P(A&lt;/td&gt;
+      &lt;td&gt;B) 为条件概率，表示在 B 事件出现的情况下 A 的概率。&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;P(B) 表示全概率，它可以表示为&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(B)=\sum_i^mP(B|A_i)P(A_i) \tag 2&lt;/script&gt;
+
+&lt;p&gt;上面式子的意思是 B 事件出现的概率是由因素 m 个\( A_i \) 影响的。&lt;/p&gt;
+
+&lt;p&gt;故（1）中的条件概率又可以&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(A|B)=\frac {P(B|A)P(A)} {\sum_i^mP(B|A_i)P(A_i)} \tag 3&lt;/script&gt;
+
+&lt;p&gt;可以简单地&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(A|B)=\frac {P(B|A)P(A)} {P(B|A)P(A)+P(B|\rightharpoondown A)P(\rightharpoondown A)} \tag 4&lt;/script&gt;
+
+&lt;p&gt;其中 \( P(A)=1-P(-A) \)&lt;/p&gt;
+
+&lt;h3 id=&quot;section-1&quot;&gt;垃圾邮件分类器&lt;/h3&gt;
+
+&lt;p&gt;在机器学习中贝叶斯分类器经常见的应用是&lt;strong&gt;垃圾邮件分类&lt;/strong&gt;。下面我们就运用贝叶斯定理推导一下垃圾邮件的分类模型算法。&lt;/p&gt;
+
+&lt;p&gt;假设&lt;/p&gt;
+
+&lt;p&gt;\( W_1,W_2,W_3,…,W_i \) 垃圾邮件中出现单词 i 的事件；&lt;/p&gt;
+
+&lt;p&gt;S 为垃圾邮件的事件，H 为正常邮件；&lt;/p&gt;
+
+&lt;p&gt;P(S) 垃圾邮件概率,P(H) 为正常邮件的概率；&lt;/p&gt;
+
+&lt;p&gt;而 P(S)、P(H) 是先验概率，表示在统计之前一封邮件的概率,这里我们假设 P(S) = P(H)=0.5；&lt;/p&gt;
+
+&lt;p&gt;\( P(W_i) \) 为单词 i 出现的概率。&lt;/p&gt;
+
+&lt;p&gt;那么如果有一份邮件出现了单词 \( W_1 \)，那么它是垃圾邮件和正常邮件的概率分别是多大呢？&lt;/p&gt;
+
+&lt;p&gt;根据贝叶斯定理&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(S|W_1)=\frac {P(W_1|S)P(S)} {P(W_1)} \\
+P(S|W_2)=\frac {P(W_2|S)P(S)} {P(W_2)} \\
+\vdots \\
+\\
+P(S|W_i)=\frac {P(W_i|S)P(S)} {P(W_i)} \\ \tag 5&lt;/script&gt;
+
+&lt;p&gt;这样可以计算出每个单词的垃圾邮件的条件概率。&lt;/p&gt;
+
+&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;其中 \( P(W_i&lt;/td&gt;
+      &lt;td&gt;S) \) 表示垃圾邮件中 \( W_i \) 出现的概率，可以根据训练数据可以统计出来。\( P(W_i) \) 也可以从训练数据中得到。&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;p&gt;但是仅仅根据其中一个单词来判断一封邮件是否是垃圾邮件，显然是不行的。这就需要计算&lt;strong&gt;联合概率（Combining Probabilities）&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;h4 id=&quot;combining-probabilities&quot;&gt;联合概率（Combining Probabilities）&lt;/h4&gt;
+
+&lt;p&gt;我们从（5）的式子中选取 n 个概率最大的单词来计算它们的联合概率。&lt;/p&gt;
+
+&lt;p&gt;为了简单我们这里取 n=2，于是计算两个单词的联合概率&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(S|W_1,W_2)=\frac {P(W_1,W_2|S)P(S)} {P(W_1,W_2)} \tag 6&lt;/script&gt;
+
+&lt;p&gt;又由于我们假设单词 \( W_1,W_2 \) 是相互独立的（实际上不是，但是这个假设很有用，而且这样假设实际效果很不错，所以才称之为&lt;strong&gt;朴素贝叶斯&lt;/strong&gt;）&lt;/p&gt;
+
+&lt;p&gt;所以&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(W_1,W_2|S)=P(W_1|S)P(W_2|S) \tag 7&lt;/script&gt;
+
+&lt;p&gt;又根据全概率公式有&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{equation}\begin{split}P(W_1,W_2)&amp;=P(W_1,W_2|S)P(S) +P(W_1,W_2|S)P(H)\\
+&amp;=P(W_1|S)P(W_2|S) P(S)+P(W_1|H)P(W_2|H)P(H) \end{split}\end{equation}\tag 8 %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;由（6）（7）（8）&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(S|W_1,W_2)=\frac {P(W_1|S)P(W_2|S) P(S)} {P(W_1|S)P(W_2|S) P(S)+P(W_1|H)P(W_2|H)P(H)} \tag 9&lt;/script&gt;
+
+&lt;p&gt;将 P(S)=P(H)=0.5 代入&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(S|W_1,W_2)=\frac {P(W_1|S)P(W_2|S)} {P(W_1|S)P(W_2|S) +P(W_1|H)P(W_2|H)} \tag {10}&lt;/script&gt;
+
+&lt;p&gt;且有&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(W_1|H)=P(W_1|-S)=1-P(W_1|S)\\
+P(W_2|H)=P(W_2|-S)=1-P(W_2|S) \tag {11}&lt;/script&gt;
+
+&lt;p&gt;最终&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(S|W_1,W_2)=\frac {P(W_1|S)P(W_2|S)} {P(W_1|S)P(W_2|S) +(1-P(W_1|S))(1-P(W_2|S))} \tag {12}&lt;/script&gt;
+
+&lt;p&gt;这个就是 \( W_1,W_2 \) 的&lt;strong&gt;联合概率&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;p&gt;一般地&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;P(S|W_1,W_2,...,W_i)=\frac {P_1P_2...P_i} {P_1P_2...P_3 +(1-P_1)(1-P_2)...(1-P_i)} \tag {13}&lt;/script&gt;
+
+&lt;p&gt;上式就是&lt;strong&gt;垃圾邮件的分类模型&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;h4 id=&quot;section-2&quot;&gt;参考文档&lt;/h4&gt;
+
+&lt;p&gt;http://cs229.stanford.edu/materials.html&lt;/p&gt;
+
+&lt;p&gt;http://www.mathpages.com/home/kmath267/kmath267.htm&lt;/p&gt;
+
+&lt;p&gt;https://en.wikipedia.org/wiki/Bayes%27_theorem&lt;/p&gt;
+
+&lt;p&gt;http://www.paulgraham.com/spam.html&lt;/p&gt;</content><category term="朴素贝叶斯" /><category term="Naive Bayesian" /><summary>本文会讲到以下内容</summary></entry><entry><title>机器学习之线性回归</title><link href="/linear-regression/" rel="alternate" type="text/html" title="机器学习之线性回归" /><published>2017-08-07T00:00:00+08:00</published><updated>2017-08-07T00:00:00+08:00</updated><id>/linear-regression</id><content type="html" xml:base="/linear-regression/">&lt;p&gt;线性回归属于&lt;strong&gt;监督学习&lt;/strong&gt;算法中的一种，也是最简单的一种算法。本文将讲述以下内容&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;Linear Regression 线性回归&lt;/li&gt;
+  &lt;li&gt;Cost Function 成本函数&lt;/li&gt;
+  &lt;li&gt;Gradient Decent 梯度下降法&lt;/li&gt;
+  &lt;li&gt;Normal Equations 正规方程&lt;/li&gt;
+  &lt;li&gt;Probabilistic interpretation 概率论解释&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h2 id=&quot;linear-regression-&quot;&gt;Linear Regression 线性回归&lt;/h2&gt;
+
+&lt;p&gt;简单地
+&lt;script type=&quot;math/tex&quot;&gt;h_\theta(x)=\theta_0+\theta_1x&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;若有5个样本，令 \(x_0=1\) ，那么
+&lt;script type=&quot;math/tex&quot;&gt;% &lt;![CDATA[
+\begin{bmatrix}h_\theta(x^{(1)})\\
+h_\theta(x^{(2)})\\
+h_\theta(x^{(3)})\\
+h_\theta(x^{(4)})\\
+h_\theta(x^{(5)})\\
+\end{bmatrix}=\begin{bmatrix}
+1&amp;x^{(1)}\\
+1&amp;x^{(2)}\\
+1&amp;x^{(3)}\\
+1&amp;x^{(4)}\\
+1&amp;x^{(5)}\\
+\end{bmatrix}
+\begin{bmatrix}
+\theta_0\\
+\theta_1
+\end{bmatrix} %]]&gt;&lt;/script&gt;&lt;/p&gt;
+
+&lt;p&gt;若有2个变量&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;h_\theta(x)=\theta_0+\theta_1x_1+\theta_2x_2&lt;/script&gt;
+
+&lt;p&gt;那么&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{bmatrix}
+h_\theta(x^{(1)})\\
+h_\theta(x^{(2)})\\
+h_\theta(x^{(3)})\\
+h_\theta(x^{(4)})\\
+h_\theta(x^{(5)})\\
+\end{bmatrix}=\begin{bmatrix}
+1&amp;x_1^{(1)}&amp;x_2^{(1)}\\
+1&amp;x_1^{(2)}&amp;x_2^{(2)}\\
+1&amp;x_1^{(3)}&amp;x_2^{(3)}\\
+1&amp;x_1^{(4)}&amp;x_2^{(4)}\\
+1&amp;x_1^{(5)}&amp;x_2^{(5)}\\
+\end{bmatrix}
+\begin{bmatrix}
+\theta_0\\
+\theta_1
+\end{bmatrix} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;一般地&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;h_\theta(x) = \theta_0 + \theta_1x_1+...+\theta_nx_n&lt;/script&gt;
+
+&lt;p&gt;写成向量的形式&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;h_\theta(x)=\sum_i^m\theta_ix_i=\theta^Tx&lt;/script&gt;
+
+&lt;p&gt;其中 \(\theta\) 是权重，\( x_i \) 是feature，\( h_\theta(x) \)是 hypothesis。
+对于有 m 个样本，更一般地为&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;h_\theta(x^{(i)})=\theta^Tx^{(i)}&lt;/script&gt;
+
+&lt;h3 id=&quot;cost-function-&quot;&gt;Cost Function 成本函数&lt;/h3&gt;
+
+&lt;p&gt;成本函数定义为&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;J(\theta) = \frac 1 {2m} \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2&lt;/script&gt;
+
+&lt;p&gt;其中 y 是真实值，而 \(h(x)\) 为机器预测值，i 表示第几个样本，前面的 1/2 是为了后面的计算方便引用的，当 y 和 h 的差的平方和为最小时，这样的直线就是我们要找的最佳拟合直线。&lt;/p&gt;
+
+&lt;p&gt;那如何找到这样\(\theta\) 呢？这就用到了&lt;strong&gt;Gradient Descent&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h3 id=&quot;gradient-descent-&quot;&gt;Gradient Descent 梯度下降法&lt;/h3&gt;
+
+&lt;p&gt;假设只有单变量的线性函数，那么 \(J(\theta)\) 可以看出是一个碗状的面，如&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/1346902099_4852.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;我们使用一些迭代公式进行搜索，找到最小值&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\theta_j:=\theta_j-\alpha\frac{\partial}{\partial \theta_j} J(\theta)&lt;/script&gt;
+
+&lt;p&gt;其中 &lt;strong&gt;:=&lt;/strong&gt;表示赋值符号，=表示比较两个值是否相等，\(\alpha\) 是学习率。我们需要对 \(\theta_j\) 求偏导&lt;/p&gt;
+
+&lt;p&gt;为了简单起见，我们考虑只有一个样本的情况，这样可以把&lt;strong&gt;累加符号&lt;/strong&gt;去掉&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{equation}\begin{split}\frac{\partial J(\theta)} {\partial \theta_j}&amp;=\frac{\partial } {\partial \theta_j}\frac 1 2 (h_\theta(x)-y)^2\\
+&amp;=2 \cdot\frac 1 2 (h_\theta(x)-y)\frac {\partial} {\partial \theta_j}(h_\theta(x)-y)\\
+&amp;= (h_\theta(x)-y)\frac {\partial} {\partial \theta_j}(\sum_i^n\theta_ix_i-y)\\
+&amp;= (h_\theta(x)-y)x_j\end{split}\end{equation} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;于是，当只有一个样本的情况时&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\theta_j:=\theta_j+\alpha(y^{(i)}-h_\theta(x^{(i)}))x_j&lt;/script&gt;
+
+&lt;p&gt;推广到 n 个样本&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\theta_j:=\theta_j+\alpha\sum_i^n(y^{(i)}-h_\theta(x^{(i)}))x_j&lt;/script&gt;
+
+&lt;h3 id=&quot;normal-equations&quot;&gt;Normal Equations&lt;/h3&gt;
+
+&lt;p&gt;假设X 是一个 m x n 的矩阵，那么可以&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;X=\begin{bmatrix}-{(x^{(1)})}^T-\\-{(x^{(2)})}^T-\\\vdots\\-{(x^{(m)})}^T-\end{bmatrix}&lt;/script&gt;
+
+&lt;p&gt;\(\vec y\) 是一个 m 维向量&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\vec y = \begin{bmatrix}y^{(1)}\\y^{(2)}\\\vdots\\y^{(m)}\end{bmatrix}&lt;/script&gt;
+
+&lt;p&gt;由于&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;h_\theta(x^{(i)})=(x^{(i)})^T\theta&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{equation}\begin{split}X\theta-\vec y
+&amp;=\begin{bmatrix}(x^{(1)^T})\\(x^{(2)^T})\\
+\vdots\\
+(x^{(m)^T})\end{bmatrix}
+\begin{bmatrix}y^{(1)}\\
+y^{(2)}\\
+\vdots\\
+y^{(m)}\end{bmatrix}\\
+&amp;=\begin{bmatrix}(x^{(1)})^T-y^{(1)}\\
+(x^{(2)})^T-y^{(2)}\\\vdots\\(x^{(m)})^T-y^{(m)}\end{bmatrix}\end{split}\end{equation} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;又如果 z 是一个向量，那么有&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;z^Tz=\sum_iz_i^2&lt;/script&gt;
+
+&lt;p&gt;所以&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{equation}\begin{split}\frac 1 2(X\theta-\vec y)^T(X\theta-\vec y^)
+&amp;=\frac 1 2 \sum_i^m(h_\theta(x^{i})-y^{(i)})^2\\
+&amp;=J(\theta)\end{split}\end{equation} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;那么要求 \(J(\theta)\) 的最小值，那么需要对其求导，求得极值点。&lt;/p&gt;
+
+&lt;p&gt;这时候会用到对矩阵的求导公式&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{equation}\begin{split}\nabla_\theta J(\theta)&amp;=\nabla_\theta\frac 1 2(X\theta-\vec y)^T(X\theta-\vec y^)\\
+&amp;=\frac 1 2 \nabla_\theta(\theta^T X^T X\theta-\theta^TX^T\vec y-{\vec y}^TX\theta+{\vec y}^T\vec y)\\
+&amp;=\frac 1 2 \nabla_\theta tr(\theta^T X^T X\theta-\theta^TX^T\vec y-{\vec y}^TX\theta+{\vec y}^T\vec y)\\
+&amp;=\frac 1 2\nabla_\theta (tr\theta^TX^TX\theta-tr\theta^TX^T\vec y-tr\vec y^TX\theta)\\
+&amp;=\frac 1 2\nabla_\theta (tr\theta^TX^TX\theta-tr(\vec y^T(X\theta))^T-tr\vec y^TX\theta)\\
+&amp;=\frac 1 2\nabla_\theta (tr\theta^TX^TX\theta-2tr\vec y^TX\theta)\\
+&amp;=\frac 1 2(X^TX\theta+X^TX\theta-2X^T\vec y)\\
+&amp;=X^TX\theta-X^T\vec y\end{split}\end{equation} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;第3步用到&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;trR=R,\text {$R$是实数}&lt;/script&gt;
+
+&lt;p&gt;第5步用到&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;trA=trA^T&lt;/script&gt;
+
+&lt;p&gt;最后用到以下公式&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\nabla_AtrAB=\nabla_AtrBA=B^T\tag 1&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\nabla_{A^T}f(A)=(\nabla_Af(A))^T\tag 2&lt;/script&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\nabla_AtrABA^TC=CAB+C^TAB^T\tag 3&lt;/script&gt;
+
+&lt;p&gt;由公式(2)(3)&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\nabla_{A^T}trABA^TC=B^TA^TC^T+BA^TC\tag 4&lt;/script&gt;
+
+&lt;p&gt;若 C=I，即 C 为单位矩阵，那么&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\nabla_{A^T}ABA^T=B^TA^T+BA^T\tag 5&lt;/script&gt;
+
+&lt;p&gt;故要求得 \(J(\theta)\) 最小值，就令导数等于0&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;X^TX\theta=X^T\vec y&lt;/script&gt;
+
+&lt;p&gt;于是就得到所谓的 &lt;strong&gt;normal equations&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;\theta=(X^TX)^{-1}X^T\vec y&lt;/script&gt;
+### Probabilistic interpretation 概率论解释&lt;/p&gt;
+
+&lt;p&gt;从上文可以知道成本函数为&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;J(\theta) = \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2&lt;/script&gt;
+
+&lt;p&gt;那么为什么会这样定义呢？下文我们来从概率论的角度来说明。&lt;/p&gt;
+
+&lt;p&gt;假设目标变量 y 与输入变量存在以下关系&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;y^{(i)}=\theta^Tx^{(i)}+\epsilon^{(i)}&lt;/script&gt;
+
+&lt;p&gt;\(\epsilon^{(i)}\) 表示误差项，例如样本的测量误差等因素。我们再假设这个误差是&lt;strong&gt;独立同分布&lt;/strong&gt;的，即它是符合&lt;strong&gt;高斯分布或正态分布&lt;/strong&gt;，那么&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;p(\epsilon^{(i)})=\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {( \epsilon^{(i)})^2}{2\sigma^2}\right)&lt;/script&gt;
+
+&lt;p&gt;于是&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;p(y^{(i)}|x^{(i)};\theta)=\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)&lt;/script&gt;
+
+&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;\(p(y^{(i)}&lt;/td&gt;
+      &lt;td&gt;x^{(i)};\theta)\) 表示给定以\(\theta\)为参数的\(x^{(i)} y^{(i)}\)的分布。同时需要注意的时，中间的是分号不能写成逗号，因为\(\theta\)不是随机变量。&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;table&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;通常我们把\(p(y^{(i)}&lt;/td&gt;
+      &lt;td&gt;x^{(i)};\theta)\) 称之为 &lt;strong&gt;Likelihood Function（似然函数）&lt;/strong&gt;&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+&lt;/table&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;L(\theta)=L(\theta;X,\vec y)=p(\vec y|X;\theta)&lt;/script&gt;
+
+&lt;p&gt;还可以写成&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{equation}\begin{split}L(\theta)&amp;=\prod_{i=1}^mp(y^{(i)}|x^{(i)};\theta)\\
+&amp;=\prod_{i=1}^m\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\end{split}\end{equation} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;要求 \(\theta\) 使得样本中的值出现的概率是最大的，于是要求似然函数的最大值。&lt;/p&gt;
+
+&lt;p&gt;把上面的式子的连乘运算转化成加和运算，可以化简计算&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
+\begin{equation}\begin{split}l(\theta)&amp;=logL(\theta)\\
+&amp;=log\prod_{i=1}^m\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
+&amp;=\sum_{i=1}^mlog\frac 1 {\sqrt {2\pi\sigma^2}}exp\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
+&amp;=\sum_{i=1}^mlog\frac 1 {\sqrt{2\pi\sigma^2}}+\sum_{i=1}^m\left(-\frac {(y^{(i)}-\theta^Tx^{(i)})^2}{2\sigma^2}\right)\\
+&amp;=m\cdot log \frac 1 {\sqrt{2\pi\sigma^2}}-\frac 1 {\sigma^2}\cdot \frac 1 2\sum_{i=1}^m(y^{(i)}-\theta^Tx^{(i)})^2\end{split}\end{equation} %]]&gt;&lt;/script&gt;
+
+&lt;p&gt;于是，要求 \( L(\theta) \) 的最大值，就是要求以下式子的最小值&lt;/p&gt;
+
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2&lt;/script&gt;
+
+&lt;p&gt;而这个就是我们的 &lt;strong&gt;Cost Function（成本函数）&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;h3 id=&quot;section&quot;&gt;参考文档&lt;/h3&gt;
+
+&lt;p&gt;http://cs229.stanford.edu/materials.html&lt;/p&gt;</content><category term="线性回归" /><category term="Linear Regression" /><summary>线性回归属于监督学习算法中的一种，也是最简单的一种算法。本文将讲述以下内容</summary></entry></feed>
