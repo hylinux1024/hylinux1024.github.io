@@ -1,5 +1,6 @@
 ---
 title: About
+layout: page
 share: false
 date: 2017-08-06 01:00:07
 ---
