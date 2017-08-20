@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.1.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-08-20T21:52:10+08:00</updated><id>/</id><title>Machine Learning</title><subtitle>Mahine Learning Path.</subtitle><entry><title>机器学习之逻辑回归</title><link href="/logisitic-regression/" rel="alternate" type="text/html" title="机器学习之逻辑回归" /><published>2017-08-20T00:00:00+08:00</published><updated>2017-08-20T00:00:00+08:00</updated><id>/logisitic-regression</id><content type="html" xml:base="/logisitic-regression/">&lt;p&gt;本文主要内容&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.1.6">Jekyll</generator><link href="https://wecodexyz.github.io/feed.xml" rel="self" type="application/atom+xml" /><link href="https://wecodexyz.github.io/" rel="alternate" type="text/html" /><updated>2017-08-20T22:11:19+08:00</updated><id>https://wecodexyz.github.io/</id><title>Machine Learning</title><subtitle>Mahine Learning Path.</subtitle><entry><title>机器学习之逻辑回归</title><link href="https://wecodexyz.github.io/logisitic-regression/" rel="alternate" type="text/html" title="机器学习之逻辑回归" /><published>2017-08-20T00:00:00+08:00</published><updated>2017-08-20T00:00:00+08:00</updated><id>https://wecodexyz.github.io/logisitic-regression</id><content type="html" xml:base="https://wecodexyz.github.io/logisitic-regression/">&lt;p&gt;本文主要内容&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;逻辑回归（Logistic Regression）模型&lt;/li&gt;
@@ -137,7 +137,7 @@ j \in {\{0,1,2...n\}}
 
 &lt;h3 id=&quot;section-1&quot;&gt;参考文献&lt;/h3&gt;
 
-&lt;p&gt;Andrew Ng coursera 机器学习课程&lt;/p&gt;</content><category term="逻辑回归" /><category term="Logistic Regression" /><summary>本文主要内容</summary></entry><entry><title>机器学习之朴素贝叶斯</title><link href="/naive-bayesian/" rel="alternate" type="text/html" title="机器学习之朴素贝叶斯" /><published>2017-08-08T00:00:00+08:00</published><updated>2017-08-08T00:00:00+08:00</updated><id>/naive-bayesian</id><content type="html" xml:base="/naive-bayesian/">&lt;p&gt;本文会讲到以下内容&lt;/p&gt;
+&lt;p&gt;Andrew Ng coursera 机器学习课程&lt;/p&gt;</content><category term="逻辑回归" /><category term="Logistic Regression" /><summary>本文主要内容</summary></entry><entry><title>机器学习之朴素贝叶斯</title><link href="https://wecodexyz.github.io/naive-bayesian/" rel="alternate" type="text/html" title="机器学习之朴素贝叶斯" /><published>2017-08-08T00:00:00+08:00</published><updated>2017-08-08T00:00:00+08:00</updated><id>https://wecodexyz.github.io/naive-bayesian</id><content type="html" xml:base="https://wecodexyz.github.io/naive-bayesian/">&lt;p&gt;本文会讲到以下内容&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;贝叶斯定理&lt;/li&gt;
@@ -269,7 +269,7 @@ P(W_2|H)=P(W_2|-S)=1-P(W_2|S) \tag {11}&lt;/script&gt;
 
 &lt;p&gt;https://en.wikipedia.org/wiki/Bayes%27_theorem&lt;/p&gt;
 
-&lt;p&gt;http://www.paulgraham.com/spam.html&lt;/p&gt;</content><category term="朴素贝叶斯" /><category term="Naive Bayesian" /><summary>本文会讲到以下内容</summary></entry><entry><title>机器学习之线性回归</title><link href="/linear-regression/" rel="alternate" type="text/html" title="机器学习之线性回归" /><published>2017-08-07T00:00:00+08:00</published><updated>2017-08-07T00:00:00+08:00</updated><id>/linear-regression</id><content type="html" xml:base="/linear-regression/">&lt;p&gt;线性回归属于&lt;strong&gt;监督学习&lt;/strong&gt;算法中的一种，也是最简单的一种算法。本文将讲述以下内容&lt;/p&gt;
+&lt;p&gt;http://www.paulgraham.com/spam.html&lt;/p&gt;</content><category term="朴素贝叶斯" /><category term="Naive Bayesian" /><summary>本文会讲到以下内容</summary></entry><entry><title>机器学习之线性回归</title><link href="https://wecodexyz.github.io/linear-regression/" rel="alternate" type="text/html" title="机器学习之线性回归" /><published>2017-08-07T00:00:00+08:00</published><updated>2017-08-07T00:00:00+08:00</updated><id>https://wecodexyz.github.io/linear-regression</id><content type="html" xml:base="https://wecodexyz.github.io/linear-regression/">&lt;p&gt;线性回归属于&lt;strong&gt;监督学习&lt;/strong&gt;算法中的一种，也是最简单的一种算法。本文将讲述以下内容&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;Linear Regression 线性回归&lt;/li&gt;
