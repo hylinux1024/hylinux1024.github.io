@@ -85,6 +85,8 @@ $$
 
 
 就是**决策边界**。当
+
+
 $$
 x_1+x_2\geq3
 $$
@@ -97,6 +99,8 @@ $$
 ![non-linear-decision-boundary](http://angrycode.qiniudn.com/non-linear-decision-boundary.png)
 
  这里的决策边界就是
+
+
 $$
 x_1+x_2=1 \tag 6
 $$
@@ -107,18 +111,30 @@ $$
 ### 成本函数（Cost Function）
 
 回忆一下线性回归中的成本函数
+
+
 $$
 J(\theta)=\frac 1 {2m} \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})^2
 $$
 我们定义函数
+
+
 $$
 Cost(h_\theta(x),y)=\frac 1 2 (h_\theta(x)-y)^2
 $$
+
+
 那么成本函数就可以写成
+
+
 $$
 J(\theta)=\frac 1 m \sum_{i=1}^mCost(h_\theta(x),y)
 $$
+
+
 **逻辑回归的成本函数（Cost Function）**
+
+
 $$
 Cost(h_\theta(x),y)=
 \begin{cases}
@@ -126,6 +142,8 @@ Cost(h_\theta(x),y)=
 -log(1-h_\theta(x)) & \text{if $y$ =0}
 \end{cases} \tag 7
 $$
+
+
 当 y=1 时
 
 ![](http://angrycode.qiniudn.com/minus-logx.png?imageView2/2/w/200/h/200)
@@ -135,6 +153,8 @@ $$
 ![](http://angrycode.qiniudn.com/minus-log1-x.png?imageView2/2/w/200/h/200)
 
 由于 y 取值是{0,1}，我们可以把公式 (7) 写成
+
+
 $$
 Cost(h_\theta(x),y)=-ylog(h_\theta(x))-(1-y)log(1-h_\theta(x)) \\ y\in {\{0,1\}}\tag 8
 $$
@@ -142,16 +162,26 @@ $$
 ### 梯度下降法（Gradient Descent）
 
 由上文可以知道成本函数为
+
+
 $$
 J(\theta)=-\frac 1 m \sum_{i=1}^{m}(y^{(i)}log(h_\theta(x^{(i)}))+(1-y^{(i)})log(1-h_\theta(x^{(i)})))
 $$
+
+
 要求\\(min_{\theta}J(\theta)\\)，需要使用微分求导公式
+
+
 $$
 f(x)'=(log_ax)'=\frac 1 x lna
 $$
+
+
 同时为了简单起见，求导时可以假设只有一个样本，这样可以把∑符号去掉，方便推导。
 
 因为上文中 log 函数默认是以 e 底的
+
+
 $$
 log(h_\theta(x))' =\frac 1 {h_\theta(x)} \frac d {d\theta}h_\theta(x)
 $$
@@ -169,6 +199,8 @@ $$
 \end{split}\end{equation}
 $$
 那么有
+
+
 $$
 \frac d {d\theta_j}g(\theta^Tx)=g(\theta^Tx)(1-g(\theta^Tx))\theta_j
 $$
@@ -178,11 +210,15 @@ J(\theta_j)'=\frac 1 m \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
 j \in {\{0,1,2...n\}}
 \tag 9
 $$
+
+
 这个式子形式上与线性回归的\\(J(\theta)\\)的偏导数是很相似的，但是需要注意的是
 \
 预测函数 h(x) 是不一样的。
 
 根据梯度下降法
+
+
 $$
 \begin{equation}\begin{split}repeat &\{\\
 &\theta_j := \theta_j-\alpha\frac 1 m \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
@@ -199,6 +235,8 @@ $$
 例如要预测一个三分类的问题，假设要预测class1，那么就可以其他两类class2，class3当做一个分类，这样转换成一个二分类问题。这时候我们就需要根据已有的训练数据构造新的训练数据。预测class2，class3时，以此类推。这样就需要有三个不同训练数据。
 
 当有一个新的数据进行预测时，我们只要计算下面式子的最大值就可以了
+
+ß
 $$
 \max_i h_\theta(x^{(i)})\\ i\in\{1,2,3\}
 $$
