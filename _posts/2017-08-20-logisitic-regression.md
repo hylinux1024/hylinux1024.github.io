@@ -167,7 +167,7 @@ $$
 根据梯度下降法
 $$
 \begin{equation}\begin{split}repeat &\{\\
-&\theta_j := \theta_j-\alpha\sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
+&\theta_j := \theta_j-\alpha\frac 1 m \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
 \}
 \end{split}\end{equation}
 $$

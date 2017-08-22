@@ -180,8 +180,8 @@ $$
 所以
 
 $$
-\begin{equation}\begin{split}\frac 1 2(X\theta-\vec y)^T(X\theta-\vec y^)
-&=\frac 1 2 \sum_i^m(h_\theta(x^{i})-y^{(i)})^2\\
+\begin{equation}\begin{split}\frac 1 {2m}(X\theta-\vec y)^T(X\theta-\vec y^)
+&=\frac 1 {2m} \sum_i^m(h_\theta(x^{i})-y^{(i)})^2\\
 &=J(\theta)\end{split}\end{equation}
 $$
 
@@ -254,7 +254,7 @@ $$
 从上文可以知道成本函数为
 
 $$
-J(\theta) = \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2
+J(\theta) = \frac 1 {2m} \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2
 $$
 
 那么为什么会这样定义呢？下文我们来从概率论的角度来说明。

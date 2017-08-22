@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.1.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-08-20T22:48:20+08:00</updated><id>/</id><title>Machine Learning</title><subtitle>Mahine Learning Path.</subtitle><entry><title>机器学习之逻辑回归</title><link href="/logisitic-regression/" rel="alternate" type="text/html" title="机器学习之逻辑回归" /><published>2017-08-20T00:00:00+08:00</published><updated>2017-08-20T00:00:00+08:00</updated><id>/logisitic-regression</id><content type="html" xml:base="/logisitic-regression/">&lt;p&gt;本文主要内容&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom"><generator uri="http://jekyllrb.com" version="3.1.6">Jekyll</generator><link href="/feed.xml" rel="self" type="application/atom+xml" /><link href="/" rel="alternate" type="text/html" /><updated>2017-08-22T08:32:01+08:00</updated><id>/</id><title>Machine Learning</title><subtitle>Mahine Learning Path.</subtitle><entry><title>机器学习之逻辑回归</title><link href="/logisitic-regression/" rel="alternate" type="text/html" title="机器学习之逻辑回归" /><published>2017-08-20T00:00:00+08:00</published><updated>2017-08-20T00:00:00+08:00</updated><id>/logisitic-regression</id><content type="html" xml:base="/logisitic-regression/">&lt;p&gt;本文主要内容&lt;/p&gt;
 
 &lt;ul&gt;
   &lt;li&gt;逻辑回归（Logistic Regression）模型&lt;/li&gt;
@@ -120,7 +120,7 @@ j \in {\{0,1,2...n\}}
 &lt;p&gt;根据梯度下降法
 &lt;script type=&quot;math/tex&quot;&gt;% &lt;![CDATA[
 \begin{equation}\begin{split}repeat &amp;\{\\
-&amp;\theta_j := \theta_j-\alpha\sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
+&amp;\theta_j := \theta_j-\alpha\frac 1 m \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
 \}
 \end{split}\end{equation} %]]&gt;&lt;/script&gt;&lt;/p&gt;
 
@@ -412,8 +412,8 @@ y^{(m)}\end{bmatrix}\\
 &lt;p&gt;所以&lt;/p&gt;
 
 &lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
-\begin{equation}\begin{split}\frac 1 2(X\theta-\vec y)^T(X\theta-\vec y^)
-&amp;=\frac 1 2 \sum_i^m(h_\theta(x^{i})-y^{(i)})^2\\
+\begin{equation}\begin{split}\frac 1 {2m}(X\theta-\vec y)^T(X\theta-\vec y^)
+&amp;=\frac 1 {2m} \sum_i^m(h_\theta(x^{i})-y^{(i)})^2\\
 &amp;=J(\theta)\end{split}\end{equation} %]]&gt;&lt;/script&gt;
 
 &lt;p&gt;那么要求 \(J(\theta)\) 的最小值，那么需要对其求导，求得极值点。&lt;/p&gt;
@@ -465,7 +465,7 @@ y^{(m)}\end{bmatrix}\\
 
 &lt;p&gt;从上文可以知道成本函数为&lt;/p&gt;
 
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;J(\theta) = \frac 1 2 \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2&lt;/script&gt;
+&lt;script type=&quot;math/tex; mode=display&quot;&gt;J(\theta) = \frac 1 {2m} \sum_{i=1}^m (h_\theta(x^{(i)})-y^{(i)})^2&lt;/script&gt;
 
 &lt;p&gt;那么为什么会这样定义呢？下文我们来从概率论的角度来说明。&lt;/p&gt;
 
