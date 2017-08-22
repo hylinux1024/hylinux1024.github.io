@@ -185,10 +185,16 @@ $$
 $$
 log(h_\theta(x))' =\frac 1 {h_\theta(x)} \frac d {d\theta}h_\theta(x)
 $$
+
+
 因为
+
+
 $$
 g(z)=\frac 1 {1+e^{-z}}
 $$
+
+
 有
 $$
 \begin{equation}\begin{split}g(z)'&=\frac d {dz}(1+e^{-z})^{-1} \\
@@ -198,12 +204,16 @@ $$
 &=g(z)(1-g(z))
 \end{split}\end{equation}
 $$
+
+
 那么有
 
 
 $$
 \frac d {d\theta_j}g(\theta^Tx)=g(\theta^Tx)(1-g(\theta^Tx))\theta_j
 $$
+
+
 于是
 $$
 J(\theta_j)'=\frac 1 m \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
