@@ -1,4 +1,4 @@
-### Android NDK开发CMakeLists.txt 配置文件解析
+
 
 在`Android Studio`中建立支持`NDK`项目是默认是`CMake`的方式来进行构建的，过去的`ndk-build`的方式从目前官方的文档上看，应该是逐渐淘汰的。现在大多数`APP`架构中都是有`Native Code`的，所以了解`CMake`的配置方式是进行`NDK`开发的基础。
 
