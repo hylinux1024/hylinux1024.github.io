@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 机器学习之逻辑回归
+title: "机器学习之逻辑回归"
 description: "逻辑回归（Logistic Regression）是机器学习中的监督学习算法，主要用于分类任务。这些任务预测的标签（label）通常为{0,1}，或者说是一个概率值。 例如我们预测一封邮件是否为垃圾邮件；预测天气是否为晴天、阴天、雨天和雪天等。"
 modified: 2017-08-20
 tags: [逻辑回归,Logistic Regression]

@@ -1,8 +1,8 @@
-source "https://rubygems.org"
+# frozen_string_literal: true
 
-gem "json"
-gem "jekyll"
-gem "jekyll-sitemap"
-gem "jekyll-feed"
+gem "jekyll-remote-theme"
 gem "jekyll-paginate"
-gem "jekyll-gist"
+gem "jemoji"
+
+source "https://rubygems.org"
+gemspec
