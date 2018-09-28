@@ -2,8 +2,10 @@
 <div class="container">
     {% include navigation.html %}
     <div class="main">
-        <h2> {% if page.title %} {{ page.title }} {% else %} {{ site.title }} {% endif %} </h2>
+        <h2> {{ page.title }} </h2>
         {{ content }}
+        {% include share.html %}
+        {% include comments.html %}
     </div>
 </div>
 {% include footer.html %}

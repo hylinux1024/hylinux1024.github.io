@@ -1,129 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="Zhuang Ma, 马壮, mzlogin, mazhuang" />
+        <meta name="description" content="Zhuang Ma's Blog" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> Thinking Tech  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+    </head>
+    <body>
 
-  <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  
-    <meta name="description" content="Posts about program.">
-  
-
-  <title>
-    
-      hylinux
-    
-  </title>
-
-  <!-- CSS -->
-  <link rel="stylesheet" href="/assets/main.css">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Libre+Baskerville:400,400i,700">
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
-
-  <!-- RSS -->
-  <link type="application/atom+xml" rel="alternate" href="http://localhost:4000/feed.xml" title="hylinux" />
-</head>
-
-
-  <body>
-    <nav class="nav">
-      <div class="nav-container">
-        <a href="/">
-          <h2 class="nav-title">hylinux</h2>
-        </a>
-        <ul>
-          <li><a href="/about">About</a></li>
-          <li><a href="/">Posts</a></li>
-        </ul>
-      </div>
-    </nav>
-
-    <main>
-      <div class="catalogue">
-  
-    <a href="/2018-09-26/Android-NDK%E5%BC%80%E5%8F%91CMakeLists.txt-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90" class="catalogue-item">
-      <div>
-        <time datetime="2018-09-26 00:00:00 +0800" class="catalogue-time">September 26, 2018</time>
-        <h1 class="catalogue-title">Android ndk开发cmakelists.txt 配置文件解析</h1>
-        <div class="catalogue-line"></div>
-
-        <p>
-          在Android Studio中建立支持NDK项目是默认是CMake的方式来进行构建的，过去的ndk-build的方式从目前官方的文档上看，应该是逐渐淘汰的。现在大多数APP架构中都是有Native Code的，所以了解CMake的配置方式是进行NDK开发的基础。 0x00 建立支持NDK项目 Android Studio 创建NDK项目是相当简单的，在项目创建向导页面中勾选支持 include C++ support，然后工程目录中就自动生成一个CMakeLists.txt文件。gralde文件中也会生成相应的ndk配置。 0x01 Gradle 配置解析 android { ... defaultConfig {...} // Encapsulates your external native build configurations. externalNativeBuild { // Encapsulates...
-        </p>
-
-      </div>
-    </a>
-  
-    <a href="/2018-09-21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5" class="catalogue-item">
-      <div>
-        <time datetime="2018-09-21 00:00:00 +0800" class="catalogue-time">September 21, 2018</time>
-        <h1 class="catalogue-title">Android后台单进程保活处理实践</h1>
-        <div class="catalogue-line"></div>
-
-        <p>
-          0x00、如何实现一个后台进程 自定义的 Service，实现相应的业务逻辑 在 Manifest 文件中配置 Service 组件，需配置 process 属性，然后指定 intent-filter 和 priority 属性，如下示例： &lt;service android:name="com.stfl.SSClientService" android:process=":ssclient"&gt; &lt;intent-filter android:priority="1000"&gt; &lt;action android:name="io.telebox.ssclient.service" /&gt; &lt;/intent-filter&gt; &lt;/service&gt; priority 属性值越大，优先级越高。 0x01、如何重启进程 重写 Service 的...
-        </p>
-
-      </div>
-    </a>
-  
-    <a href="/2017-08-20/logisitic-regression" class="catalogue-item">
-      <div>
-        <time datetime="2017-08-20 00:00:00 +0800" class="catalogue-time">August 20, 2017</time>
-        <h1 class="catalogue-title">机器学习之逻辑回归</h1>
-        <div class="catalogue-line"></div>
-
-        <p>
-          [TOC] 本文主要内容 逻辑回归（Logistic Regression）模型 决策边界（Decision Boundary） 成本函数（Cost Function） 梯度下降法（Gradient Descent） 多分类问题 逻辑回归（Logistic Regression）是机器学习中的监督学习算法，主要用于分类任务。这些任务预测的标签（label）通常为 {0,1}，或者说是一个概率值。 例如我们预测一封邮件是否为垃圾邮件；预测天气是否为晴天、阴天、雨天和雪天等。 逻辑回归（Logistic Regression）模型 从上文《机器学习之线性回归》我们知道线性回归的模型为 可以从上面模型通过函数 g 对线性回归进行变换 其中 其中g(z) 是 sigmoid 函数或者叫逻辑函数。可以看出 0&lt;= g(z)&lt;=1 由 (1)...
-        </p>
-
-      </div>
-    </a>
-  
-    <a href="/2017-08-08/naive-bayesian" class="catalogue-item">
-      <div>
-        <time datetime="2017-08-08 00:00:00 +0800" class="catalogue-time">August 08, 2017</time>
-        <h1 class="catalogue-title">机器学习之朴素贝叶斯</h1>
-        <div class="catalogue-line"></div>
-
-        <p>
-          本文会讲到以下内容 贝叶斯定理 垃圾邮件分类器 贝叶斯定理 贝叶斯定理又称贝叶斯法则，它的形式为 其中 P(A)、 P(B) 分别为事件 A、B出现的的概率，且 \( P(B) \neq 0 \) P(A B) 为条件概率，表示在 B 事件出现的情况下 A 的概率。 P(B) 表示全概率，它可以表示为 上面式子的意思是 B 事件出现的概率是由因素 m 个\( A_i...
-        </p>
-
-      </div>
-    </a>
-  
-    <a href="/2017-08-07/linear-regression" class="catalogue-item">
-      <div>
-        <time datetime="2017-08-07 00:00:00 +0800" class="catalogue-time">August 07, 2017</time>
-        <h1 class="catalogue-title">机器学习之线性回归</h1>
-        <div class="catalogue-line"></div>
-
-        <p>
-          线性回归属于监督学习算法中的一种，也是最简单的一种算法。本文将讲述以下内容 Linear Regression 线性回归 Cost Function 成本函数 Gradient Decent 梯度下降法 Normal Equations 正规方程 Probabilistic interpretation 概率论解释 Linear Regression 线性回归 简单地 若有5个样本，令 \(x_0=1\) ，那么 若有2个变量 那么 一般地 写成向量的形式 其中 \(\theta\) 是权重，\(...
-        </p>
-
-      </div>
-    </a>
-  
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
 </div>
 
-<div class="pagination">
+    <div class="main">
+        <h2>  Thinking Tech  </h2>
+        <div class="postlist">
+    
+    <div class="overview">
+        <div class="date">Sep 26, 2018</div>
+        <div class="detail"><a href="http://localhost:4000/2018/09/26/Android-NDK%E5%BC%80%E5%8F%91CMakeLists.txt-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90/">Android ndk开发cmakelists.txt 配置文件解析</a></div>
+    </div>
+    
+    <div class="overview">
+        <div class="date">Sep 21, 2018</div>
+        <div class="detail"><a href="http://localhost:4000/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5/">Android后台单进程保活处理实践</a></div>
+    </div>
+    
+    <div class="overview">
+        <div class="date">Aug 20, 2017</div>
+        <div class="detail"><a href="http://localhost:4000/2017/08/20/logisitic-regression/">机器学习之逻辑回归</a></div>
+    </div>
+    
+    <div class="overview">
+        <div class="date">Aug 08, 2017</div>
+        <div class="detail"><a href="http://localhost:4000/2017/08/08/naive-bayesian/">机器学习之朴素贝叶斯</a></div>
+    </div>
+    
+    <div class="overview">
+        <div class="date">Aug 07, 2017</div>
+        <div class="detail"><a href="http://localhost:4000/2017/08/07/linear-regression/">机器学习之线性回归</a></div>
+    </div>
+    
+</div>
+<div id="post-pagination" class="paginator">
+
   
+    <span class="previous disabled"><前页</span>
   
 
-  <span>1</span>
+      
+      <span class="current-page">1</span>
+      
+
+    
+
+  
+    <span class="next disabled" >后页></span>
+  
+  (共5篇)
 </div>
 
-    </main>
 
-    <footer>
-      <span>
-        &copy; <time datetime="2018-09-27 21:39:01 +0800">2018</time> hylinux1024. Made with Jekyll using the <a href="https://github.com/chesterhow/tale/">Tale</a> theme.
-      </span>
-    </footer>
-  </body>
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
 </html>
+

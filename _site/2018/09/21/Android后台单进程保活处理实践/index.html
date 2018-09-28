@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="" />
+        <meta name="description" content="运行后台进程有很多好处，但是坑也很多" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> Android后台单进程保活处理实践  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> Android后台单进程保活处理实践 </h2>
+        <h4 id="0x00如何实现一个后台进程">0x00、如何实现一个后台进程</h4>
+
+<ol>
+  <li>
+    <p>自定义的 <code class="highlighter-rouge">Service</code>，实现相应的业务逻辑</p>
+  </li>
+  <li>
+    <p>在 <code class="highlighter-rouge">Manifest</code> 文件中配置 <code class="highlighter-rouge">Service</code> 组件，需配置 <code class="highlighter-rouge">process</code> 属性，然后指定 <code class="highlighter-rouge">intent-filter</code> 和 <code class="highlighter-rouge">priority</code> 属性，如下示例：</p>
+
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;</span><span class="n">service</span>
+	<span class="nl">android:</span><span class="n">name</span><span class="o">=</span><span class="s">"com.stfl.SSClientService"</span>
+	<span class="nl">android:</span><span class="n">process</span><span class="o">=</span><span class="s">":ssclient"</span><span class="o">&gt;</span>
+			<span class="o">&lt;</span><span class="n">intent</span><span class="o">-</span><span class="n">filter</span> <span class="nl">android:</span><span class="n">priority</span><span class="o">=</span><span class="s">"1000"</span><span class="o">&gt;</span>
+		<span class="o">&lt;</span><span class="n">action</span> <span class="nl">android:</span><span class="n">name</span><span class="o">=</span><span class="s">"io.telebox.ssclient.service"</span> <span class="o">/&gt;</span>
+	<span class="o">&lt;/</span><span class="n">intent</span><span class="o">-</span><span class="n">filter</span><span class="o">&gt;</span>
+<span class="o">&lt;/</span><span class="n">service</span><span class="o">&gt;</span>
+</code></pre></div>    </div>
+
+    <p><code class="highlighter-rouge">priority</code> 属性值越大，优先级越高。</p>
+  </li>
+</ol>
+
+<h4 id="0x01如何重启进程">0x01、如何重启进程</h4>
+
+<ol>
+  <li>
+    <p>重写 <code class="highlighter-rouge">Service</code> 的 <code class="highlighter-rouge">OnDestroy</code> 方法。主要逻辑是<strong>监听到 <code class="highlighter-rouge">Service</code> 被杀掉后</strong>，发送一个 <code class="highlighter-rouge">Broadcast</code> 通知，重新启动 <code class="highlighter-rouge">Service</code> 进程。根据不同的业务逻辑，可以选择是否调用 <code class="highlighter-rouge">killProcess</code> 方法，彻底清理所有进程资源。可参考如下：</p>
+
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	<span class="nd">@Override</span>
+	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">onDestroy</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">.</span><span class="na">onDestroy</span><span class="o">();</span>
+        <span class="n">logger</span><span class="o">.</span><span class="na">info</span><span class="o">(</span><span class="s">"SSClient is stop!"</span><span class="o">);</span>
+        <span class="c1">// 根据业务需要决定是否调用killProcess，这里我是推荐调用此方法，清理资源。</span>
+        <span class="n">Process</span><span class="o">.</span><span class="na">killProcess</span><span class="o">(</span><span class="n">Process</span><span class="o">.</span><span class="na">myPid</span><span class="o">());</span>
+        <span class="c1">// 服务关掉通知</span>
+        <span class="n">Intent</span> <span class="n">intent</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Intent</span><span class="o">(</span><span class="n">SSClientReceiver</span><span class="o">.</span><span class="na">ACTION_DISCONNECTED</span><span class="o">);</span>
+        <span class="n">intent</span><span class="o">.</span><span class="na">setComponent</span><span class="o">(</span><span class="k">new</span> <span class="n">ComponentName</span><span class="o">(</span><span class="n">getPackageName</span><span class="o">(),</span> <span class="n">SSClientReceiver</span><span class="o">.</span><span class="na">class</span><span class="o">.</span><span class="na">getName</span><span class="o">()));</span>
+        <span class="n">sendBroadcast</span><span class="o">(</span><span class="n">intent</span><span class="o">);</span>
+	<span class="o">}</span>
+   
+</code></pre></div>    </div>
+
+    <p>需要注意的是，<strong>需要设置 <code class="highlighter-rouge">component</code> 否则在8.0手机会出现 <code class="highlighter-rouge">Background execution not allowed</code>的错误。</strong></p>
+  </li>
+</ol>
+
+<h4 id="0x02实现监听进程通知">0x02、实现监听进程通知</h4>
+
+<ol>
+  <li>
+    <p>继承 <code class="highlighter-rouge">BroadcastReceiver</code> 并实现 <code class="highlighter-rouge">onReceive()</code>方法。实现参考：</p>
+
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	<span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onReceive</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">,</span> <span class="n">Intent</span> <span class="n">intent</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">String</span> <span class="n">action</span> <span class="o">=</span> <span class="n">intent</span><span class="o">.</span><span class="na">getAction</span><span class="o">();</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">action</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">action</span> <span class="o">=</span> <span class="s">""</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">switch</span> <span class="o">(</span><span class="n">action</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">case</span> <span class="nl">ACTION_START:</span>
+                <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="s">"SSClient"</span><span class="o">,</span> <span class="s">"start by receiver."</span><span class="o">);</span>
+                <span class="n">SSClientService</span><span class="o">.</span><span class="na">startSService</span><span class="o">(</span><span class="n">context</span><span class="o">);</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="nl">ACTION_DISCONNECTED:</span>
+                <span class="n">Log</span><span class="o">.</span><span class="na">d</span><span class="o">(</span><span class="s">"SSClient"</span><span class="o">,</span> <span class="s">"disconnected,restart by receiver."</span><span class="o">);</span>
+                <span class="n">SSClientService</span><span class="o">.</span><span class="na">startSService</span><span class="o">(</span><span class="n">context</span><span class="o">);</span>
+                <span class="n">onSSClientDisconnected</span><span class="o">();</span>
+                <span class="k">break</span><span class="o">;</span>
+            <span class="k">case</span> <span class="nl">ACTION_CONNECTED:</span>
+                <span class="n">onSSClientConnected</span><span class="o">();</span>
+                <span class="k">break</span><span class="o">;</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div>    </div>
+
+    <p>在接收到<code class="highlighter-rouge">ACTION_START</code>或<code class="highlighter-rouge">ACTION_DISCONNECTED</code>时，就调用启动<code class="highlighter-rouge">Service</code>的方法。</p>
+  </li>
+  <li>
+    <p>在 <code class="highlighter-rouge">Manifest</code> 文件中配置 <code class="highlighter-rouge">Broadcast</code> ，示例参考：</p>
+
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	<span class="o">&lt;</span><span class="n">receiver</span>
+		<span class="nl">android:</span><span class="n">name</span><span class="o">=</span><span class="s">"com.stfl.SSClientReceiver"</span>
+		<span class="nl">android:</span><span class="n">enabled</span><span class="o">=</span><span class="s">"true"</span><span class="o">&gt;</span>
+		<span class="o">&lt;</span><span class="n">intent</span><span class="o">-</span><span class="n">filter</span><span class="o">&gt;</span>
+			<span class="o">&lt;</span><span class="n">action</span> <span class="nl">android:</span><span class="n">name</span><span class="o">=</span><span class="s">"io.telebox.ssclient.start"</span> <span class="o">/&gt;</span>
+		<span class="o">&lt;/</span><span class="n">intent</span><span class="o">-</span><span class="n">filter</span><span class="o">&gt;</span>
+	<span class="o">&lt;/</span><span class="n">receiver</span><span class="o">&gt;</span>
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+<p>​</p>
+
+<h4 id="0x03需要注意的问题">0x03、需要注意的问题</h4>
+
+<ol>
+  <li>
+    <p>配置<code class="highlighter-rouge">Service</code>优先级<code class="highlighter-rouge">priority</code>属性，尽量提高<code class="highlighter-rouge">Service</code>的优先级</p>
+  </li>
+  <li>
+    <p>Android 8.0手机发送通知时会出现 <code class="highlighter-rouge">Background execution not allowed</code>的错误，intent要设置component。</p>
+
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Intent</span> <span class="n">intent</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Intent</span><span class="o">(</span><span class="s">"receiver-action-string"</span><span class="o">);</span>
+<span class="n">intent</span><span class="o">.</span><span class="na">setComponent</span><span class="o">(</span><span class="k">new</span> <span class="n">ComponentName</span><span class="o">(</span><span class="n">getPackageName</span><span class="o">(),</span><span class="s">"receiver-class-name"</span><span class="o">));</span>
+<span class="n">sendBroadcast</span><span class="o">(</span><span class="n">intent</span><span class="o">);</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Android 8.0后台服务启动时出现<code class="highlighter-rouge">java.lang.IllegalStateException: Not allowed to start service Intent</code>错误。</p>
+
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 1.启动Service的方法中修改为</span>
+<span class="n">Intent</span> <span class="n">service</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Intent</span><span class="o">(</span><span class="n">SSClientService</span><span class="o">.</span><span class="na">ACTION</span><span class="o">);</span>
+<span class="n">service</span><span class="o">.</span><span class="na">setPackage</span><span class="o">(</span><span class="n">context</span><span class="o">.</span><span class="na">getPackageName</span><span class="o">());</span>
+<span class="c1">// kill:java.lang.IllegalStateException: Not allowed to start service Intent</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">Build</span><span class="o">.</span><span class="na">VERSION</span><span class="o">.</span><span class="na">SDK_INT</span> <span class="o">&gt;=</span> <span class="n">Build</span><span class="o">.</span><span class="na">VERSION_CODES</span><span class="o">.</span><span class="na">O</span><span class="o">)</span> <span class="o">{</span>
+	<span class="n">context</span><span class="o">.</span><span class="na">startForegroundService</span><span class="o">(</span><span class="n">service</span><span class="o">);</span>
+<span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+    <span class="n">context</span><span class="o">.</span><span class="na">startService</span><span class="o">(</span><span class="n">service</span><span class="o">);</span>
+<span class="o">}</span>
+<span class="c1">// 2.在Service类中调用startForeground方法</span>
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">onCreate</span><span class="o">()</span> <span class="o">{</span>
+	<span class="kd">super</span><span class="o">.</span><span class="na">onCreate</span><span class="o">();</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">Build</span><span class="o">.</span><span class="na">VERSION</span><span class="o">.</span><span class="na">SDK_INT</span> <span class="o">&gt;=</span> <span class="n">Build</span><span class="o">.</span><span class="na">VERSION_CODES</span><span class="o">.</span><span class="na">O</span><span class="o">)</span> <span class="o">{</span>
+    	<span class="n">startForeground</span><span class="o">(</span><span class="n">Integer</span><span class="o">.</span><span class="na">MAX_VALUE</span><span class="o">,</span> <span class="k">new</span> <span class="n">Notification</span><span class="o">());</span>
+       	<span class="c1">//这个id不要和应用内的其他同志id一样，不行就写 int.maxValue()</span>
+      	<span class="c1">//context.startForeground(SERVICE_ID, builder.getNotification());</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li>
+    <p>Android 8.1出现<code class="highlighter-rouge">android.app.RemoteServiceException: Bad notification for startForeground</code></p>
+
+    <p>修改<code class="highlighter-rouge">startForeground</code>方法。</p>
+
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	<span class="nd">@TargetApi</span><span class="o">(</span><span class="n">Build</span><span class="o">.</span><span class="na">VERSION_CODES</span><span class="o">.</span><span class="na">O</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">startForeground</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">nid</span> <span class="o">=</span> <span class="mi">1010</span><span class="o">;</span>
+        <span class="n">String</span> <span class="n">channelId</span> <span class="o">=</span> <span class="n">createNotificationChannel</span><span class="o">();</span>
+   
+        <span class="n">Notification</span><span class="o">.</span><span class="na">Builder</span> <span class="n">builder</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Notification</span><span class="o">.</span><span class="na">Builder</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">channelId</span><span class="o">);</span>
+        <span class="n">Notification</span> <span class="n">notification</span> <span class="o">=</span> <span class="n">builder</span><span class="o">.</span><span class="na">setOngoing</span><span class="o">(</span><span class="kc">false</span><span class="o">)</span>
+                <span class="o">.</span><span class="na">setSmallIcon</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">mipmap</span><span class="o">.</span><span class="na">ic_small_logo</span><span class="o">)</span>
+                <span class="o">.</span><span class="na">setPriority</span><span class="o">(</span><span class="n">Notification</span><span class="o">.</span><span class="na">PRIORITY_MIN</span><span class="o">)</span>
+   
+                <span class="o">.</span><span class="na">setCategory</span><span class="o">(</span><span class="n">Notification</span><span class="o">.</span><span class="na">CATEGORY_SERVICE</span><span class="o">)</span>
+                <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+        <span class="n">startForeground</span><span class="o">(</span><span class="n">nid</span><span class="o">,</span> <span class="n">notification</span><span class="o">);</span>
+    <span class="o">}</span>
+   
+    <span class="nd">@TargetApi</span><span class="o">(</span><span class="n">Build</span><span class="o">.</span><span class="na">VERSION_CODES</span><span class="o">.</span><span class="na">O</span><span class="o">)</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="nf">createNotificationChannel</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">String</span> <span class="n">channelId</span> <span class="o">=</span> <span class="s">"my_service"</span><span class="o">;</span>
+        <span class="n">String</span> <span class="n">channelName</span> <span class="o">=</span> <span class="s">"My Background Service"</span><span class="o">;</span>
+        <span class="n">NotificationChannel</span> <span class="n">chan</span> <span class="o">=</span> <span class="k">new</span> <span class="n">NotificationChannel</span><span class="o">(</span><span class="n">channelId</span><span class="o">,</span>
+                <span class="n">channelName</span><span class="o">,</span> <span class="n">NotificationManager</span><span class="o">.</span><span class="na">IMPORTANCE_NONE</span><span class="o">);</span>
+        <span class="n">chan</span><span class="o">.</span><span class="na">setLightColor</span><span class="o">(</span><span class="n">Color</span><span class="o">.</span><span class="na">BLUE</span><span class="o">);</span>
+        <span class="n">chan</span><span class="o">.</span><span class="na">setLockscreenVisibility</span><span class="o">(</span><span class="n">Notification</span><span class="o">.</span><span class="na">VISIBILITY_PRIVATE</span><span class="o">);</span>
+        <span class="n">NotificationManager</span> <span class="n">service</span> <span class="o">=</span> <span class="o">(</span><span class="n">NotificationManager</span><span class="o">)</span> <span class="n">getSystemService</span><span class="o">(</span><span class="n">Context</span><span class="o">.</span><span class="na">NOTIFICATION_SERVICE</span><span class="o">);</span>
+        <span class="n">service</span><span class="o">.</span><span class="na">createNotificationChannel</span><span class="o">(</span><span class="n">chan</span><span class="o">);</span>
+        <span class="k">return</span> <span class="n">channelId</span><span class="o">;</span>
+    <span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+</ol>
+
+
+        
+        <div class="post_footer">
+          <p>Published on Sep 21, 2018 in categories 
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/2017/08/20/logisitic-regression/">机器学习之逻辑回归</a>
+            </li>
+            
+            
+            <li>
+                <span>下一篇</span>
+                <a href="/2018/09/26/Android-NDK%E5%BC%80%E5%8F%91CMakeLists.txt-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90/">Android ndk开发cmakelists.txt 配置文件解析</a>
+            </li>
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5/',
+            owner: 'hylinux1024',
+            repo: 'jekyll-theme-solid',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+

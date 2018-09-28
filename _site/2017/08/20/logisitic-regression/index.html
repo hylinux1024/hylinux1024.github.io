@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="" />
+        <meta name="description" content="逻辑回归（Logistic Regression）是机器学习中的监督学习算法，主要用于分类任务。这些任务预测的标签（label）通常为{0,1}，或者说是一个概率值。 例如我们预测一封邮件是否为垃圾邮件；预测天气是否为晴天、阴天、雨天和雪天等。" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> 机器学习之逻辑回归  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> 机器学习之逻辑回归 </h2>
+        <p>[TOC]</p>
+
+<p>本文主要内容</p>
+
+<ul>
+  <li>逻辑回归（Logistic Regression）模型</li>
+  <li>决策边界（Decision Boundary）</li>
+  <li>成本函数（Cost Function）</li>
+  <li>梯度下降法（Gradient Descent）</li>
+  <li>多分类问题</li>
+</ul>
+
+<p>逻辑回归（Logistic Regression）是机器学习中的监督学习算法，主要用于分类任务。这些任务预测的标签（label）通常为 {0,1}，或者说是一个概率值。 例如我们预测一封邮件是否为垃圾邮件；预测天气是否为晴天、阴天、雨天和雪天等。</p>
+
+<h3 id="逻辑回归logistic-regression模型">逻辑回归（Logistic Regression）模型</h3>
+
+<p>从上文《机器学习之线性回归》我们知道线性回归的模型为
+<script type="math/tex">h_\theta(x)=\theta_0+\theta_1x_1+...+\theta_nx_n=\theta^Tx</script>
+可以从上面模型通过函数 g 对线性回归进行变换
+<script type="math/tex">h_\theta(x)=g(\theta^Tx) \tag 1</script>
+其中
+<script type="math/tex">g(z)=\frac 1 {1+e^{-z}} \tag 2</script></p>
+
+<p>其中g(z) 是 <strong>sigmoid 函数或者叫逻辑函数</strong>。可以看出 0&lt;= g(z)&lt;=1</p>
+
+<p><img src="http://angrycode.qiniudn.com/sigmoid_functio.jpeg" alt="sigmoid function" /></p>
+
+<p>由 (1) 和 (2)
+<script type="math/tex">h_\theta(x)=\frac 1 {1+e^{-\theta^Tx}} \tag 3</script></p>
+
+<p>这就是<strong>逻辑回归的数学模型</strong>。</p>
+
+<p>因为预测值 h(x) 是在{0,1}，故还可以用概率的角度进行解析这个模型的预测结果。</p>
+
+<p>以预测垃圾邮件为例，如果 y=1 表示这封邮件时垃圾邮件，那么预测模型可以表示</p>
+
+<script type="math/tex; mode=display">h_\theta(x)=P(y=1|x;\theta) \tag 4</script>
+
+<h3 id="决策边界decision-boundary">决策边界（Decision Boundary）</h3>
+
+<p>我们知道 sigmoid 函数的值是在 {0,1} 范围，当 \(h_\theta(x)\geq0.5\) 时，预测y=1，反之则预测 y=0。</p>
+
+<p>根据 sigmoid 函数可以知道要预测 \(h_\theta(x)\geq0.5\) 那么等价于 \(\theta^Tx\geq0\)</p>
+
+<p>我们以这张来自于 Andrew Ng 机器学习课程的 ppt 来说明。</p>
+
+<p><img src="http://angrycode.qiniudn.com/decision_boundary.png" alt="" /></p>
+
+<p>假设通过训练得出
+<script type="math/tex">\theta=\begin{bmatrix}
+-3\\
+1\\
+1
+\end{bmatrix}</script></p>
+
+<p>那么
+<script type="math/tex">x_1+x_2=3 \tag 5</script></p>
+
+<p>就是<strong>决策边界</strong>。当</p>
+
+<script type="math/tex; mode=display">x_1+x_2\geq3</script>
+
+<p>表示预测值 y=1，反之预测值 y=0。</p>
+
+<p>除了线性决策边界，还可以是曲线的。</p>
+
+<p><img src="http://angrycode.qiniudn.com/non-linear-decision-boundary.png" alt="non-linear-decision-boundary" /></p>
+
+<p>这里的决策边界就是</p>
+
+<script type="math/tex; mode=display">x_1+x_2=1 \tag 6</script>
+
+<p>以上两个例子都是简单的边界，当然实际情况下，决策边界有能是复杂的图形，甚至是高维度的。</p>
+
+<h3 id="成本函数cost-function">成本函数（Cost Function）</h3>
+
+<p>回忆一下线性回归中的成本函数</p>
+
+<p><script type="math/tex">J(\theta)=\frac 1 {2m} \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})^2</script>
+我们定义函数</p>
+
+<script type="math/tex; mode=display">Cost(h_\theta(x),y)=\frac 1 2 (h_\theta(x)-y)^2</script>
+
+<p>那么成本函数就可以写成</p>
+
+<script type="math/tex; mode=display">J(\theta)=\frac 1 m \sum_{i=1}^mCost(h_\theta(x),y)</script>
+
+<p><strong>逻辑回归的成本函数（Cost Function）</strong></p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+Cost(h_\theta(x),y)=
+\begin{cases}
+-log(h_\theta(x)) & \text{if $y$ =1} \\
+-log(1-h_\theta(x)) & \text{if $y$ =0}
+\end{cases} \tag 7 %]]></script>
+
+<p>当 y=1 时</p>
+
+<p><img src="http://angrycode.qiniudn.com/minus-logx.png?imageView2/2/w/200/h/200" alt="" /></p>
+
+<p>当 y=0 时</p>
+
+<p><img src="http://angrycode.qiniudn.com/minus-log1-x.png?imageView2/2/w/200/h/200" alt="" /></p>
+
+<p>由于 y 取值是{0,1}，我们可以把公式 (7) 写成</p>
+
+<script type="math/tex; mode=display">Cost(h_\theta(x),y)=-ylog(h_\theta(x))-(1-y)log(1-h_\theta(x)) \\ y\in {\{0,1\}}\tag 8</script>
+
+<h3 id="梯度下降法gradient-descent">梯度下降法（Gradient Descent）</h3>
+
+<p>由上文可以知道成本函数为</p>
+
+<script type="math/tex; mode=display">J(\theta)=-\frac 1 m \sum_{i=1}^{m}(y^{(i)}log(h_\theta(x^{(i)}))+(1-y^{(i)})log(1-h_\theta(x^{(i)})))</script>
+
+<p>要求\(min_{\theta}J(\theta)\)，需要使用微分求导公式</p>
+
+<script type="math/tex; mode=display">f(x)'=(log_ax)'=\frac 1 x lna</script>
+
+<p>同时为了简单起见，求导时可以假设只有一个样本，这样可以把∑符号去掉，方便推导。</p>
+
+<p>因为上文中 log 函数默认是以 e 底的</p>
+
+<script type="math/tex; mode=display">log(h_\theta(x))' =\frac 1 {h_\theta(x)} \frac d {d\theta}h_\theta(x)</script>
+
+<p>因为</p>
+
+<script type="math/tex; mode=display">g(z)=\frac 1 {1+e^{-z}}</script>
+
+<p>有
+<script type="math/tex">% <![CDATA[
+\begin{equation}\begin{split}g(z)'&=\frac d {dz}(1+e^{-z})^{-1} \\
+&=-(1+e^{-z})^{-2} \cdot (e^{-z})\cdot(-1)\\
+&=\frac {e^{-z}} {(1+e^{-z})^2}\\
+&=g(z) \cdot (\frac {e^{-z}} {1+e^{-z}})\\
+&=g(z)(1-g(z))
+\end{split}\end{equation} %]]></script></p>
+
+<p>那么有</p>
+
+<script type="math/tex; mode=display">\frac d {d\theta_j}g(\theta^Tx)=g(\theta^Tx)(1-g(\theta^Tx))\theta_j</script>
+
+<p>于是
+<script type="math/tex">J(\theta_j)'=\frac 1 m \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
+j \in {\{0,1,2...n\}}
+\tag 9</script></p>
+
+<p>这个式子形式上与线性回归的\(J(\theta)\)的偏导数是很相似的，但是需要注意的是
+\
+预测函数 h(x) 是不一样的。</p>
+
+<p>根据梯度下降法</p>
+
+<script type="math/tex; mode=display">% <![CDATA[
+\begin{equation}\begin{split}repeat &\{\\
+&\theta_j := \theta_j-\alpha\frac 1 m \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
+\}
+\end{split}\end{equation} %]]></script>
+
+<h3 id="多分类问题">多分类问题</h3>
+
+<p>对于二分类问题，我们很容易就可以建立模型。如果预测一个多分类问题，我们应该如何做呢？我们还是以Andrew Ng的ppt来说明</p>
+
+<p><img src="http://angrycode.qiniudn.com/multi-class.png" alt="multi-class" /></p>
+
+<p>例如要预测一个三分类的问题，假设要预测class1，那么就可以其他两类class2，class3当做一个分类，这样转换成一个二分类问题。这时候我们就需要根据已有的训练数据构造新的训练数据。预测class2，class3时，以此类推。这样就需要有三个不同训练数据。</p>
+
+<p>当有一个新的数据进行预测时，我们只要计算下面式子的最大值就可以了</p>
+
+<p>ß
+<script type="math/tex">\max_i h_\theta(x^{(i)})\\ i\in\{1,2,3\}</script></p>
+
+<h3 id="参考文献">参考文献</h3>
+
+<p>Andrew Ng coursera 机器学习课程</p>
+
+
+        
+        <div class="post_footer">
+          <p>Published on Aug 20, 2017 in categories 
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/2017/08/08/naive-bayesian/">机器学习之朴素贝叶斯</a>
+            </li>
+            
+            
+            <li>
+                <span>下一篇</span>
+                <a href="/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5/">Android后台单进程保活处理实践</a>
+            </li>
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/2017/08/20/logisitic-regression/',
+            owner: 'hylinux1024',
+            repo: 'jekyll-theme-solid',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+
