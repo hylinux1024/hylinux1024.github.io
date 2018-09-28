@@ -44,7 +44,7 @@ disqus:
 # https://imsun.net/posts/gitment-introduction/
 gitment:
     owner: hylinux1024
-    repo: jekyll-theme-solid
+    repo: hylinux1024.github.io
     oauth:
         client_id: c79c9ae57765adcce459
         client_secret: 09264b1c3c58033878872c924196898c9931a8e5
