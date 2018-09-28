@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="Activity,多进程" />
+        <meta name="description" content="看看老司机如何掉坑里的" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> 老司机带路——15个Android撸代码常见的坑  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> 老司机带路——15个Android撸代码常见的坑 </h2>
+        <p>老司机为何能够成为老司机，不是因为开车开得多，而是撸多了…</p>
+
+<h3 id="0x00-使用-startactivityforresult-后在-onactivityresult-中没有正确回调到-activityresult_ok">0x00 使用 startActivityForResult 后在 onActivityResult 中没有正确回调到 Activity.RESULT_OK</h3>
+
+<ol>
+  <li>要正确获取到 <code class="highlighter-rouge">RESULT_OK</code> 的状态码，<code class="highlighter-rouge">Activity</code> 的启动模式不能为设置为的 <code class="highlighter-rouge">singleTask</code> 或者 <code class="highlighter-rouge">singleInstance</code></li>
+  <li>调用 <code class="highlighter-rouge">startActivityForResult(intent,requestCode)</code> 方法时第二个参数不应该使用过大的整数，例如超过 <strong>65535</strong></li>
+</ol>
+
+<h3 id="0x01-activity-的-oncreate-方法中操作-view-相关">0x01 Activity 的 onCreate() 方法中操作 View 相关</h3>
+
+<ol>
+  <li>不能直接获取 <code class="highlighter-rouge">View</code>的宽高，而应在 <code class="highlighter-rouge">view.post()</code> 里面操作</li>
+  <li>不能调用 <code class="highlighter-rouge">PopupWindow</code> 的 <code class="highlighter-rouge">show</code> 方法显示，也应在 <code class="highlighter-rouge">view.post()</code> 里面操作</li>
+</ol>
+
+<h3 id="0x02-transactiontoolargeexception-异常">0x02 TransactionTooLargeException 异常</h3>
+
+<p>这个错误主要发生在 <code class="highlighter-rouge">Intent </code> 中传递了大量的数据。</p>
+
+<p>例如有一个 <code class="highlighter-rouge">Activity </code> 页面跳转中，经常会使用 <code class="highlighter-rouge">Intent</code> 传递数据，但是稍不留神就会把一个很大的对象(列表，<code class="highlighter-rouge">bitmap</code> 等)传递过去，这时候就会出现这个异常。</p>
+
+<p>建议不要在 <code class="highlighter-rouge">Intent</code> 中传递大数据，应该使用持久化的方式共享数据。而且数据过多也会影响<code class="highlighter-rouge">Activity </code> 的启动速度。</p>
+
+<p>类似问题 <code class="highlighter-rouge">startActivity()</code> 时发生以下错误</p>
+
+<blockquote>
+  <p>java.lang.SecurityException: Unable to find app for caller android.app.ApplicationThreadProxy。This log means that your app is having trouble handling a communication intent. Sometimes problems like this can be cause by sending an intent with big extras. Try to reduce the dimension of the image or, and this is the best way, save your image on the sd and put in the extras only the Uri of that image。</p>
+</blockquote>
+
+<p>即不要在 <code class="highlighter-rouge">Intent</code> 中传递大量的数据数据，否则会抛异常。</p>
+
+<h3 id="0x03-fragmenttransactionsetcustomanimations-后动画没有效果">0x03 FragmentTransaction.setCustomAnimations() 后动画没有效果</h3>
+
+<p><code class="highlighter-rouge">setCustomAnimations  </code> 要在 <code class="highlighter-rouge">replace()</code>，<code class="highlighter-rouge">add()</code> 或 <code class="highlighter-rouge">remove()</code> 等对 <code class="highlighter-rouge">Fragment</code> 添加或者移除的方法前面。</p>
+
+<h3 id="0x04-应用使用多进程应该注意的问题">0x04 应用使用多进程应该注意的问题</h3>
+
+<ol>
+  <li><code class="highlighter-rouge">Application</code> 会被初始化多次，即 <code class="highlighter-rouge">onCreate()</code> 方法会执行多次。在这里的一些初始化逻辑，例如数据库初始化，就需要根据判断当前进程的名称来进行初始化。</li>
+  <li>主进程与子进程数据共享的问题。由于不存在同一个内存空间，数据共享可以考虑使用 <code class="highlighter-rouge">ContentProvider</code>。</li>
+</ol>
+
+<h3 id="0x05-应用打包后-h5-无法访问到-webview-与-js-交互的自定义-jsbridge-类">0x05 应用打包后 H5 无法访问到 WebView 与 JS 交互的自定义 JSBridge 类</h3>
+
+<p><code class="highlighter-rouge">WebView</code> 通过 <code class="highlighter-rouge">addJavascriptInterface()</code> 注入本地实现的方法类 <code class="highlighter-rouge">JsBridge</code> 供 H5 访问，但是打包时应该把自定义的 <code class="highlighter-rouge">JSBridge</code> 类加入到混淆规则里面，否则混淆后 H5 将有可能无法访问本地方法。</p>
+
+<h3 id="0x06-app-端使用-webviewloadurl-执行-js-方法后无响应">0x06 App 端使用 WebView.loadUrl() 执行 JS 方法后无响应</h3>
+
+<ol>
+  <li><code class="highlighter-rouge">WebView</code> 通过 <code class="highlighter-rouge">loadUrl()</code> 执行 JS 方法后却无响应，但是前端确定已提供。这时候应该考虑使用主线程（例如 <code class="highlighter-rouge">WebView.post()</code> ）来执行 <code class="highlighter-rouge">loadUrl()</code>；</li>
+  <li>通过 H5 调用本地方法时，如果 H5 是异步调用，那么也应该考虑把本地方法的实现放在主线程中。</li>
+</ol>
+
+<h3 id="0x07-ui-控件的样式出现了很奇诡的渲染例如花屏闪动等的问题">0x07 UI 控件的样式出现了很奇诡的渲染，例如花屏、闪动等的问题</h3>
+
+<p>有些机型使用硬件加速出现了一些奇诡的UI问题，可以检查一下控件所在 <code class="highlighter-rouge">Activity</code> 是否配置了硬件加速，多数情况下去掉硬件加速就 OK 了。</p>
+
+<p>如果需要硬件加速的配置，可以考虑在控件本身上使用，而不是 <code class="highlighter-rouge">Activity</code> 上。</p>
+
+<h3 id="0x08-activity-与-fragment-控件-id-重复的问题">0x08 Activity 与 Fragment 控件 ID 重复的问题</h3>
+
+<p><code class="highlighter-rouge">Activity</code> 中使用 <code class="highlighter-rouge">Fragment</code> ，<code class="highlighter-rouge">Activity</code> 中有一个控件 ID 为 <code class="highlighter-rouge">R.id.widget_btn</code> ，但是在 <code class="highlighter-rouge">Fragment</code> 里面也有一个控件 ID 为 <code class="highlighter-rouge">R.id.widget_btn</code> ，那么在 <code class="highlighter-rouge">Fragment</code> 里面使用 <code class="highlighter-rouge">getActivity().findViewById()</code> 时就无法取到正确的控件引用。</p>
+
+<h3 id="0x09-webview-无法弹起-h5-中的-alert-和-comfirm-对话框的问题">0x09 WebView 无法弹起 H5 中的 alert 和 comfirm 对话框的问题</h3>
+
+<p><code class="highlighter-rouge">WebView</code> 是一个承载体，各种内容的渲染需要使用 <code class="highlighter-rouge">WebViewChromClient</code> 去实现，所以需要设置一个默认的 <code class="highlighter-rouge">WebChromeClient</code> 实现。但是一般情况下实现自定义 <code class="highlighter-rouge">WebView</code> 都会重写 <code class="highlighter-rouge">onAlert</code> 和 <code class="highlighter-rouge">onConfirm</code> 方法，使用 <code class="highlighter-rouge">AlertDialog</code> 来展示 <code class="highlighter-rouge">H5</code> 中的 <code class="highlighter-rouge">alert</code> 或者 <code class="highlighter-rouge">confirm</code> 对话框。</p>
+
+<h3 id="0x10-gridview-中的-item-无法居中问题">0x10 GridView 中的 Item 无法居中问题</h3>
+
+<p>查看一下 <code class="highlighter-rouge">GridView</code> 的布局文件是否设置了 <code class="highlighter-rouge">android:scrollbarStyle="outsideInset"</code> 属性，如果有，去掉这个属性。</p>
+
+<h3 id="0x11-edittext-textcursordrawable-属性直接用-color-在很多手机上光标是不会闪动">0x11 EditText textCursorDrawable 属性直接用 color 在很多手机上光标是不会闪动</h3>
+
+<p>需要用 <code class="highlighter-rouge">drawable</code> 来设置这个属性，写一个 <code class="highlighter-rouge">drawable</code> 文件，例如</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;</span><span class="n">shape</span> <span class="nl">xmlns:</span><span class="n">android</span><span class="o">=</span><span class="s">"http://schemas.android.com/apk/res/android"</span> 			   	<span class="nl">android:</span><span class="n">shape</span><span class="o">=</span><span class="s">"rectangle"</span> <span class="o">&gt;</span>
+	<span class="o">&lt;</span><span class="n">solid</span> <span class="nl">android:</span><span class="n">color</span><span class="o">=</span><span class="s">"@color/white"</span> <span class="o">/&gt;</span>
+	<span class="o">&lt;</span><span class="n">size</span> <span class="nl">android:</span><span class="n">width</span><span class="o">=</span><span class="s">"1dp"</span> <span class="o">/&gt;</span>
+<span class="o">&lt;/</span><span class="n">shape</span><span class="o">&gt;</span>
+</code></pre></div></div>
+<h3 id="0x12-在-listfragment-中-set-footer-后-javalangillegalstateexception问题">0x12 在 ListFragment 中 set footer 后 java.lang.IllegalStateException问题</h3>
+
+<p>不要 <code class="highlighter-rouge">ListFragment</code> 的 <code class="highlighter-rouge">onCreateView()</code> 中设置 <code class="highlighter-rouge">footer</code> ，要在 <code class="highlighter-rouge">onActivityCreate()</code> 中设置，否则会 <code class="highlighter-rouge">Caused by: java.lang.IllegalStateException: Content view not yet created</code> 。</p>
+
+<h3 id="0x13-开源项目-tabpageindicator-tab-默认情况只显示-6-个中文字符过多的字符被截断了">0x13 开源项目 TabPageIndicator Tab 默认情况只显示 6 个中文字符，过多的字符被截断了</h3>
+
+<p>可修改 <code class="highlighter-rouge">TabView</code> 中的 <code class="highlighter-rouge">mMaxTabWidth</code> 的值，默认时 <code class="highlighter-rouge">mMaxTabWidth = (int) (MeasureSpec.getSize(widthMeasureSpec) * 0.4f);</code> 修改为 <code class="highlighter-rouge">mMaxTabWidth = (int) (MeasureSpec.getSize(widthMeasureSpec) * 1f);</code></p>
+
+<h3 id="0x14-spannablestringbuilder-修饰文本影响-listview-性能问题">0x14 SpannableStringBuilder 修饰文本影响 ListView 性能问题</h3>
+
+<p>通常需要在一个列表中对 <code class="highlighter-rouge">Item</code> 的文本作一些特殊的修饰处理，例如对文本添加简单的图标，文本颜色，字体高亮等等效果，这时候 <code class="highlighter-rouge">SpannableStringBuilder</code> 就可以帮上忙了。但如果在 <code class="highlighter-rouge">getView()</code> 方法里构造 <code class="highlighter-rouge">Spannable</code> 对象，明显会影响列表的展示的效率，应该在线程中先这些 <code class="highlighter-rouge">Spannable</code> 数据构造好，而 <code class="highlighter-rouge">getView()</code> 尽量少做影响列表性能的操作。</p>
+
+        
+        <div class="post_footer">
+          <p>Published on Mar 22, 2017 in categories 
+          
+          <a href="http://localhost:4000/categories/#Android" title="Android">Android</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/2017/03/11/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Android-Handler%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E7%9A%84/">源码分析Android Handler是如何实现线程间通信的</a>
+            </li>
+            
+            
+            <li>
+                <span>下一篇</span>
+                <a href="/2017/08/07/linear-regression/">机器学习之线性回归</a>
+            </li>
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/2017/03/22/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF-15%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91/',
+            owner: 'hylinux1024',
+            repo: 'jekyll-theme-solid',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+

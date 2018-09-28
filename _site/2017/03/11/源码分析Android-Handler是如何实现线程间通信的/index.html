@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="Handler,线程,Message,Looper" />
+        <meta name="description" content="Handler是如何实现线程间通信的呢？本文将从源码中分析Handler的消息通信机制" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> 源码分析Android Handler是如何实现线程间通信的  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> 源码分析Android Handler是如何实现线程间通信的 </h2>
+        <p>Handler作为Android消息通信的基础，它的使用是每一个开发者都必须掌握的。开发者从一开始就被告知必须在主线程中进行UI操作。但Handler是如何实现线程间通信的呢？本文将从源码中分析Handler的消息通信机制。</p>
+
+<h3 id="0x00-handler使用">0x00 Handler使用</h3>
+
+<p>首先看看我们平时是如何使用的<code class="highlighter-rouge">Handler</code>的。先看看以下代码</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">//定义Handler</span>
+<span class="n">Handler</span> <span class="n">mHandler</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Handler</span><span class="o">(){</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleMessage</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">){</span>
+    <span class="k">switch</span><span class="o">(</span><span class="n">msg</span><span class="o">.</span><span class="na">what</span><span class="o">){</span>
+      <span class="k">case</span> <span class="nl">UPDATE_UI:</span>
+        <span class="n">updateUI</span><span class="o">(</span><span class="n">msg</span><span class="o">);</span>
+        <span class="k">break</span><span class="o">;</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">};</span>
+<span class="kd">class</span> <span class="nc">MyThread</span> <span class="kd">extends</span> <span class="n">Thread</span><span class="o">{</span>
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">(){</span>
+    <span class="c1">//do same work!</span>
+    <span class="o">...</span>
+    <span class="c1">//send message</span>
+    <span class="n">Message</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">mHandler</span><span class="o">.</span><span class="na">obtainMessage</span><span class="o">(</span><span class="n">UPDATE_UI</span><span class="o">);</span>
+    <span class="n">mHandler</span><span class="o">.</span><span class="na">sendMessage</span><span class="o">(</span><span class="n">msg</span><span class="o">);</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">updateUI</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">){</span>
+  <span class="c1">//update UI</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>在子线程中<code class="highlighter-rouge">sendMessage(Message)</code>发送消息，然后在Handler的<code class="highlighter-rouge">handleMessage(Message)</code>接收消息，执行更新UI操作。那么<code class="highlighter-rouge">Handler</code>是如何把消息从<code class="highlighter-rouge">MyThread</code>传递到<code class="highlighter-rouge">MainThread</code>中来呢？我们从<code class="highlighter-rouge">sendMessage()</code>开始慢慢揭开它的面纱。</p>
+
+<h3 id="0x01-sendmessagemessage">0x01 sendMessage(Message)</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">sendMessage</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">){</span>
+    <span class="k">return</span> <span class="nf">sendMessageDelayed</span><span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+<span class="o">}</span>
+<span class="o">...</span>
+<span class="kd">public</span> <span class="kd">final</span> <span class="kt">boolean</span> <span class="nf">sendMessageDelayed</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">,</span> <span class="kt">long</span> <span class="n">delayMillis</span><span class="o">){</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">delayMillis</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">delayMillis</span> <span class="o">=</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="nf">sendMessageAtTime</span><span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">SystemClock</span><span class="o">.</span><span class="na">uptimeMillis</span><span class="o">()</span> <span class="o">+</span> <span class="n">delayMillis</span><span class="o">);</span>
+<span class="o">}</span>
+<span class="o">...</span>
+<span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">sendMessageAtTime</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">,</span> <span class="kt">long</span> <span class="n">uptimeMillis</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">MessageQueue</span> <span class="n">queue</span> <span class="o">=</span> <span class="n">mQueue</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">queue</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">RuntimeException</span> <span class="n">e</span> <span class="o">=</span> <span class="k">new</span> <span class="n">RuntimeException</span><span class="o">(</span>
+                <span class="k">this</span> <span class="o">+</span> <span class="s">" sendMessageAtTime() called with no mQueue"</span><span class="o">);</span>
+        <span class="n">Log</span><span class="o">.</span><span class="na">w</span><span class="o">(</span><span class="s">"Looper"</span><span class="o">,</span> <span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">(),</span> <span class="n">e</span><span class="o">);</span>
+        <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="nf">enqueueMessage</span><span class="o">(</span><span class="n">queue</span><span class="o">,</span> <span class="n">msg</span><span class="o">,</span> <span class="n">uptimeMillis</span><span class="o">);</span>
+<span class="o">}</span>
+<span class="o">...</span>
+<span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">enqueueMessage</span><span class="o">(</span><span class="n">MessageQueue</span> <span class="n">queue</span><span class="o">,</span> <span class="n">Message</span> <span class="n">msg</span><span class="o">,</span> <span class="kt">long</span> <span class="n">uptimeMillis</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">msg</span><span class="o">.</span><span class="na">target</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">mAsynchronous</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">msg</span><span class="o">.</span><span class="na">setAsynchronous</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">queue</span><span class="o">.</span><span class="na">enqueueMessage</span><span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">uptimeMillis</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>我们发现调用<code class="highlighter-rouge">sendMessage()</code>方法最后都走到<code class="highlighter-rouge">enqueueMessage()</code>这个方法，一开始就把当前<code class="highlighter-rouge">Handler</code>实例赋给了<code class="highlighter-rouge">Message.target</code>的属性里面，后面可以知道这个<code class="highlighter-rouge">target</code>是用来执行处理函数回调的。</p>
+
+<p><code class="highlighter-rouge">enqueueMessage</code>方法是把<code class="highlighter-rouge">Message</code>信息放入到一个<code class="highlighter-rouge">MessageQueue</code>的队列中。顾名思义<code class="highlighter-rouge">MessageQueue</code>就是消息队列。从<code class="highlighter-rouge">sendMessageAtTime()</code>方法知道这个<code class="highlighter-rouge">MessageQueue</code>是<code class="highlighter-rouge">Handler</code>中的一个成员。它是在<code class="highlighter-rouge">Handler</code>的构造函数中通过<code class="highlighter-rouge">Loopger</code>对象来初始化的。</p>
+
+<h3 id="0x02-handler构造函数">0x02 Handler构造函数</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="nf">Handler</span><span class="o">(</span><span class="n">Callback</span> <span class="n">callback</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">async</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">FIND_POTENTIAL_LEAKS</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">final</span> <span class="n">Class</span><span class="o">&lt;?</span> <span class="kd">extends</span> <span class="n">Handler</span><span class="o">&gt;</span> <span class="n">klass</span> <span class="o">=</span> <span class="n">getClass</span><span class="o">();</span>
+        <span class="k">if</span> <span class="o">((</span><span class="n">klass</span><span class="o">.</span><span class="na">isAnonymousClass</span><span class="o">()</span> <span class="o">||</span> <span class="n">klass</span><span class="o">.</span><span class="na">isMemberClass</span><span class="o">()</span> <span class="o">||</span> <span class="n">klass</span><span class="o">.</span><span class="na">isLocalClass</span><span class="o">())</span> <span class="o">&amp;&amp;</span>
+                <span class="o">(</span><span class="n">klass</span><span class="o">.</span><span class="na">getModifiers</span><span class="o">()</span> <span class="o">&amp;</span> <span class="n">Modifier</span><span class="o">.</span><span class="na">STATIC</span><span class="o">)</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">Log</span><span class="o">.</span><span class="na">w</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="s">"The following Handler class should be static or leaks might occur: "</span> <span class="o">+</span>
+                <span class="n">klass</span><span class="o">.</span><span class="na">getCanonicalName</span><span class="o">());</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+
+    <span class="n">mLooper</span> <span class="o">=</span> <span class="n">Looper</span><span class="o">.</span><span class="na">myLooper</span><span class="o">();</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">mLooper</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span>
+            <span class="s">"Can't create handler inside thread that has not called Looper.prepare()"</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="n">mQueue</span> <span class="o">=</span> <span class="n">mLooper</span><span class="o">.</span><span class="na">mQueue</span><span class="o">;</span>
+    <span class="n">mCallback</span> <span class="o">=</span> <span class="n">callback</span><span class="o">;</span>
+    <span class="n">mAsynchronous</span> <span class="o">=</span> <span class="n">async</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>这时候我们脑海知道创建<code class="highlighter-rouge">Handler</code>的时候，同时也创建了<code class="highlighter-rouge">Looper</code>实例和<code class="highlighter-rouge">MessageQueue</code>引用（<code class="highlighter-rouge">MessageQueue</code>对象其实是在<code class="highlighter-rouge">Looper</code>中构造的）。<code class="highlighter-rouge">Looper</code>是何物呢？简单地说就是消息循环，这个我们稍后会分析。</p>
+
+<h3 id="0x03-enqueuemessagemessagequeue">0x03 enqueueMessage(MessageQueue)</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kt">boolean</span> <span class="nf">enqueueMessage</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">,</span> <span class="kt">long</span> <span class="n">when</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">msg</span><span class="o">.</span><span class="na">target</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalArgumentException</span><span class="o">(</span><span class="s">"Message must have a target."</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">msg</span><span class="o">.</span><span class="na">isInUse</span><span class="o">())</span> <span class="o">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalStateException</span><span class="o">(</span><span class="n">msg</span> <span class="o">+</span> <span class="s">" This message is already in use."</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">synchronized</span> <span class="o">(</span><span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mQuitting</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">IllegalStateException</span> <span class="n">e</span> <span class="o">=</span> <span class="k">new</span> <span class="n">IllegalStateException</span><span class="o">(</span>
+                    <span class="n">msg</span><span class="o">.</span><span class="na">target</span> <span class="o">+</span> <span class="s">" sending message to a Handler on a dead thread"</span><span class="o">);</span>
+            <span class="n">Log</span><span class="o">.</span><span class="na">w</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">(),</span> <span class="n">e</span><span class="o">);</span>
+            <span class="n">msg</span><span class="o">.</span><span class="na">recycle</span><span class="o">();</span>
+            <span class="k">return</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="n">msg</span><span class="o">.</span><span class="na">markInUse</span><span class="o">();</span>
+        <span class="n">msg</span><span class="o">.</span><span class="na">when</span> <span class="o">=</span> <span class="n">when</span><span class="o">;</span>
+        <span class="n">Message</span> <span class="n">p</span> <span class="o">=</span> <span class="n">mMessages</span><span class="o">;</span>
+        <span class="kt">boolean</span> <span class="n">needWake</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">p</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">when</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">when</span> <span class="o">&lt;</span> <span class="n">p</span><span class="o">.</span><span class="na">when</span><span class="o">)</span> <span class="o">{</span>
+            <span class="c1">// New head, wake up the event queue if blocked.</span>
+            <span class="n">msg</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">p</span><span class="o">;</span>
+            <span class="n">mMessages</span> <span class="o">=</span> <span class="n">msg</span><span class="o">;</span>
+            <span class="n">needWake</span> <span class="o">=</span> <span class="n">mBlocked</span><span class="o">;</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="c1">// Inserted within the middle of the queue.  Usually we don't have to wake</span>
+            <span class="c1">// up the event queue unless there is a barrier at the head of the queue</span>
+            <span class="c1">// and the message is the earliest asynchronous message in the queue.</span>
+            <span class="n">needWake</span> <span class="o">=</span> <span class="n">mBlocked</span> <span class="o">&amp;&amp;</span> <span class="n">p</span><span class="o">.</span><span class="na">target</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">msg</span><span class="o">.</span><span class="na">isAsynchronous</span><span class="o">();</span>
+            <span class="n">Message</span> <span class="n">prev</span><span class="o">;</span>
+          	<span class="c1">//这里把消息插入到队列中</span>
+            <span class="k">for</span> <span class="o">(;;)</span> <span class="o">{</span>
+                <span class="n">prev</span> <span class="o">=</span> <span class="n">p</span><span class="o">;</span>
+                <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="na">next</span><span class="o">;</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">p</span> <span class="o">==</span> <span class="kc">null</span> <span class="o">||</span> <span class="n">when</span> <span class="o">&lt;</span> <span class="n">p</span><span class="o">.</span><span class="na">when</span><span class="o">)</span> <span class="o">{</span>
+                    <span class="k">break</span><span class="o">;</span>
+                <span class="o">}</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">needWake</span> <span class="o">&amp;&amp;</span> <span class="n">p</span><span class="o">.</span><span class="na">isAsynchronous</span><span class="o">())</span> <span class="o">{</span>
+                    <span class="n">needWake</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+            <span class="n">msg</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">p</span><span class="o">;</span> <span class="c1">// invariant: p == prev.next</span>
+            <span class="n">prev</span><span class="o">.</span><span class="na">next</span> <span class="o">=</span> <span class="n">msg</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="c1">// We can assume mPtr != 0 because mQuitting is false.</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">needWake</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">nativeWake</span><span class="o">(</span><span class="n">mPtr</span><span class="o">);</span>
+        <span class="o">}</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>在<code class="highlighter-rouge">MessageQueue</code>中可以看到这个入列方法中有一个<code class="highlighter-rouge">for</code>循环就是把当前的需要处理<code class="highlighter-rouge">Message</code>放到队列的合适位置。因为需要处理的<code class="highlighter-rouge">Message</code>对象都有一个开始处理的时间<code class="highlighter-rouge">when</code>，这个队列是按照<code class="highlighter-rouge">when</code>排序的。</p>
+
+<p>至此，<code class="highlighter-rouge">Handler</code>调用<code class="highlighter-rouge">sendMessage()</code>方法后就把<code class="highlighter-rouge">Message</code>消息通过<code class="highlighter-rouge">enqueueMessage()</code>插入<code class="highlighter-rouge">MessageQueue</code>队列中。</p>
+
+<p>而这个<code class="highlighter-rouge">MessageQueue</code>是在<code class="highlighter-rouge">Looper</code>中维护的。</p>
+
+<h3 id="0x04-prepare创建looper">0x04 prepare()创建Looper</h3>
+
+<p>在<strong>0x02</strong>中我们知道创建<code class="highlighter-rouge">Handler</code>时就使用静态方法<code class="highlighter-rouge">Looper.myLooper()</code>得到当前线程的<code class="highlighter-rouge">Looper</code>对象。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Return the Looper object associated with the current thread.  Returns
+ * null if the calling thread is not associated with a Looper.
+ */</span>
+<span class="kd">public</span> <span class="kd">static</span> <span class="nd">@Nullable</span> <span class="n">Looper</span> <span class="nf">myLooper</span><span class="o">()</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="n">sThreadLocal</span><span class="o">.</span><span class="na">get</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">sThreadLocal</code>是一个<code class="highlighter-rouge">ThreadLocal</code>类型的静态变量。什么时候会把<code class="highlighter-rouge">Looper</code>对象放在<code class="highlighter-rouge">sThreadLocal</code>中呢？通过<code class="highlighter-rouge">prepare()</code>方法。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">prepare</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">quitAllowed</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">sThreadLocal</span><span class="o">.</span><span class="na">get</span><span class="o">()</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="s">"Only one Looper may be created per thread"</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="n">sThreadLocal</span><span class="o">.</span><span class="na">set</span><span class="o">(</span><span class="k">new</span> <span class="n">Looper</span><span class="o">(</span><span class="n">quitAllowed</span><span class="o">));</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>继续翻阅源码知道<code class="highlighter-rouge">Looper</code>在构造函数中创建<code class="highlighter-rouge">MessageQueue</code>对象</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="nf">Looper</span><span class="o">(</span><span class="kt">boolean</span> <span class="n">quitAllowed</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">mQueue</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MessageQueue</span><span class="o">(</span><span class="n">quitAllowed</span><span class="o">);</span>
+    <span class="n">mThread</span> <span class="o">=</span> <span class="n">Thread</span><span class="o">.</span><span class="na">currentThread</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>调用<code class="highlighter-rouge">prepare()</code>方法将一个<code class="highlighter-rouge">Looper</code>对象放在了静态的<code class="highlighter-rouge">ThreadLocal</code>对象中。这个是一个与线程绑定的对象，且在内存中仅保存了一份引用。</p>
+
+<p>使用<code class="highlighter-rouge">ThreadLocal</code>对象这一点非常巧妙，也非常重要，这是线程间通信的基础。即在线程中调用<code class="highlighter-rouge">prepare()</code>时就在该线程中绑定了<code class="highlighter-rouge">Looper</code>对象，而<code class="highlighter-rouge">Looper</code>对象中拥有<code class="highlighter-rouge">MessageQueue</code>引用。所以<strong>每个线程都有一个消息队列</strong>。</p>
+
+<p>这样<code class="highlighter-rouge">Handler</code>、<code class="highlighter-rouge">Looper</code>、<code class="highlighter-rouge">MessageQueue</code>这几个类关系大概就可以画出来了。</p>
+
+<p><img src="http://angrycode.qiniudn.com/Handler%E7%B1%BB%E5%9B%BE.png?imageMogr2/thumbnail/800x480/imageslim" alt="Handler类图" /></p>
+
+<h3 id="0x05-启动循环loop">0x05 启动循环loop()</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Run the message queue in this thread. Be sure to call
+ * {@link #quit()} to end the loop.
+ */</span>
+<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">loop</span><span class="o">()</span> <span class="o">{</span>
+    <span class="kd">final</span> <span class="n">Looper</span> <span class="n">me</span> <span class="o">=</span> <span class="n">myLooper</span><span class="o">();</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">me</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="s">"No Looper; Looper.prepare() wasn't called on this thread."</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="kd">final</span> <span class="n">MessageQueue</span> <span class="n">queue</span> <span class="o">=</span> <span class="n">me</span><span class="o">.</span><span class="na">mQueue</span><span class="o">;</span>
+
+    <span class="c1">// Make sure the identity of this thread is that of the local process,</span>
+    <span class="c1">// and keep track of what that identity token actually is.</span>
+    <span class="n">Binder</span><span class="o">.</span><span class="na">clearCallingIdentity</span><span class="o">();</span>
+    <span class="kd">final</span> <span class="kt">long</span> <span class="n">ident</span> <span class="o">=</span> <span class="n">Binder</span><span class="o">.</span><span class="na">clearCallingIdentity</span><span class="o">();</span>
+	<span class="c1">//这里执行消息队列循环</span>
+    <span class="k">for</span> <span class="o">(;;)</span> <span class="o">{</span>
+        <span class="n">Message</span> <span class="n">msg</span> <span class="o">=</span> <span class="n">queue</span><span class="o">.</span><span class="na">next</span><span class="o">();</span> <span class="c1">// might block</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">msg</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="c1">// No message indicates that the message queue is quitting.</span>
+            <span class="k">return</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="c1">// This must be in a local variable, in case a UI event sets the logger</span>
+        <span class="kd">final</span> <span class="n">Printer</span> <span class="n">logging</span> <span class="o">=</span> <span class="n">me</span><span class="o">.</span><span class="na">mLogging</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">logging</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">logging</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"&gt;&gt;&gt;&gt;&gt; Dispatching to "</span> <span class="o">+</span> <span class="n">msg</span><span class="o">.</span><span class="na">target</span> <span class="o">+</span> <span class="s">" "</span> <span class="o">+</span>
+                    <span class="n">msg</span><span class="o">.</span><span class="na">callback</span> <span class="o">+</span> <span class="s">": "</span> <span class="o">+</span> <span class="n">msg</span><span class="o">.</span><span class="na">what</span><span class="o">);</span>
+        <span class="o">}</span>
+
+        <span class="kd">final</span> <span class="kt">long</span> <span class="n">traceTag</span> <span class="o">=</span> <span class="n">me</span><span class="o">.</span><span class="na">mTraceTag</span><span class="o">;</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">traceTag</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">Trace</span><span class="o">.</span><span class="na">isTagEnabled</span><span class="o">(</span><span class="n">traceTag</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">Trace</span><span class="o">.</span><span class="na">traceBegin</span><span class="o">(</span><span class="n">traceTag</span><span class="o">,</span> <span class="n">msg</span><span class="o">.</span><span class="na">target</span><span class="o">.</span><span class="na">getTraceName</span><span class="o">(</span><span class="n">msg</span><span class="o">));</span>
+        <span class="o">}</span>
+      	<span class="c1">//执行处理消息的回调</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">msg</span><span class="o">.</span><span class="na">target</span><span class="o">.</span><span class="na">dispatchMessage</span><span class="o">(</span><span class="n">msg</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">traceTag</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">Trace</span><span class="o">.</span><span class="na">traceEnd</span><span class="o">(</span><span class="n">traceTag</span><span class="o">);</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">logging</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">logging</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="s">"&lt;&lt;&lt;&lt;&lt; Finished to "</span> <span class="o">+</span> <span class="n">msg</span><span class="o">.</span><span class="na">target</span> <span class="o">+</span> <span class="s">" "</span> <span class="o">+</span> <span class="n">msg</span><span class="o">.</span><span class="na">callback</span><span class="o">);</span>
+        <span class="o">}</span>
+
+        <span class="c1">// Make sure that during the course of dispatching the</span>
+        <span class="c1">// identity of the thread wasn't corrupted.</span>
+        <span class="kd">final</span> <span class="kt">long</span> <span class="n">newIdent</span> <span class="o">=</span> <span class="n">Binder</span><span class="o">.</span><span class="na">clearCallingIdentity</span><span class="o">();</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">ident</span> <span class="o">!=</span> <span class="n">newIdent</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">Log</span><span class="o">.</span><span class="na">wtf</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="s">"Thread identity changed from 0x"</span>
+                    <span class="o">+</span> <span class="n">Long</span><span class="o">.</span><span class="na">toHexString</span><span class="o">(</span><span class="n">ident</span><span class="o">)</span> <span class="o">+</span> <span class="s">" to 0x"</span>
+                    <span class="o">+</span> <span class="n">Long</span><span class="o">.</span><span class="na">toHexString</span><span class="o">(</span><span class="n">newIdent</span><span class="o">)</span> <span class="o">+</span> <span class="s">" while dispatching to "</span>
+                    <span class="o">+</span> <span class="n">msg</span><span class="o">.</span><span class="na">target</span><span class="o">.</span><span class="na">getClass</span><span class="o">().</span><span class="na">getName</span><span class="o">()</span> <span class="o">+</span> <span class="s">" "</span>
+                    <span class="o">+</span> <span class="n">msg</span><span class="o">.</span><span class="na">callback</span> <span class="o">+</span> <span class="s">" what="</span> <span class="o">+</span> <span class="n">msg</span><span class="o">.</span><span class="na">what</span><span class="o">);</span>
+        <span class="o">}</span>
+
+        <span class="n">msg</span><span class="o">.</span><span class="na">recycleUnchecked</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">loop()</code>方法中有一个无限循环，不停地读取调用<code class="highlighter-rouge">MessageQueue</code>的<code class="highlighter-rouge">next()</code>方法。当<code class="highlighter-rouge">next()</code>没有返回时就阻塞在这里。当获取到<code class="highlighter-rouge">MessageQueue</code>中的消息时，就执行了处理消息的回调函数<code class="highlighter-rouge">msg.target.dispatchMessage(msg)</code>。</p>
+
+<p>前面<strong>0x01</strong>分析我们知道<code class="highlighter-rouge">msg.target</code>是在<code class="highlighter-rouge">Handler</code>中的<code class="highlighter-rouge">enqueueMessage()</code>进行赋值，即它指向当前的<code class="highlighter-rouge">Handler</code>实例。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">private</span> <span class="kt">boolean</span> <span class="nf">enqueueMessage</span><span class="o">(</span><span class="n">MessageQueue</span> <span class="n">queue</span><span class="o">,</span> <span class="n">Message</span> <span class="n">msg</span><span class="o">,</span> <span class="kt">long</span> <span class="n">uptimeMillis</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">msg</span><span class="o">.</span><span class="na">target</span> <span class="o">=</span> <span class="k">this</span><span class="o">;</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">mAsynchronous</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">msg</span><span class="o">.</span><span class="na">setAsynchronous</span><span class="o">(</span><span class="kc">true</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="n">queue</span><span class="o">.</span><span class="na">enqueueMessage</span><span class="o">(</span><span class="n">msg</span><span class="o">,</span> <span class="n">uptimeMillis</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>执行<code class="highlighter-rouge">msg.target.dispatchMessage(msg)</code>后便走到了以下流程</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Handle system messages here.
+ */</span>
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">dispatchMessage</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">msg</span><span class="o">.</span><span class="na">callback</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">handleCallback</span><span class="o">(</span><span class="n">msg</span><span class="o">);</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mCallback</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">mCallback</span><span class="o">.</span><span class="na">handleMessage</span><span class="o">(</span><span class="n">msg</span><span class="o">))</span> <span class="o">{</span>
+                <span class="k">return</span><span class="o">;</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="n">handleMessage</span><span class="o">(</span><span class="n">msg</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>这里就是回调<code class="highlighter-rouge">handleMessage(msg)</code>函数处理消息的地方。<strong><code class="highlighter-rouge">Handler</code>负责将<code class="highlighter-rouge">Message</code>入列，<code class="highlighter-rouge">Looper</code>则负责循环从<code class="highlighter-rouge">MessageQueue</code>中取出需要处理的<code class="highlighter-rouge">Message</code>并交由Handler来处理。</strong></p>
+
+<h3 id="0x06-启动主线程的消息循环">0x06 启动主线程的消息循环</h3>
+
+<p>我们知道通过静态方法<code class="highlighter-rouge">Looper.prepare()</code>创建了绑定当前线程的<code class="highlighter-rouge">Looper</code>对象，而通过<code class="highlighter-rouge">loop()</code>启动一个循环不停地读取队列中<code class="highlighter-rouge">Message</code>。但是Android系统是什么时候启动了主线程的消息循环呢？</p>
+
+<p>要理解这一点就必须进入Android应用程序的入口<code class="highlighter-rouge">ActivityThread</code>的<code class="highlighter-rouge">main</code>方法。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">...</span>
+
+    <span class="n">Looper</span><span class="o">.</span><span class="na">prepareMainLooper</span><span class="o">();</span>
+
+    <span class="o">...</span>
+    <span class="n">Looper</span><span class="o">.</span><span class="na">loop</span><span class="o">();</span>
+
+    <span class="k">throw</span> <span class="k">new</span> <span class="nf">RuntimeException</span><span class="o">(</span><span class="s">"Main thread loop unexpectedly exited"</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>可以看出<code class="highlighter-rouge">main</code>方法中先后执行了<code class="highlighter-rouge">Looper.prepareMainLooper()</code>方法和<code class="highlighter-rouge">Looper.loop()</code>方法。正常情况下<code class="highlighter-rouge">main</code>方法不会退出，只有<code class="highlighter-rouge">loop()</code>方法发生异常后将会抛出<code class="highlighter-rouge">RuntimeException</code>。</p>
+
+<h3 id="0x07-looperpreparemainlooper">0x07 Looper.prepareMainLooper()</h3>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Initialize the current thread as a looper, marking it as an
+ * application's main looper. The main looper for your application
+ * is created by the Android environment, so you should never need
+ * to call this function yourself.  See also: {@link #prepare()}
+ */</span>
+<span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">prepareMainLooper</span><span class="o">()</span> <span class="o">{</span>
+    <span class="n">prepare</span><span class="o">(</span><span class="kc">false</span><span class="o">);</span>
+    <span class="kd">synchronized</span> <span class="o">(</span><span class="n">Looper</span><span class="o">.</span><span class="na">class</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">sMainLooper</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">IllegalStateException</span><span class="o">(</span><span class="s">"The main Looper has already been prepared."</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="n">sMainLooper</span> <span class="o">=</span> <span class="n">myLooper</span><span class="o">();</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">prepareMainLooper()</code>方法其实是调用了<code class="highlighter-rouge">prepare()</code>方法。</p>
+
+<p>当我们启动应用时系统就调用了<code class="highlighter-rouge">prepareMainLooper()</code>并在主线程中绑定了一个<code class="highlighter-rouge">Looper</code>对象。</p>
+
+<p>这时候我们回过来看看一开始的<code class="highlighter-rouge">Handler</code>使用方式。在主线程中我们创建了<code class="highlighter-rouge">Handler</code>对象，在<code class="highlighter-rouge">Handler</code>构造函数中初始化了<code class="highlighter-rouge">Looper</code>（即获取到了绑定在主线程中的<code class="highlighter-rouge">Looper</code>对象）。当在子线程<code class="highlighter-rouge">MyThread</code>中通过<code class="highlighter-rouge">mHandler.sendMessage(msg)</code>方法发送一个消息时就把<code class="highlighter-rouge">Message</code>放在与主线程绑定的<code class="highlighter-rouge">MessageQueue</code>中。这样在子线程中使用<code class="highlighter-rouge">Handler</code>就实现了消息的通信。</p>
+
+<p>可以简单的使用以下类图表示，<strong>每个线程都由一个Handler，每个Handler都是与当前所在线程的Looper绑定</strong>。</p>
+
+<p><img src="http://angrycode.qiniudn.com/%E7%BA%BF%E7%A8%8B%E4%B8%ADHandler%E6%A8%A1%E5%9E%8B.png" alt="线程Handler模型" /></p>
+
+<h3 id="0x08-主线程是否会阻塞">0x08 主线程是否会阻塞</h3>
+
+<p>在<strong>0x06</strong>中知道在<code class="highlighter-rouge">ActivityThead</code>的<code class="highlighter-rouge">main</code>方法中启动了一个死循环。那主线程是不是就一直阻塞在这里呢？其实不然。可以看到<code class="highlighter-rouge">ActivityThread</code>类里面有一个自定义的<code class="highlighter-rouge">Handler</code>对象<code class="highlighter-rouge">mH</code>，在这里对象中<code class="highlighter-rouge">handleMessage()</code>回调中定义了<code class="highlighter-rouge">Activity</code>的各种交互如管理<code class="highlighter-rouge">Activity</code>生命周期，启动<code class="highlighter-rouge">service</code>，显示<code class="highlighter-rouge">window</code>等，都是通过<code class="highlighter-rouge">Handler</code>进行处理的。同时可以看出只有当应用退出<code class="highlighter-rouge">EXIT_APPLICATION</code>之后才回调用<code class="highlighter-rouge">Looper.quit()</code>停止消息循环。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kt">void</span> <span class="nf">handleMessage</span><span class="o">(</span><span class="n">Message</span> <span class="n">msg</span><span class="o">)</span> <span class="o">{</span>
+    <span class="o">...</span>
+    <span class="k">switch</span> <span class="o">(</span><span class="n">msg</span><span class="o">.</span><span class="na">what</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">case</span> <span class="nl">LAUNCH_ACTIVITY:</span> <span class="o">{</span>
+            <span class="o">...</span>
+            <span class="n">handleLaunchActivity</span><span class="o">(</span><span class="n">r</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="s">"LAUNCH_ACTIVITY"</span><span class="o">);</span>
+            <span class="n">Trace</span><span class="o">.</span><span class="na">traceEnd</span><span class="o">(</span><span class="n">Trace</span><span class="o">.</span><span class="na">TRACE_TAG_ACTIVITY_MANAGER</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">break</span><span class="o">;</span>
+        <span class="o">...</span>
+        <span class="k">case</span> <span class="nl">PAUSE_ACTIVITY:</span> <span class="o">{</span>
+            <span class="o">...</span>
+            <span class="n">handlePauseActivity</span><span class="o">((</span><span class="n">IBinder</span><span class="o">)</span> <span class="n">args</span><span class="o">.</span><span class="na">arg1</span><span class="o">,</span> <span class="kc">false</span><span class="o">,</span>
+                    <span class="o">(</span><span class="n">args</span><span class="o">.</span><span class="na">argi1</span> <span class="o">&amp;</span> <span class="n">USER_LEAVING</span><span class="o">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">,</span> <span class="n">args</span><span class="o">.</span><span class="na">argi2</span><span class="o">,</span>
+                    <span class="o">(</span><span class="n">args</span><span class="o">.</span><span class="na">argi1</span> <span class="o">&amp;</span> <span class="n">DONT_REPORT</span><span class="o">)</span> <span class="o">!=</span> <span class="mi">0</span><span class="o">,</span> <span class="n">args</span><span class="o">.</span><span class="na">argi3</span><span class="o">);</span>
+            <span class="o">...</span>
+        <span class="o">}</span> <span class="k">break</span><span class="o">;</span>
+        
+        <span class="o">...</span>
+        <span class="k">case</span> <span class="nl">SHOW_WINDOW:</span>
+            <span class="o">...</span>
+            <span class="n">handleWindowVisibility</span><span class="o">((</span><span class="n">IBinder</span><span class="o">)</span><span class="n">msg</span><span class="o">.</span><span class="na">obj</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+            <span class="o">...</span>
+            <span class="k">break</span><span class="o">;</span>
+        <span class="o">...</span>
+        <span class="k">case</span> <span class="nl">EXIT_APPLICATION:</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">mInitialApplication</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">mInitialApplication</span><span class="o">.</span><span class="na">onTerminate</span><span class="o">();</span>
+            <span class="o">}</span>
+            <span class="n">Looper</span><span class="o">.</span><span class="na">myLooper</span><span class="o">().</span><span class="na">quit</span><span class="o">();</span>
+            <span class="k">break</span><span class="o">;</span>
+        <span class="o">...</span>
+    <span class="o">}</span>
+    <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h3 id="0x09-总结">0x09 总结</h3>
+
+<p>当创建<code class="highlighter-rouge">Handler</code>时将通过<code class="highlighter-rouge">ThreadLocal</code>在当前线程绑定一个<code class="highlighter-rouge">Looper</code>对象，而<code class="highlighter-rouge">Looper</code>持有<code class="highlighter-rouge">MessageQueue</code>对象。执行<code class="highlighter-rouge">Handler.sendMessage(Message)</code>方法将一个待处理的<code class="highlighter-rouge">Message</code>插入到<code class="highlighter-rouge">MessageQueue</code>中，这时候通过<code class="highlighter-rouge">Looper.loop()</code>方法获取到队列中<code class="highlighter-rouge">Message</code>，然后再交由<code class="highlighter-rouge">Handler.handleMessage(Message)</code>来处理。</p>
+
+        
+        <div class="post_footer">
+          <p>Published on Mar 11, 2017 in categories 
+          
+          <a href="http://localhost:4000/categories/#Android" title="Android">Android</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            
+            <li>
+                <span>下一篇</span>
+                <a href="/2017/03/22/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF-15%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91/">老司机带路——15个Android撸代码常见的坑</a>
+            </li>
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/2017/03/11/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Android-Handler%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E7%9A%84/',
+            owner: 'hylinux1024',
+            repo: 'jekyll-theme-solid',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+
