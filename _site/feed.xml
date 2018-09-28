@@ -1,4 +1,52 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-09-28T12:23:59+08:00</updated><id>http://localhost:4000/</id><title type="html">Thinking Tech</title><author><name>hylinux</name></author><entry><title type="html">Android ndk开发cmakelists.txt 配置文件解析</title><link href="http://localhost:4000/2018/09/26/Android-NDK%E5%BC%80%E5%8F%91CMakeLists.txt-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90/" rel="alternate" type="text/html" title="Android ndk开发cmakelists.txt 配置文件解析" /><published>2018-09-26T00:00:00+08:00</published><updated>2018-09-26T00:00:00+08:00</updated><id>http://localhost:4000/2018/09/26/Android%20NDK%E5%BC%80%E5%8F%91CMakeLists.txt%20%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90</id><content type="html" xml:base="http://localhost:4000/2018/09/26/Android-NDK%E5%BC%80%E5%8F%91CMakeLists.txt-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90/">&lt;p&gt;在&lt;code class=&quot;highlighter-rouge&quot;&gt;Android Studio&lt;/code&gt;中建立支持&lt;code class=&quot;highlighter-rouge&quot;&gt;NDK&lt;/code&gt;项目是默认是&lt;code class=&quot;highlighter-rouge&quot;&gt;CMake&lt;/code&gt;的方式来进行构建的，过去的&lt;code class=&quot;highlighter-rouge&quot;&gt;ndk-build&lt;/code&gt;的方式从目前官方的文档上看，应该是逐渐淘汰的。现在大多数&lt;code class=&quot;highlighter-rouge&quot;&gt;APP&lt;/code&gt;架构中都是有&lt;code class=&quot;highlighter-rouge&quot;&gt;Native Code&lt;/code&gt;的，所以了解&lt;code class=&quot;highlighter-rouge&quot;&gt;CMake&lt;/code&gt;的配置方式是进行&lt;code class=&quot;highlighter-rouge&quot;&gt;NDK&lt;/code&gt;开发的基础。&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-09-28T16:50:17+08:00</updated><id>http://localhost:4000/</id><title type="html">Thinking Tech</title><author><name>hylinux</name></author><entry><title type="html">Android 后台任务处理指南</title><link href="http://localhost:4000/2018/09/28/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97/" rel="alternate" type="text/html" title="Android 后台任务处理指南" /><published>2018-09-28T00:00:00+08:00</published><updated>2018-09-28T00:00:00+08:00</updated><id>http://localhost:4000/2018/09/28/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97</id><content type="html" xml:base="http://localhost:4000/2018/09/28/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97/">&lt;h4 id=&quot;0x00-后台任务处理指南&quot;&gt;0x00 后台任务处理指南&lt;/h4&gt;
+
+&lt;p&gt;Android的主线程（MainThread）主要是处理UI和绘制，接收用户的交互以及处理生命周期等事件。在UI线程中处理耗时操作，将严重影响用户的体验。因此很多任务是需要放在后台任务中进行处理的。&lt;/p&gt;
+
+&lt;p&gt;当需要后台任务时需要考虑以下因素：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;strong&gt;任务是否可以延期执行，还是需要马上执行？&lt;/strong&gt; 例如，当你点击页面上按钮去请求网络数据时，这个任务是需要立即执行，不应该让用户等待。如果是上传用户日志到服务器中，这个任务在不影响用户体验的情况下是可以推迟执行的。&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;任务一旦开启，操作系统是否要保持该任务所在的进程？&lt;/strong&gt; 例如，解码一个&lt;code class=&quot;highlighter-rouge&quot;&gt;bitmap&lt;/code&gt;并显示到屏幕上，这个任务是需要&lt;code class=&quot;highlighter-rouge&quot;&gt;App&lt;/code&gt;在前台并且该进程是活跃的。而一个音乐播放器在&lt;code class=&quot;highlighter-rouge&quot;&gt;App&lt;/code&gt;退到后台甚至用户没有进行操作时，也是需要保持播放服务能够正常的进行。&lt;/li&gt;
+  &lt;li&gt;&lt;strong&gt;任务是否需要响应系统的触发事件？&lt;/strong&gt;这些触发事件是指像网络、电量、空间存储等状态的变化。当这些状态变化的时候，可以触发任务的执行。例如当从飞行模式切换回来时，&lt;code class=&quot;highlighter-rouge&quot;&gt;App&lt;/code&gt;能够自动与服务端通讯，而且如果此时进程已经被系统杀掉，那么该任务所在的进程应该在有网络的情况下重新创建，然后执行后台任务。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;目前Android系统中处理后台任务的方式有以下几种：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;ThreadPools（线程池）&lt;/li&gt;
+  &lt;li&gt;Foreground Services（前台服务）&lt;/li&gt;
+  &lt;li&gt;WorkManager（任务管理器）&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&quot;threadpools&quot;&gt;ThreadPools&lt;/h5&gt;
+
+&lt;p&gt;当一个任务必须在&lt;code class=&quot;highlighter-rouge&quot;&gt;App&lt;/code&gt;处于前台状态时处理，可以使用&lt;code class=&quot;highlighter-rouge&quot;&gt;ThreadPools&lt;/code&gt;。如果要响应操作系统的触发事件状态，那么只能通过&lt;code class=&quot;highlighter-rouge&quot;&gt;Broadcast Receiver&lt;/code&gt;了。&lt;/p&gt;
+
+&lt;h5 id=&quot;foregound-services&quot;&gt;Foregound Services&lt;/h5&gt;
+
+&lt;p&gt;对于必须执行完成的，并需要马上执行的任务，可以使用&lt;code class=&quot;highlighter-rouge&quot;&gt;Foreground Services&lt;/code&gt;。前台服务会在通知栏中保持一个无法手动取消的通知，它会告诉操作系统这个任务非常重要，不要杀掉。&lt;/p&gt;
+
+&lt;h5 id=&quot;workmanager&quot;&gt;WorkManager&lt;/h5&gt;
+
+&lt;p&gt;对于必须执行完成的，并能否延迟执行的任务，可以使用&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;。任务管理器是一个&lt;code class=&quot;highlighter-rouge&quot;&gt;Android&lt;/code&gt;库，它优雅地实现了可延迟任务的执行，它还能够响应操作系统的触发事件（网络状态、电量变化等事件）。Android 6.0以上操作系统 &lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;使用了框架层中的&lt;code class=&quot;highlighter-rouge&quot;&gt;JobScheduler&lt;/code&gt;，用于优化电量消耗和批量任务的执行。在低于&lt;code class=&quot;highlighter-rouge&quot;&gt;Android 6.0 (API 23) &lt;/code&gt;的系统，如果项目有引用&lt;code class=&quot;highlighter-rouge&quot;&gt;Firebase&lt;/code&gt;相关依赖库的话， &lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt; 则会使用&lt;code class=&quot;highlighter-rouge&quot;&gt;Firebase JobDispatcher&lt;/code&gt; ，否则&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt; 使用&lt;code class=&quot;highlighter-rouge&quot;&gt;AlarmManager&lt;/code&gt;来优雅地处理后台任务。&lt;/p&gt;
+
+&lt;p&gt;因此&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt; 其实是封装了&lt;code class=&quot;highlighter-rouge&quot;&gt;JobScheduler&lt;/code&gt; 、&lt;code class=&quot;highlighter-rouge&quot;&gt;Firebase JobDispatcher&lt;/code&gt; 和 &lt;code class=&quot;highlighter-rouge&quot;&gt;AlarmManager&lt;/code&gt; 的调用逻辑。它能够以最优的方式选择处理后台任务的方式，这也是&lt;code class=&quot;highlighter-rouge&quot;&gt;google&lt;/code&gt;目前推荐处理后台任务的一种方式。&lt;/p&gt;
+
+&lt;h6 id=&quot;后台任务处理的限制&quot;&gt;后台任务处理的限制&lt;/h6&gt;
+
+&lt;p&gt;为了延长电量使用，在 &lt;code class=&quot;highlighter-rouge&quot;&gt;App&lt;/code&gt; 处于后台不可见得情况下 Android 限制了后台任务的执行情况。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Android 6.0 (API 23) 引入了 &lt;a href=&quot;https://developer.android.com/training/monitoring-device-state/doze-standby&quot;&gt;Doze mode and app standby&lt;/a&gt;（低耗电模式和待机模式）。在此模式下限制了 &lt;code class=&quot;highlighter-rouge&quot;&gt;App&lt;/code&gt;访问网络、工作任务和同步的操作。&lt;/li&gt;
+  &lt;li&gt;Android 7.0 (API 24) 限制了隐式广播&lt;code class=&quot;highlighter-rouge&quot;&gt;(limited implicit broadcasts)&lt;/code&gt; 并引入了 &lt;a href=&quot;https://developer.android.com/about/versions/nougat/android-7.0#doze_on_the_go&quot;&gt;Doze-on-the-Go&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;Android 8.0 (API 26) 深度限制了后台任务行为&lt;a href=&quot;https://developer.android.com/about/versions/oreo/background&quot;&gt;limited background behavior&lt;/a&gt;，例如后台获取地理位置。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt; 是处理以上限制的最好工具。&lt;/p&gt;
+
+&lt;h4 id=&quot;0x01-参考文档&quot;&gt;0x01 参考文档&lt;/h4&gt;
+
+&lt;p&gt;&lt;a href=&quot;https://developer.android.com/guide/background&quot;&gt;https://developer.android.com/guide/background&lt;/a&gt;&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">0x00 后台任务处理指南</summary></entry><entry><title type="html">Android NDK开发CMakeLists文件配置解析</title><link href="http://localhost:4000/2018/09/26/Android-NDK%E5%BC%80%E5%8F%91CMakeLists%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90/" rel="alternate" type="text/html" title="Android NDK开发CMakeLists文件配置解析" /><published>2018-09-26T00:00:00+08:00</published><updated>2018-09-26T00:00:00+08:00</updated><id>http://localhost:4000/2018/09/26/Android%20NDK%E5%BC%80%E5%8F%91CMakeLists%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90</id><content type="html" xml:base="http://localhost:4000/2018/09/26/Android-NDK%E5%BC%80%E5%8F%91CMakeLists%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90/">&lt;p&gt;在&lt;code class=&quot;highlighter-rouge&quot;&gt;Android Studio&lt;/code&gt;中建立支持&lt;code class=&quot;highlighter-rouge&quot;&gt;NDK&lt;/code&gt;项目是默认是&lt;code class=&quot;highlighter-rouge&quot;&gt;CMake&lt;/code&gt;的方式来进行构建的，过去的&lt;code class=&quot;highlighter-rouge&quot;&gt;ndk-build&lt;/code&gt;的方式从目前官方的文档上看，应该是逐渐淘汰的。现在大多数&lt;code class=&quot;highlighter-rouge&quot;&gt;APP&lt;/code&gt;架构中都是有&lt;code class=&quot;highlighter-rouge&quot;&gt;Native Code&lt;/code&gt;的，所以了解&lt;code class=&quot;highlighter-rouge&quot;&gt;CMake&lt;/code&gt;的配置方式是进行&lt;code class=&quot;highlighter-rouge&quot;&gt;NDK&lt;/code&gt;开发的基础。&lt;/p&gt;
 
 &lt;h4 id=&quot;0x00-建立支持ndk项目&quot;&gt;0x00 建立支持NDK项目&lt;/h4&gt;
 
@@ -139,7 +187,7 @@ set_target_properties( # Specifies the target library.
 
 &lt;h4 id=&quot;0x03-引用&quot;&gt;0x03 引用&lt;/h4&gt;
 
-&lt;p&gt;https://developer.android.com/studio/projects/add-native-code&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html"></summary></entry><entry><title type="html">Android后台单进程保活处理实践</title><link href="http://localhost:4000/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5/" rel="alternate" type="text/html" title="Android后台单进程保活处理实践" /><published>2018-09-21T00:00:00+08:00</published><updated>2018-09-21T00:00:00+08:00</updated><id>http://localhost:4000/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5</id><content type="html" xml:base="http://localhost:4000/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5/">&lt;h4 id=&quot;0x00如何实现一个后台进程&quot;&gt;0x00、如何实现一个后台进程&lt;/h4&gt;
+&lt;p&gt;https://developer.android.com/studio/projects/add-native-code&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">在Android Studio中建立支持NDK项目是默认是CMake的方式来进行构建的，过去的ndk-build的方式从目前官方的文档上看，应该是逐渐淘汰的。现在大多数APP架构中都是有Native Code的，所以了解CMake的配置方式是进行NDK开发的基础。</summary></entry><entry><title type="html">Android后台单进程保活处理实践</title><link href="http://localhost:4000/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5/" rel="alternate" type="text/html" title="Android后台单进程保活处理实践" /><published>2018-09-21T00:00:00+08:00</published><updated>2018-09-21T00:00:00+08:00</updated><id>http://localhost:4000/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5</id><content type="html" xml:base="http://localhost:4000/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5/">&lt;h4 id=&quot;0x00如何实现一个后台进程&quot;&gt;0x00、如何实现一个后台进程&lt;/h4&gt;
 
 &lt;ol&gt;
   &lt;li&gt;
@@ -303,7 +351,68 @@ set_target_properties( # Specifies the target library.
     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
   &lt;/li&gt;
-&lt;/ol&gt;</content><author><name>hylinux</name></author><category term="后台进程" /><category term="Service" /><summary type="html">0x00、如何实现一个后台进程</summary></entry><entry><title type="html">机器学习之逻辑回归</title><link href="http://localhost:4000/2017/08/20/logisitic-regression/" rel="alternate" type="text/html" title="机器学习之逻辑回归" /><published>2017-08-20T00:00:00+08:00</published><updated>2017-08-20T00:00:00+08:00</updated><id>http://localhost:4000/2017/08/20/logisitic-regression</id><content type="html" xml:base="http://localhost:4000/2017/08/20/logisitic-regression/">&lt;p&gt;[TOC]&lt;/p&gt;
+&lt;/ol&gt;</content><author><name>hylinux</name></author><category term="后台进程" /><category term="Service" /><summary type="html">0x00、如何实现一个后台进程</summary></entry><entry><title type="html">搭建Telegram代理服务</title><link href="http://localhost:4000/2018/08/06/%E6%90%AD%E5%BB%BATelegram%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1/" rel="alternate" type="text/html" title="搭建Telegram代理服务" /><published>2018-08-06T00:00:00+08:00</published><updated>2018-08-06T00:00:00+08:00</updated><id>http://localhost:4000/2018/08/06/%E6%90%AD%E5%BB%BATelegram%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1</id><content type="html" xml:base="http://localhost:4000/2018/08/06/%E6%90%AD%E5%BB%BATelegram%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1/">&lt;h4 id=&quot;0x00-代理服务&quot;&gt;0x00 代理服务&lt;/h4&gt;
+
+&lt;p&gt;搭建代理服务两种常见方式：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;shadowsocks&lt;/li&gt;
+  &lt;li&gt;socks5&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h5 id=&quot;1-shadowsocks服务&quot;&gt;1. Shadowsocks服务&lt;/h5&gt;
+
+&lt;p&gt;具体搭建步骤可参考&lt;/p&gt;
+
+&lt;p&gt;https://shadowsocks.org/en/download/servers.html&lt;/p&gt;
+
+&lt;p&gt;其中配置文件如下&lt;/p&gt;
+
+&lt;div class=&quot;language-json highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;server&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;my_server_ip&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;server_port&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;8388&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;local_address&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;0.0.0.0&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;local_port&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1080&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;password&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;barfoo!&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;timeout&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;600&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+    &lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;method&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;aes-256-cfb&quot;&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;&lt;span class=&quot;w&quot;&gt;
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;通过命令启动便可以Shadowsocks服务&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;ssserver&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;json&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;d&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;restart&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;通过修改Shadowsocks的配置文件,将&lt;code class=&quot;highlighter-rouge&quot;&gt;local_address&lt;/code&gt;与&lt;code class=&quot;highlighter-rouge&quot;&gt;server&lt;/code&gt;字段修改为一样，也可以设置为&lt;code class=&quot;highlighter-rouge&quot;&gt;0.0.0.0&lt;/code&gt;，这时&lt;code class=&quot;highlighter-rouge&quot;&gt;shadowsocks&lt;/code&gt;服务也可以支持&lt;code class=&quot;highlighter-rouge&quot;&gt;socks5&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;然后再通过以下命令启动socks5代理服务（shadowsocks服务必须也要启动）&lt;/p&gt;
+
+&lt;div class=&quot;language-c highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;nohup&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;sslocal&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;c&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;config&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;json&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;ss&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;log&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;amp;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h5 id=&quot;2-socks5搭建&quot;&gt;2. Socks5搭建&lt;/h5&gt;
+
+&lt;p&gt;具体搭建步骤可参考&lt;/p&gt;
+
+&lt;p&gt;https://github.com/wyx176/Socks5&lt;/p&gt;
+
+&lt;h4 id=&quot;0x01-mtproxy-代理搭建&quot;&gt;0x01 MTProxy 代理搭建&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Telegram&lt;/code&gt; 使用的是自家通信协议&lt;code class=&quot;highlighter-rouge&quot;&gt;MTProto&lt;/code&gt;,而其本身也提供了基于&lt;code class=&quot;highlighter-rouge&quot;&gt;MTProto&lt;/code&gt;的代理方式，更加轻便有效，针对&lt;code class=&quot;highlighter-rouge&quot;&gt;Telegram&lt;/code&gt;的代理，推荐使用&lt;code class=&quot;highlighter-rouge&quot;&gt;MTProxy&lt;/code&gt;&lt;/p&gt;
+
+&lt;p&gt;具体搭建步骤可参考&lt;/p&gt;
+
+&lt;p&gt;https://github.com/TelegramMessenger/MTProxy&lt;/p&gt;
+
+&lt;h4 id=&quot;0x02-supervisor&quot;&gt;0x02 supervisor&lt;/h4&gt;
+
+&lt;div class=&quot;highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;find / -name supervisor.sock
+
+unlink /name/supervisor.sock
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;https://blog.csdn.net/LHWorldBlog/article/details/78518696&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">0x00 代理服务</summary></entry><entry><title type="html">机器学习之逻辑回归</title><link href="http://localhost:4000/2017/08/20/logisitic-regression/" rel="alternate" type="text/html" title="机器学习之逻辑回归" /><published>2017-08-20T00:00:00+08:00</published><updated>2017-08-20T00:00:00+08:00</updated><id>http://localhost:4000/2017/08/20/logisitic-regression</id><content type="html" xml:base="http://localhost:4000/2017/08/20/logisitic-regression/">&lt;p&gt;[TOC]&lt;/p&gt;
 
 &lt;p&gt;本文主要内容&lt;/p&gt;
 

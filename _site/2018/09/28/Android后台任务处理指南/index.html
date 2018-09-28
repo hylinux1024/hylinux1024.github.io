@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="background processing,后台任务,ThreadPool,Foreground Services,WorkManager" />
+        <meta name="description" content="后台任务处理指南" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> Android 后台任务处理指南  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> Android 后台任务处理指南 </h2>
+        <h4 id="0x00-后台任务处理指南">0x00 后台任务处理指南</h4>
+
+<p>Android的主线程（MainThread）主要是处理UI和绘制，接收用户的交互以及处理生命周期等事件。在UI线程中处理耗时操作，将严重影响用户的体验。因此很多任务是需要放在后台任务中进行处理的。</p>
+
+<p>当需要后台任务时需要考虑以下因素：</p>
+
+<ul>
+  <li><strong>任务是否可以延期执行，还是需要马上执行？</strong> 例如，当你点击页面上按钮去请求网络数据时，这个任务是需要立即执行，不应该让用户等待。如果是上传用户日志到服务器中，这个任务在不影响用户体验的情况下是可以推迟执行的。</li>
+  <li><strong>任务一旦开启，操作系统是否要保持该任务所在的进程？</strong> 例如，解码一个<code class="highlighter-rouge">bitmap</code>并显示到屏幕上，这个任务是需要<code class="highlighter-rouge">App</code>在前台并且该进程是活跃的。而一个音乐播放器在<code class="highlighter-rouge">App</code>退到后台甚至用户没有进行操作时，也是需要保持播放服务能够正常的进行。</li>
+  <li><strong>任务是否需要响应系统的触发事件？</strong>这些触发事件是指像网络、电量、空间存储等状态的变化。当这些状态变化的时候，可以触发任务的执行。例如当从飞行模式切换回来时，<code class="highlighter-rouge">App</code>能够自动与服务端通讯，而且如果此时进程已经被系统杀掉，那么该任务所在的进程应该在有网络的情况下重新创建，然后执行后台任务。</li>
+</ul>
+
+<p>目前Android系统中处理后台任务的方式有以下几种：</p>
+
+<ul>
+  <li>ThreadPools（线程池）</li>
+  <li>Foreground Services（前台服务）</li>
+  <li>WorkManager（任务管理器）</li>
+</ul>
+
+<h5 id="threadpools">ThreadPools</h5>
+
+<p>当一个任务必须在<code class="highlighter-rouge">App</code>处于前台状态时处理，可以使用<code class="highlighter-rouge">ThreadPools</code>。如果要响应操作系统的触发事件状态，那么只能通过<code class="highlighter-rouge">Broadcast Receiver</code>了。</p>
+
+<h5 id="foregound-services">Foregound Services</h5>
+
+<p>对于必须执行完成的，并需要马上执行的任务，可以使用<code class="highlighter-rouge">Foreground Services</code>。前台服务会在通知栏中保持一个无法手动取消的通知，它会告诉操作系统这个任务非常重要，不要杀掉。</p>
+
+<h5 id="workmanager">WorkManager</h5>
+
+<p>对于必须执行完成的，并能否延迟执行的任务，可以使用<code class="highlighter-rouge">WorkManager</code>。任务管理器是一个<code class="highlighter-rouge">Android</code>库，它优雅地实现了可延迟任务的执行，它还能够响应操作系统的触发事件（网络状态、电量变化等事件）。Android 6.0以上操作系统 <code class="highlighter-rouge">WorkManager</code>使用了框架层中的<code class="highlighter-rouge">JobScheduler</code>，用于优化电量消耗和批量任务的执行。在低于<code class="highlighter-rouge">Android 6.0 (API 23) </code>的系统，如果项目有引用<code class="highlighter-rouge">Firebase</code>相关依赖库的话， <code class="highlighter-rouge">WorkManager</code> 则会使用<code class="highlighter-rouge">Firebase JobDispatcher</code> ，否则<code class="highlighter-rouge">WorkManager</code> 使用<code class="highlighter-rouge">AlarmManager</code>来优雅地处理后台任务。</p>
+
+<p>因此<code class="highlighter-rouge">WorkManager</code> 其实是封装了<code class="highlighter-rouge">JobScheduler</code> 、<code class="highlighter-rouge">Firebase JobDispatcher</code> 和 <code class="highlighter-rouge">AlarmManager</code> 的调用逻辑。它能够以最优的方式选择处理后台任务的方式，这也是<code class="highlighter-rouge">google</code>目前推荐处理后台任务的一种方式。</p>
+
+<h6 id="后台任务处理的限制">后台任务处理的限制</h6>
+
+<p>为了延长电量使用，在 <code class="highlighter-rouge">App</code> 处于后台不可见得情况下 Android 限制了后台任务的执行情况。</p>
+
+<ul>
+  <li>Android 6.0 (API 23) 引入了 <a href="https://developer.android.com/training/monitoring-device-state/doze-standby">Doze mode and app standby</a>（低耗电模式和待机模式）。在此模式下限制了 <code class="highlighter-rouge">App</code>访问网络、工作任务和同步的操作。</li>
+  <li>Android 7.0 (API 24) 限制了隐式广播<code class="highlighter-rouge">(limited implicit broadcasts)</code> 并引入了 <a href="https://developer.android.com/about/versions/nougat/android-7.0#doze_on_the_go">Doze-on-the-Go</a></li>
+  <li>Android 8.0 (API 26) 深度限制了后台任务行为<a href="https://developer.android.com/about/versions/oreo/background">limited background behavior</a>，例如后台获取地理位置。</li>
+</ul>
+
+<p><code class="highlighter-rouge">WorkManager</code> 是处理以上限制的最好工具。</p>
+
+<h4 id="0x01-参考文档">0x01 参考文档</h4>
+
+<p><a href="https://developer.android.com/guide/background">https://developer.android.com/guide/background</a></p>
+
+
+        
+        <div class="post_footer">
+          <p>Published on Sep 28, 2018 in categories 
+          
+          <a href="http://localhost:4000/categories/#Android" title="Android">Android</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/2018/09/26/Android-NDK%E5%BC%80%E5%8F%91CMakeLists%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90/">Android NDK开发CMakeLists文件配置解析</a>
+            </li>
+            
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="https://imsun.github.io/gitment/dist/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/2018/09/28/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97/',
+            owner: 'hylinux1024',
+            repo: 'jekyll-theme-solid',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+
