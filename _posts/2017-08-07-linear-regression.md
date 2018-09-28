@@ -1,9 +1,10 @@
 ---
 layout: post
 title: 机器学习之线性回归
+categories: ML
 description: "线性回归属于监督学习算法中的一种，也是最简单的一种算法。"
 modified: 2017-08-08
-tags: [线性回归,Linear Regression]
+keywords: 线性回归,Linear Regression
 share: false
 ---
 

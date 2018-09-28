@@ -1,9 +1,10 @@
 ---
 layout: post
 title: 机器学习之朴素贝叶斯
+categories: ML
 description: "贝叶斯定理又称贝叶斯法则。"
 modified: 2017-08-08
-tags: [朴素贝叶斯,Naive Bayesian]
+keywords: 朴素贝叶斯,Naive Bayesian
 share: false
 ---
 
