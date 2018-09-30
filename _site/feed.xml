@@ -1,4 +1,158 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-09-28T18:25:56+08:00</updated><id>http://localhost:4000/</id><title type="html">Thinking Tech</title><author><name>hylinux</name></author><entry><title type="html">Android 后台任务处理指南</title><link href="http://localhost:4000/2018/09/28/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97/" rel="alternate" type="text/html" title="Android 后台任务处理指南" /><published>2018-09-28T00:00:00+08:00</published><updated>2018-09-28T00:00:00+08:00</updated><id>http://localhost:4000/2018/09/28/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97</id><content type="html" xml:base="http://localhost:4000/2018/09/28/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97/">&lt;h4 id=&quot;0x00-后台任务处理指南&quot;&gt;0x00 后台任务处理指南&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-09-30T19:06:21+08:00</updated><id>http://localhost:4000/</id><title type="html">Thinking Tech</title><author><name>hylinux</name></author><entry><title type="html">如何使用WorkManager执行后台任务(上)</title><link href="http://localhost:4000/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1-%E4%B8%8A" rel="alternate" type="text/html" title="如何使用WorkManager执行后台任务(上)" /><published>2018-09-29T00:00:00+08:00</published><updated>2018-09-29T00:00:00+08:00</updated><id>http://localhost:4000/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1(%E4%B8%8A)</id><content type="html" xml:base="http://localhost:4000/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1-%E4%B8%8A">&lt;h4 id=&quot;0x00-简述&quot;&gt;0x00 简述&lt;/h4&gt;
+
+&lt;p&gt;WorkManager 是 Android Jetpack中的一部分，它主要是封装了 Android 后台任务的调度逻辑。在前文《Android后台任务处理指南》一文中知道，WorkManager 是高级 API，它实际是封装了&lt;a href=&quot;https://developer.android.com/reference/android/app/job/JobScheduler.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;JobScheduler&lt;/code&gt;&lt;/a&gt;, &lt;a href=&quot;https://github.com/firebase/firebase-jobdispatcher-android#user-content-firebase-jobdispatcher-&quot;&gt;Firebase JobDispatcher&lt;/a&gt;, 和 &lt;a href=&quot;https://developer.android.com/reference/android/app/AlarmManager.html&quot;&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;AlarmManager&lt;/code&gt;&lt;/a&gt; 底层的使用，提供了简单且灵活易用的API，它有很多优势：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;支持异步一次性或周期任务&lt;/li&gt;
+  &lt;li&gt;支持网络、存储空间以及电量状态等约束&lt;/li&gt;
+  &lt;li&gt;可使用链式的调用方式来执行任务，也包括并行任务处理&lt;/li&gt;
+  &lt;li&gt;一个工作任务的执行结果可以作为下一个任务的输入&lt;/li&gt;
+  &lt;li&gt;兼容API 14 以上&lt;/li&gt;
+  &lt;li&gt;可以支持Google play services&lt;/li&gt;
+  &lt;li&gt;支持LiveData&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;0x01-理论篇重要的类&quot;&gt;0x01 理论篇——重要的类&lt;/h4&gt;
+
+&lt;p&gt;WorkManager库中有一些非常重要的类，这些类帮助你构建后台执行的工作任务：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Worker&lt;/code&gt;：这是一个抽象类，它表示一个工作任务，继承这个类实现&lt;code class=&quot;highlighter-rouge&quot;&gt;doWork()&lt;/code&gt;方法，这里就是实现执行任务的主要逻辑。&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt;：表示一个工作任务请求，指定执行哪个&lt;code class=&quot;highlighter-rouge&quot;&gt;Work&lt;/code&gt;，它还可以设置任务执行的约束条件。每一个&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt;都有一个自动生成的唯一ID。使用这个ID可以取消任务的执行，或者取得当前任务的执行状态。&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt;也是一个抽象类，使用的时候是框架库中提供的子类&lt;code class=&quot;highlighter-rouge&quot;&gt;OneTimeWorkRequest&lt;/code&gt;和&lt;code class=&quot;highlighter-rouge&quot;&gt;PeriodicWorkRequest&lt;/code&gt;类，分别代表&lt;strong&gt;一次性任务和周期任务&lt;/strong&gt;
+    &lt;ul&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest.Builder&lt;/code&gt;：这是一个创建工作任务请求的辅助工具类。它有两个具体的实现：&lt;code class=&quot;highlighter-rouge&quot;&gt;OneTimeWorkRequest.Builder&lt;/code&gt;类和&lt;code class=&quot;highlighter-rouge&quot;&gt;PeriodicWorkRequest.Builder&lt;/code&gt;类，可以分别创建相应的任务请求实例。&lt;/li&gt;
+      &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Constraints&lt;/code&gt;：它表示工作任务执行的约束条件。指的是在哪一些系统条件下（例如只有网络连接情况下），这个工作任务会被执行。同样地，创建&lt;code class=&quot;highlighter-rouge&quot;&gt;Constraints&lt;/code&gt;也有&lt;code class=&quot;highlighter-rouge&quot;&gt;Builder&lt;/code&gt;方法：&lt;code class=&quot;highlighter-rouge&quot;&gt;Constraints.Builder&lt;/code&gt;。约束类是可以在使用&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest.Builder&lt;/code&gt; 创建的时候进行传递给&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt;。&lt;/li&gt;
+    &lt;/ul&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;：工作任务管理器，它是用于管理工作任务的请求队列的类。通过它可以把一个&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt;加入到任务队列中，然后根据系统的资源和约束条件对工作任务进行调度。&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkStatus&lt;/code&gt;：工作状态类，它包含了工作任务当前的状态信息。&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt; 为每一个&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt;都提供了&lt;code class=&quot;highlighter-rouge&quot;&gt;LiveData&lt;/code&gt;对象，而&lt;code class=&quot;highlighter-rouge&quot;&gt;LiveData&lt;/code&gt;对象又持有&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkStatus&lt;/code&gt;信息，因此通过&lt;code class=&quot;highlighter-rouge&quot;&gt;LiveData&lt;/code&gt;可以监听到当前任务的状态信息，并且获取到任务结束后的执行结果。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;通过上面的描述，可以简单的画出下面的关系图：&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/work-manager-relation.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;0x02-实践篇工作流&quot;&gt;0x02 实践篇——工作流&lt;/h4&gt;
+
+&lt;p&gt;假设我们在开发一个图片相关的APP，这个应用需要期地压缩它存储的图片。我们使用&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;来实现这个需求。这种情况，我们不关心压缩任务什么时候开始，只要开启一个压缩任务，其他的就交给&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;了。&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;定义Worker&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;我们首先要定义一个&lt;code class=&quot;highlighter-rouge&quot;&gt;Worker&lt;/code&gt;类，并重写&lt;code class=&quot;highlighter-rouge&quot;&gt;doWork()&lt;/code&gt;方法，这里定义了如何执行任务的具体逻辑。例如在此例子中，&lt;code class=&quot;highlighter-rouge&quot;&gt;myCompress()&lt;/code&gt;就是具体的执行任务的逻辑。&lt;/p&gt;
+
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;CompressWorker&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;params&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;WorkerParameters&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Worker&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;context&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;params&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;override&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;fun&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;doWork&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;():&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Result&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// Do the work here--in this case, compress the stored images.
+&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;// In this example no parameters are passed; the task is
+&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;// assumed to be &quot;compress the whole library.&quot;
+&lt;/span&gt;        &lt;span class=&quot;n&quot;&gt;myCompress&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+        &lt;span class=&quot;c1&quot;&gt;// Indicate success or failure with your return value:
+&lt;/span&gt;        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Result&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;SUCCESS&lt;/span&gt;
+
+        &lt;span class=&quot;c1&quot;&gt;// (Returning RETRY tells WorkManager to try this task again
+&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;// later; FAILURE says not to try again.)
+&lt;/span&gt;    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;doWork()&lt;/code&gt; 执行后还可以返回执行的结果：&lt;code class=&quot;highlighter-rouge&quot;&gt;Result.SUCCESS&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;Result.FAILURE&lt;/code&gt;和&lt;code class=&quot;highlighter-rouge&quot;&gt;Result.RETRY&lt;/code&gt; 分别表示&lt;strong&gt;成功&lt;/strong&gt;、&lt;strong&gt;失败&lt;/strong&gt;、&lt;strong&gt;重试&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;创建WorkRequest&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;使用&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt;的子类，根据具体业务创建对应的请求实例。例如本例中，使用一次性任务来构建请求。然后把任务请求加入到&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;管理的队列中。&lt;/p&gt;
+
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;compressionWork&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;OneTimeWorkRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Builder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CompressWorker&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;WorkManager&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getInstance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;enqueue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;compressionWork&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;这样这个任务就交给&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;了，任务管理者根据当前系统情况（是否充电、网络状态等等）对任务进行调度。如果没有给&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt;指定约束条件，那么这个任务会马上执行。如果需要得到这个任务的状态，可以通过&lt;code class=&quot;highlighter-rouge&quot;&gt;LiveData&amp;lt;WorkStatus&amp;gt;&lt;/code&gt;来监听。&lt;/p&gt;
+
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;WorkManager&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getInstance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getStatusById&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;compressionWork&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;id&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;observe&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;lifecycleOwner&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Observer&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;workStatus&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;-&amp;gt;&lt;/span&gt;
+                    &lt;span class=&quot;c1&quot;&gt;// Do something with the status
+&lt;/span&gt;                    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;workStatus&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;!=&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;null&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;&amp;amp;&amp;amp;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;workStatus&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;isFinished&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+                        &lt;span class=&quot;c1&quot;&gt;// ...
+&lt;/span&gt;                    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+                &lt;span class=&quot;p&quot;&gt;})&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;任务约束&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;可以给一个任务指定约束条件。例如，可以在设备空闲的时候、或者充电的时候执行任务。这种情况，可以使用&lt;code class=&quot;highlighter-rouge&quot;&gt;Constraints.Builder&lt;/code&gt;来创建一个约束条件实例，然后传递到&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt;中。&lt;/p&gt;
+
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;c1&quot;&gt;// Create a Constraints object that defines when the task should run
+&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;myConstraints&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Constraints&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Builder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setRequiresDeviceIdle&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setRequiresCharging&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;true&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;c1&quot;&gt;// Many other constraints are available, see the
+&lt;/span&gt;        &lt;span class=&quot;c1&quot;&gt;// Constraints.Builder reference
+&lt;/span&gt;        &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// ...then create a OneTimeWorkRequest that uses those constraints
+&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;compressionWork&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;OneTimeWorkRequestBuilder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;CompressWorker&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;()&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;setConstraints&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;myConstraints&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;最后，还是调用&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;的&lt;code class=&quot;highlighter-rouge&quot;&gt;enqueue&lt;/code&gt;方法将&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt;加入队列。这时候，&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;在执行任务的时候就会考虑约束条件的情况。&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;取消任务&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;取消任务需要一个任务ID，可以通过&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt;来获取。然后调用&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;的&lt;code class=&quot;highlighter-rouge&quot;&gt;cancelWorkById&lt;/code&gt;方法来取消任务的执行。&lt;/p&gt;
+
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;compressionWorkId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;UUID&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;compressionWork&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;WorkManager&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getInstance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;cancelWorkById&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;compressionWorkId&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;给任务设置Tag&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;可以给一组任务设置一个Tag。在创建 &lt;code class=&quot;highlighter-rouge&quot;&gt;WorkRequest&lt;/code&gt; 的时候，可以执行给它指定一个Tag；而另一个任务请求也可以设置相同的Tag。&lt;/p&gt;
+
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;cacheCleanupTask&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;OneTimeWorkRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Builder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MyCacheCleanupWorker&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;one-tag&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;loadImageTask&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;OneTimeWorkRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Builder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;MyImageLoadWorker&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;()&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;addTag&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;one-tag&quot;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+    &lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;提供了很多有用的API操作这些相同Tag的任务。例如，&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager.cancelAllWorkByTag()&lt;/code&gt; 可以取消具有相同Tag的一组任务；还可以通过&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager.getStatusesByTag()&lt;/code&gt;获取一组任务的状态列表。&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;strong&gt;周期任务&lt;/strong&gt;&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;有些业务场景是需要重复执行一个任务的。例如，在一个图片应用中，可能会有一个定期检查需要压缩图片的任务。这时候可使用到 &lt;code class=&quot;highlighter-rouge&quot;&gt;PeriodicWorkRequest.Builder&lt;/code&gt; 来创建一个周期任务。跟一次性任务一样，通过&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager.enqueue()&lt;/code&gt; 方法加入到工作任务队列中。&lt;/p&gt;
+
+&lt;div class=&quot;language-kotlin highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;photoCheckBuilder&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;PeriodicWorkRequest&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Builder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;PhotoCheckWorker&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;&amp;gt;(&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;12&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;TimeUnit&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;HOURS&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// ...if you want, you can apply constraints to the builder here...
+&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// Create the actual work object:
+&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;val&lt;/span&gt; &lt;span class=&quot;py&quot;&gt;photoCheckWork&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;photoCheckBuilder&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;build&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// Then enqueue the recurring task:
+&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;WorkManager&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;getInstance&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;().&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;enqueue&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;photoCheckWork&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;接下来的事情就交给 &lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt; 了。&lt;/p&gt;
+
+&lt;h4 id=&quot;0x03-引用&quot;&gt;0x03 引用&lt;/h4&gt;
+
+&lt;p&gt;https://developer.android.com/topic/libraries/architecture/workmanager/basics&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">0x00 简述</summary></entry><entry><title type="html">Android 后台任务处理指南</title><link href="http://localhost:4000/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97" rel="alternate" type="text/html" title="Android 后台任务处理指南" /><published>2018-09-28T00:00:00+08:00</published><updated>2018-09-28T00:00:00+08:00</updated><id>http://localhost:4000/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97</id><content type="html" xml:base="http://localhost:4000/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97">&lt;h4 id=&quot;0x00-后台任务处理指南&quot;&gt;0x00 后台任务处理指南&lt;/h4&gt;
 
 &lt;p&gt;Android的主线程（MainThread）主要是处理UI和绘制，接收用户的交互以及处理生命周期等事件。在UI线程中处理耗时操作，将严重影响用户的体验。因此很多任务是需要放在后台任务中进行处理的。&lt;/p&gt;
 
@@ -46,7 +200,7 @@
 
 &lt;h4 id=&quot;0x01-参考文档&quot;&gt;0x01 参考文档&lt;/h4&gt;
 
-&lt;p&gt;&lt;a href=&quot;https://developer.android.com/guide/background&quot;&gt;https://developer.android.com/guide/background&lt;/a&gt;&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">0x00 后台任务处理指南</summary></entry><entry><title type="html">Android NDK开发CMakeLists文件配置解析</title><link href="http://localhost:4000/2018/09/26/Android-NDK%E5%BC%80%E5%8F%91CMakeLists%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90/" rel="alternate" type="text/html" title="Android NDK开发CMakeLists文件配置解析" /><published>2018-09-26T00:00:00+08:00</published><updated>2018-09-26T00:00:00+08:00</updated><id>http://localhost:4000/2018/09/26/Android%20NDK%E5%BC%80%E5%8F%91CMakeLists%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90</id><content type="html" xml:base="http://localhost:4000/2018/09/26/Android-NDK%E5%BC%80%E5%8F%91CMakeLists%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90/">&lt;p&gt;在&lt;code class=&quot;highlighter-rouge&quot;&gt;Android Studio&lt;/code&gt;中建立支持&lt;code class=&quot;highlighter-rouge&quot;&gt;NDK&lt;/code&gt;项目是默认是&lt;code class=&quot;highlighter-rouge&quot;&gt;CMake&lt;/code&gt;的方式来进行构建的，过去的&lt;code class=&quot;highlighter-rouge&quot;&gt;ndk-build&lt;/code&gt;的方式从目前官方的文档上看，应该是逐渐淘汰的。现在大多数&lt;code class=&quot;highlighter-rouge&quot;&gt;APP&lt;/code&gt;架构中都是有&lt;code class=&quot;highlighter-rouge&quot;&gt;Native Code&lt;/code&gt;的，所以了解&lt;code class=&quot;highlighter-rouge&quot;&gt;CMake&lt;/code&gt;的配置方式是进行&lt;code class=&quot;highlighter-rouge&quot;&gt;NDK&lt;/code&gt;开发的基础。&lt;/p&gt;
+&lt;p&gt;&lt;a href=&quot;https://developer.android.com/guide/background&quot;&gt;https://developer.android.com/guide/background&lt;/a&gt;&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">0x00 后台任务处理指南</summary></entry><entry><title type="html">Android NDK开发CMakeLists文件配置解析</title><link href="http://localhost:4000/Android-NDK%E5%BC%80%E5%8F%91CMakeLists%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90" rel="alternate" type="text/html" title="Android NDK开发CMakeLists文件配置解析" /><published>2018-09-26T00:00:00+08:00</published><updated>2018-09-26T00:00:00+08:00</updated><id>http://localhost:4000/Android%20NDK%E5%BC%80%E5%8F%91CMakeLists%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90</id><content type="html" xml:base="http://localhost:4000/Android-NDK%E5%BC%80%E5%8F%91CMakeLists%E6%96%87%E4%BB%B6%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90">&lt;p&gt;在&lt;code class=&quot;highlighter-rouge&quot;&gt;Android Studio&lt;/code&gt;中建立支持&lt;code class=&quot;highlighter-rouge&quot;&gt;NDK&lt;/code&gt;项目是默认是&lt;code class=&quot;highlighter-rouge&quot;&gt;CMake&lt;/code&gt;的方式来进行构建的，过去的&lt;code class=&quot;highlighter-rouge&quot;&gt;ndk-build&lt;/code&gt;的方式从目前官方的文档上看，应该是逐渐淘汰的。现在大多数&lt;code class=&quot;highlighter-rouge&quot;&gt;APP&lt;/code&gt;架构中都是有&lt;code class=&quot;highlighter-rouge&quot;&gt;Native Code&lt;/code&gt;的，所以了解&lt;code class=&quot;highlighter-rouge&quot;&gt;CMake&lt;/code&gt;的配置方式是进行&lt;code class=&quot;highlighter-rouge&quot;&gt;NDK&lt;/code&gt;开发的基础。&lt;/p&gt;
 
 &lt;h4 id=&quot;0x00-建立支持ndk项目&quot;&gt;0x00 建立支持NDK项目&lt;/h4&gt;
 
@@ -187,7 +341,7 @@ set_target_properties( # Specifies the target library.
 
 &lt;h4 id=&quot;0x03-引用&quot;&gt;0x03 引用&lt;/h4&gt;
 
-&lt;p&gt;https://developer.android.com/studio/projects/add-native-code&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">在Android Studio中建立支持NDK项目是默认是CMake的方式来进行构建的，过去的ndk-build的方式从目前官方的文档上看，应该是逐渐淘汰的。现在大多数APP架构中都是有Native Code的，所以了解CMake的配置方式是进行NDK开发的基础。</summary></entry><entry><title type="html">Android后台单进程保活处理实践</title><link href="http://localhost:4000/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5/" rel="alternate" type="text/html" title="Android后台单进程保活处理实践" /><published>2018-09-21T00:00:00+08:00</published><updated>2018-09-21T00:00:00+08:00</updated><id>http://localhost:4000/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5</id><content type="html" xml:base="http://localhost:4000/2018/09/21/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5/">&lt;h4 id=&quot;0x00如何实现一个后台进程&quot;&gt;0x00、如何实现一个后台进程&lt;/h4&gt;
+&lt;p&gt;https://developer.android.com/studio/projects/add-native-code&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">在Android Studio中建立支持NDK项目是默认是CMake的方式来进行构建的，过去的ndk-build的方式从目前官方的文档上看，应该是逐渐淘汰的。现在大多数APP架构中都是有Native Code的，所以了解CMake的配置方式是进行NDK开发的基础。</summary></entry><entry><title type="html">Android后台单进程保活处理实践</title><link href="http://localhost:4000/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5" rel="alternate" type="text/html" title="Android后台单进程保活处理实践" /><published>2018-09-21T00:00:00+08:00</published><updated>2018-09-21T00:00:00+08:00</updated><id>http://localhost:4000/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5</id><content type="html" xml:base="http://localhost:4000/Android%E5%90%8E%E5%8F%B0%E5%8D%95%E8%BF%9B%E7%A8%8B%E4%BF%9D%E6%B4%BB%E5%A4%84%E7%90%86%E5%AE%9E%E8%B7%B5">&lt;h4 id=&quot;0x00如何实现一个后台进程&quot;&gt;0x00、如何实现一个后台进程&lt;/h4&gt;
 
 &lt;ol&gt;
   &lt;li&gt;
@@ -351,7 +505,7 @@ set_target_properties( # Specifies the target library.
     &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;    &lt;/div&gt;
   &lt;/li&gt;
-&lt;/ol&gt;</content><author><name>hylinux</name></author><category term="后台进程" /><category term="Service" /><summary type="html">0x00、如何实现一个后台进程</summary></entry><entry><title type="html">搭建Telegram代理服务</title><link href="http://localhost:4000/2018/08/06/%E6%90%AD%E5%BB%BATelegram%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1/" rel="alternate" type="text/html" title="搭建Telegram代理服务" /><published>2018-08-06T00:00:00+08:00</published><updated>2018-08-06T00:00:00+08:00</updated><id>http://localhost:4000/2018/08/06/%E6%90%AD%E5%BB%BATelegram%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1</id><content type="html" xml:base="http://localhost:4000/2018/08/06/%E6%90%AD%E5%BB%BATelegram%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1/">&lt;h4 id=&quot;0x00-代理服务&quot;&gt;0x00 代理服务&lt;/h4&gt;
+&lt;/ol&gt;</content><author><name>hylinux</name></author><category term="后台进程" /><category term="Service" /><summary type="html">0x00、如何实现一个后台进程</summary></entry><entry><title type="html">搭建Telegram代理服务</title><link href="http://localhost:4000/%E6%90%AD%E5%BB%BATelegram%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1" rel="alternate" type="text/html" title="搭建Telegram代理服务" /><published>2018-08-06T00:00:00+08:00</published><updated>2018-08-06T00:00:00+08:00</updated><id>http://localhost:4000/%E6%90%AD%E5%BB%BATelegram%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1</id><content type="html" xml:base="http://localhost:4000/%E6%90%AD%E5%BB%BATelegram%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1">&lt;h4 id=&quot;0x00-代理服务&quot;&gt;0x00 代理服务&lt;/h4&gt;
 
 &lt;p&gt;搭建代理服务两种常见方式：&lt;/p&gt;
 
@@ -412,7 +566,7 @@ set_target_properties( # Specifies the target library.
 unlink /name/supervisor.sock
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;https://blog.csdn.net/LHWorldBlog/article/details/78518696&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">0x00 代理服务</summary></entry><entry><title type="html">机器学习之逻辑回归</title><link href="http://localhost:4000/2017/08/20/logisitic-regression/" rel="alternate" type="text/html" title="机器学习之逻辑回归" /><published>2017-08-20T00:00:00+08:00</published><updated>2017-08-20T00:00:00+08:00</updated><id>http://localhost:4000/2017/08/20/logisitic-regression</id><content type="html" xml:base="http://localhost:4000/2017/08/20/logisitic-regression/">&lt;p&gt;[TOC]&lt;/p&gt;
+&lt;p&gt;https://blog.csdn.net/LHWorldBlog/article/details/78518696&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">0x00 代理服务</summary></entry><entry><title type="html">机器学习之逻辑回归</title><link href="http://localhost:4000/logisitic-regression" rel="alternate" type="text/html" title="机器学习之逻辑回归" /><published>2017-08-20T00:00:00+08:00</published><updated>2017-08-20T00:00:00+08:00</updated><id>http://localhost:4000/logisitic-regression</id><content type="html" xml:base="http://localhost:4000/logisitic-regression">&lt;p&gt;[TOC]&lt;/p&gt;
 
 &lt;p&gt;本文主要内容&lt;/p&gt;
 
@@ -585,7 +739,7 @@ j \in {\{0,1,2...n\}}
 
 &lt;h3 id=&quot;参考文献&quot;&gt;参考文献&lt;/h3&gt;
 
-&lt;p&gt;Andrew Ng coursera 机器学习课程&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">[TOC]</summary></entry><entry><title type="html">机器学习之朴素贝叶斯</title><link href="http://localhost:4000/2017/08/08/naive-bayesian/" rel="alternate" type="text/html" title="机器学习之朴素贝叶斯" /><published>2017-08-08T00:00:00+08:00</published><updated>2017-08-08T00:00:00+08:00</updated><id>http://localhost:4000/2017/08/08/naive-bayesian</id><content type="html" xml:base="http://localhost:4000/2017/08/08/naive-bayesian/">&lt;p&gt;本文会讲到以下内容&lt;/p&gt;
+&lt;p&gt;Andrew Ng coursera 机器学习课程&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">[TOC]</summary></entry><entry><title type="html">机器学习之朴素贝叶斯</title><link href="http://localhost:4000/naive-bayesian" rel="alternate" type="text/html" title="机器学习之朴素贝叶斯" /><published>2017-08-08T00:00:00+08:00</published><updated>2017-08-08T00:00:00+08:00</updated><id>http://localhost:4000/naive-bayesian</id><content type="html" xml:base="http://localhost:4000/naive-bayesian">&lt;p&gt;本文会讲到以下内容&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;贝叶斯定理&lt;/li&gt;
@@ -717,7 +871,7 @@ P(W_2|H)=P(W_2|-S)=1-P(W_2|S) \tag {11}&lt;/script&gt;
 
 &lt;p&gt;https://en.wikipedia.org/wiki/Bayes%27_theorem&lt;/p&gt;
 
-&lt;p&gt;http://www.paulgraham.com/spam.html&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">本文会讲到以下内容</summary></entry><entry><title type="html">机器学习之线性回归</title><link href="http://localhost:4000/2017/08/07/linear-regression/" rel="alternate" type="text/html" title="机器学习之线性回归" /><published>2017-08-07T00:00:00+08:00</published><updated>2017-08-07T00:00:00+08:00</updated><id>http://localhost:4000/2017/08/07/linear-regression</id><content type="html" xml:base="http://localhost:4000/2017/08/07/linear-regression/">&lt;p&gt;线性回归属于&lt;strong&gt;监督学习&lt;/strong&gt;算法中的一种，也是最简单的一种算法。本文将讲述以下内容&lt;/p&gt;
+&lt;p&gt;http://www.paulgraham.com/spam.html&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">本文会讲到以下内容</summary></entry><entry><title type="html">机器学习之线性回归</title><link href="http://localhost:4000/linear-regression" rel="alternate" type="text/html" title="机器学习之线性回归" /><published>2017-08-07T00:00:00+08:00</published><updated>2017-08-07T00:00:00+08:00</updated><id>http://localhost:4000/linear-regression</id><content type="html" xml:base="http://localhost:4000/linear-regression">&lt;p&gt;线性回归属于&lt;strong&gt;监督学习&lt;/strong&gt;算法中的一种，也是最简单的一种算法。本文将讲述以下内容&lt;/p&gt;
 
 &lt;ol&gt;
   &lt;li&gt;Linear Regression 线性回归&lt;/li&gt;
@@ -974,7 +1128,7 @@ y^{(m)}\end{bmatrix}\\
 
 &lt;h3 id=&quot;参考文档&quot;&gt;参考文档&lt;/h3&gt;
 
-&lt;p&gt;http://cs229.stanford.edu/materials.html&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">线性回归属于监督学习算法中的一种，也是最简单的一种算法。本文将讲述以下内容</summary></entry><entry><title type="html">老司机带路——15个Android撸代码常见的坑</title><link href="http://localhost:4000/2017/03/22/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF-15%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91/" rel="alternate" type="text/html" title="老司机带路——15个Android撸代码常见的坑" /><published>2017-03-22T00:00:00+08:00</published><updated>2017-03-22T00:00:00+08:00</updated><id>http://localhost:4000/2017/03/22/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF%E2%80%94%E2%80%9415%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91</id><content type="html" xml:base="http://localhost:4000/2017/03/22/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF-15%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91/">&lt;p&gt;老司机为何能够成为老司机，不是因为开车开得多，而是撸多了…&lt;/p&gt;
+&lt;p&gt;http://cs229.stanford.edu/materials.html&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">线性回归属于监督学习算法中的一种，也是最简单的一种算法。本文将讲述以下内容</summary></entry><entry><title type="html">老司机带路——15个Android撸代码常见的坑</title><link href="http://localhost:4000/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF-15%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91" rel="alternate" type="text/html" title="老司机带路——15个Android撸代码常见的坑" /><published>2017-03-22T00:00:00+08:00</published><updated>2017-03-22T00:00:00+08:00</updated><id>http://localhost:4000/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF%E2%80%94%E2%80%9415%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91</id><content type="html" xml:base="http://localhost:4000/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF-15%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91">&lt;p&gt;老司机为何能够成为老司机，不是因为开车开得多，而是撸多了…&lt;/p&gt;
 
 &lt;h3 id=&quot;0x00-使用-startactivityforresult-后在-onactivityresult-中没有正确回调到-activityresult_ok&quot;&gt;0x00 使用 startActivityForResult 后在 onActivityResult 中没有正确回调到 Activity.RESULT_OK&lt;/h3&gt;
 
@@ -1065,7 +1219,7 @@ y^{(m)}\end{bmatrix}\\
 
 &lt;h3 id=&quot;0x14-spannablestringbuilder-修饰文本影响-listview-性能问题&quot;&gt;0x14 SpannableStringBuilder 修饰文本影响 ListView 性能问题&lt;/h3&gt;
 
-&lt;p&gt;通常需要在一个列表中对 &lt;code class=&quot;highlighter-rouge&quot;&gt;Item&lt;/code&gt; 的文本作一些特殊的修饰处理，例如对文本添加简单的图标，文本颜色，字体高亮等等效果，这时候 &lt;code class=&quot;highlighter-rouge&quot;&gt;SpannableStringBuilder&lt;/code&gt; 就可以帮上忙了。但如果在 &lt;code class=&quot;highlighter-rouge&quot;&gt;getView()&lt;/code&gt; 方法里构造 &lt;code class=&quot;highlighter-rouge&quot;&gt;Spannable&lt;/code&gt; 对象，明显会影响列表的展示的效率，应该在线程中先这些 &lt;code class=&quot;highlighter-rouge&quot;&gt;Spannable&lt;/code&gt; 数据构造好，而 &lt;code class=&quot;highlighter-rouge&quot;&gt;getView()&lt;/code&gt; 尽量少做影响列表性能的操作。&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">老司机为何能够成为老司机，不是因为开车开得多，而是撸多了…</summary></entry><entry><title type="html">源码分析Android Handler是如何实现线程间通信的</title><link href="http://localhost:4000/2017/03/11/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Android-Handler%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E7%9A%84/" rel="alternate" type="text/html" title="源码分析Android Handler是如何实现线程间通信的" /><published>2017-03-11T00:00:00+08:00</published><updated>2017-03-11T00:00:00+08:00</updated><id>http://localhost:4000/2017/03/11/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Android%20Handler%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E7%9A%84</id><content type="html" xml:base="http://localhost:4000/2017/03/11/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Android-Handler%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E7%9A%84/">&lt;p&gt;Handler作为Android消息通信的基础，它的使用是每一个开发者都必须掌握的。开发者从一开始就被告知必须在主线程中进行UI操作。但Handler是如何实现线程间通信的呢？本文将从源码中分析Handler的消息通信机制。&lt;/p&gt;
+&lt;p&gt;通常需要在一个列表中对 &lt;code class=&quot;highlighter-rouge&quot;&gt;Item&lt;/code&gt; 的文本作一些特殊的修饰处理，例如对文本添加简单的图标，文本颜色，字体高亮等等效果，这时候 &lt;code class=&quot;highlighter-rouge&quot;&gt;SpannableStringBuilder&lt;/code&gt; 就可以帮上忙了。但如果在 &lt;code class=&quot;highlighter-rouge&quot;&gt;getView()&lt;/code&gt; 方法里构造 &lt;code class=&quot;highlighter-rouge&quot;&gt;Spannable&lt;/code&gt; 对象，明显会影响列表的展示的效率，应该在线程中先这些 &lt;code class=&quot;highlighter-rouge&quot;&gt;Spannable&lt;/code&gt; 数据构造好，而 &lt;code class=&quot;highlighter-rouge&quot;&gt;getView()&lt;/code&gt; 尽量少做影响列表性能的操作。&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">老司机为何能够成为老司机，不是因为开车开得多，而是撸多了…</summary></entry><entry><title type="html">源码分析Android Handler是如何实现线程间通信的</title><link href="http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Android-Handler%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E7%9A%84" rel="alternate" type="text/html" title="源码分析Android Handler是如何实现线程间通信的" /><published>2017-03-11T00:00:00+08:00</published><updated>2017-03-11T00:00:00+08:00</updated><id>http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Android%20Handler%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E7%9A%84</id><content type="html" xml:base="http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Android-Handler%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E7%9A%84">&lt;p&gt;Handler作为Android消息通信的基础，它的使用是每一个开发者都必须掌握的。开发者从一开始就被告知必须在主线程中进行UI操作。但Handler是如何实现线程间通信的呢？本文将从源码中分析Handler的消息通信机制。&lt;/p&gt;
 
 &lt;h3 id=&quot;0x00-handler使用&quot;&gt;0x00 Handler使用&lt;/h3&gt;
 

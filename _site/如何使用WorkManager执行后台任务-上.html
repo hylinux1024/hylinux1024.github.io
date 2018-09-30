@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="WorkManager,后台任务,Worker,WorkRequest" />
+        <meta name="description" content="后台任务处理指南" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> 如何使用WorkManager执行后台任务(上)  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> 如何使用WorkManager执行后台任务(上) </h2>
+        <h4 id="0x00-简述">0x00 简述</h4>
+
+<p>WorkManager 是 Android Jetpack中的一部分，它主要是封装了 Android 后台任务的调度逻辑。在前文《Android后台任务处理指南》一文中知道，WorkManager 是高级 API，它实际是封装了<a href="https://developer.android.com/reference/android/app/job/JobScheduler.html"><code class="highlighter-rouge">JobScheduler</code></a>, <a href="https://github.com/firebase/firebase-jobdispatcher-android#user-content-firebase-jobdispatcher-">Firebase JobDispatcher</a>, 和 <a href="https://developer.android.com/reference/android/app/AlarmManager.html"><code class="highlighter-rouge">AlarmManager</code></a> 底层的使用，提供了简单且灵活易用的API，它有很多优势：</p>
+
+<ul>
+  <li>支持异步一次性或周期任务</li>
+  <li>支持网络、存储空间以及电量状态等约束</li>
+  <li>可使用链式的调用方式来执行任务，也包括并行任务处理</li>
+  <li>一个工作任务的执行结果可以作为下一个任务的输入</li>
+  <li>兼容API 14 以上</li>
+  <li>可以支持Google play services</li>
+  <li>支持LiveData</li>
+</ul>
+
+<h4 id="0x01-理论篇重要的类">0x01 理论篇——重要的类</h4>
+
+<p>WorkManager库中有一些非常重要的类，这些类帮助你构建后台执行的工作任务：</p>
+
+<ul>
+  <li><code class="highlighter-rouge">Worker</code>：这是一个抽象类，它表示一个工作任务，继承这个类实现<code class="highlighter-rouge">doWork()</code>方法，这里就是实现执行任务的主要逻辑。</li>
+  <li><code class="highlighter-rouge">WorkRequest</code>：表示一个工作任务请求，指定执行哪个<code class="highlighter-rouge">Work</code>，它还可以设置任务执行的约束条件。每一个<code class="highlighter-rouge">WorkRequest</code>都有一个自动生成的唯一ID。使用这个ID可以取消任务的执行，或者取得当前任务的执行状态。<code class="highlighter-rouge">WorkRequest</code>也是一个抽象类，使用的时候是框架库中提供的子类<code class="highlighter-rouge">OneTimeWorkRequest</code>和<code class="highlighter-rouge">PeriodicWorkRequest</code>类，分别代表<strong>一次性任务和周期任务</strong>
+    <ul>
+      <li><code class="highlighter-rouge">WorkRequest.Builder</code>：这是一个创建工作任务请求的辅助工具类。它有两个具体的实现：<code class="highlighter-rouge">OneTimeWorkRequest.Builder</code>类和<code class="highlighter-rouge">PeriodicWorkRequest.Builder</code>类，可以分别创建相应的任务请求实例。</li>
+      <li><code class="highlighter-rouge">Constraints</code>：它表示工作任务执行的约束条件。指的是在哪一些系统条件下（例如只有网络连接情况下），这个工作任务会被执行。同样地，创建<code class="highlighter-rouge">Constraints</code>也有<code class="highlighter-rouge">Builder</code>方法：<code class="highlighter-rouge">Constraints.Builder</code>。约束类是可以在使用<code class="highlighter-rouge">WorkRequest.Builder</code> 创建的时候进行传递给<code class="highlighter-rouge">WorkRequest</code>。</li>
+    </ul>
+  </li>
+  <li><code class="highlighter-rouge">WorkManager</code>：工作任务管理器，它是用于管理工作任务的请求队列的类。通过它可以把一个<code class="highlighter-rouge">WorkRequest</code>加入到任务队列中，然后根据系统的资源和约束条件对工作任务进行调度。</li>
+  <li><code class="highlighter-rouge">WorkStatus</code>：工作状态类，它包含了工作任务当前的状态信息。<code class="highlighter-rouge">WorkManager</code> 为每一个<code class="highlighter-rouge">WorkRequest</code>都提供了<code class="highlighter-rouge">LiveData</code>对象，而<code class="highlighter-rouge">LiveData</code>对象又持有<code class="highlighter-rouge">WorkStatus</code>信息，因此通过<code class="highlighter-rouge">LiveData</code>可以监听到当前任务的状态信息，并且获取到任务结束后的执行结果。</li>
+</ul>
+
+<p>通过上面的描述，可以简单的画出下面的关系图：</p>
+
+<p><img src="../images/work-manager-relation.png" alt="" /></p>
+
+<h4 id="0x02-实践篇工作流">0x02 实践篇——工作流</h4>
+
+<p>假设我们在开发一个图片相关的APP，这个应用需要期地压缩它存储的图片。我们使用<code class="highlighter-rouge">WorkManager</code>来实现这个需求。这种情况，我们不关心压缩任务什么时候开始，只要开启一个压缩任务，其他的就交给<code class="highlighter-rouge">WorkManager</code>了。</p>
+
+<ol>
+  <li><strong>定义Worker</strong></li>
+</ol>
+
+<p>我们首先要定义一个<code class="highlighter-rouge">Worker</code>类，并重写<code class="highlighter-rouge">doWork()</code>方法，这里定义了如何执行任务的具体逻辑。例如在此例子中，<code class="highlighter-rouge">myCompress()</code>就是具体的执行任务的逻辑。</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">class</span> <span class="nc">CompressWorker</span><span class="p">(</span><span class="n">context</span> <span class="p">:</span> <span class="n">Context</span><span class="p">,</span> <span class="n">params</span> <span class="p">:</span> <span class="n">WorkerParameters</span><span class="p">)</span>
+    <span class="p">:</span> <span class="n">Worker</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="k">override</span> <span class="k">fun</span> <span class="nf">doWork</span><span class="p">():</span> <span class="n">Result</span> <span class="p">{</span>
+        <span class="c1">// Do the work here--in this case, compress the stored images.
+</span>        <span class="c1">// In this example no parameters are passed; the task is
+</span>        <span class="c1">// assumed to be "compress the whole library."
+</span>        <span class="n">myCompress</span><span class="p">()</span>
+
+        <span class="c1">// Indicate success or failure with your return value:
+</span>        <span class="k">return</span> <span class="n">Result</span><span class="p">.</span><span class="n">SUCCESS</span>
+
+        <span class="c1">// (Returning RETRY tells WorkManager to try this task again
+</span>        <span class="c1">// later; FAILURE says not to try again.)
+</span>    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">doWork()</code> 执行后还可以返回执行的结果：<code class="highlighter-rouge">Result.SUCCESS</code>、<code class="highlighter-rouge">Result.FAILURE</code>和<code class="highlighter-rouge">Result.RETRY</code> 分别表示<strong>成功</strong>、<strong>失败</strong>、<strong>重试</strong>。</p>
+
+<ol>
+  <li><strong>创建WorkRequest</strong></li>
+</ol>
+
+<p>使用<code class="highlighter-rouge">WorkRequest</code>的子类，根据具体业务创建对应的请求实例。例如本例中，使用一次性任务来构建请求。然后把任务请求加入到<code class="highlighter-rouge">WorkManager</code>管理的队列中。</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">val</span> <span class="py">compressionWork</span> <span class="p">=</span> <span class="n">OneTimeWorkRequest</span><span class="p">.</span><span class="n">Builder</span><span class="p">&lt;</span><span class="n">CompressWorker</span><span class="p">&gt;().</span><span class="n">build</span><span class="p">()</span>
+<span class="n">WorkManager</span><span class="p">.</span><span class="n">getInstance</span><span class="p">().</span><span class="n">enqueue</span><span class="p">(</span><span class="n">compressionWork</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>这样这个任务就交给<code class="highlighter-rouge">WorkManager</code>了，任务管理者根据当前系统情况（是否充电、网络状态等等）对任务进行调度。如果没有给<code class="highlighter-rouge">WorkRequest</code>指定约束条件，那么这个任务会马上执行。如果需要得到这个任务的状态，可以通过<code class="highlighter-rouge">LiveData&lt;WorkStatus&gt;</code>来监听。</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">WorkManager</span><span class="p">.</span><span class="n">getInstance</span><span class="p">().</span><span class="n">getStatusById</span><span class="p">(</span><span class="n">compressionWork</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+                <span class="p">.</span><span class="n">observe</span><span class="p">(</span><span class="n">lifecycleOwner</span><span class="p">,</span> <span class="n">Observer</span> <span class="p">{</span> <span class="n">workStatus</span> <span class="p">-&gt;</span>
+                    <span class="c1">// Do something with the status
+</span>                    <span class="k">if</span> <span class="p">(</span><span class="n">workStatus</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">&amp;&amp;</span> <span class="n">workStatus</span><span class="p">.</span><span class="n">state</span><span class="p">.</span><span class="n">isFinished</span><span class="p">)</span> <span class="p">{</span>
+                        <span class="c1">// ...
+</span>                    <span class="p">}</span>
+                <span class="p">})</span>
+</code></pre></div></div>
+
+<ol>
+  <li><strong>任务约束</strong></li>
+</ol>
+
+<p>可以给一个任务指定约束条件。例如，可以在设备空闲的时候、或者充电的时候执行任务。这种情况，可以使用<code class="highlighter-rouge">Constraints.Builder</code>来创建一个约束条件实例，然后传递到<code class="highlighter-rouge">WorkRequest</code>中。</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Create a Constraints object that defines when the task should run
+</span><span class="kd">val</span> <span class="py">myConstraints</span> <span class="p">=</span> <span class="n">Constraints</span><span class="p">.</span><span class="n">Builder</span><span class="p">()</span>
+        <span class="p">.</span><span class="n">setRequiresDeviceIdle</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">setRequiresCharging</span><span class="p">(</span><span class="k">true</span><span class="p">)</span>
+        <span class="c1">// Many other constraints are available, see the
+</span>        <span class="c1">// Constraints.Builder reference
+</span>        <span class="p">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="c1">// ...then create a OneTimeWorkRequest that uses those constraints
+</span><span class="kd">val</span> <span class="py">compressionWork</span> <span class="p">=</span> <span class="n">OneTimeWorkRequestBuilder</span><span class="p">&lt;</span><span class="n">CompressWorker</span><span class="p">&gt;()</span>
+        <span class="p">.</span><span class="n">setConstraints</span><span class="p">(</span><span class="n">myConstraints</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">build</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>最后，还是调用<code class="highlighter-rouge">WorkManager</code>的<code class="highlighter-rouge">enqueue</code>方法将<code class="highlighter-rouge">WorkRequest</code>加入队列。这时候，<code class="highlighter-rouge">WorkManager</code>在执行任务的时候就会考虑约束条件的情况。</p>
+
+<ol>
+  <li><strong>取消任务</strong></li>
+</ol>
+
+<p>取消任务需要一个任务ID，可以通过<code class="highlighter-rouge">WorkRequest</code>来获取。然后调用<code class="highlighter-rouge">WorkManager</code>的<code class="highlighter-rouge">cancelWorkById</code>方法来取消任务的执行。</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">val</span> <span class="py">compressionWorkId</span><span class="p">:</span><span class="n">UUID</span> <span class="p">=</span> <span class="n">compressionWork</span><span class="p">.</span><span class="n">getId</span><span class="p">()</span>
+<span class="n">WorkManager</span><span class="p">.</span><span class="n">getInstance</span><span class="p">().</span><span class="n">cancelWorkById</span><span class="p">(</span><span class="n">compressionWorkId</span><span class="p">)</span>
+</code></pre></div></div>
+
+<ol>
+  <li><strong>给任务设置Tag</strong></li>
+</ol>
+
+<p>可以给一组任务设置一个Tag。在创建 <code class="highlighter-rouge">WorkRequest</code> 的时候，可以执行给它指定一个Tag；而另一个任务请求也可以设置相同的Tag。</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">val</span> <span class="py">cacheCleanupTask</span> <span class="p">=</span>
+        <span class="n">OneTimeWorkRequest</span><span class="p">.</span><span class="n">Builder</span><span class="p">&lt;</span><span class="n">MyCacheCleanupWorker</span><span class="p">&gt;()</span>
+    <span class="p">.</span><span class="n">addTag</span><span class="p">(</span><span class="s">"one-tag"</span><span class="p">)</span>
+    <span class="p">.</span><span class="n">build</span><span class="p">()</span>
+<span class="kd">val</span> <span class="py">loadImageTask</span> <span class="p">=</span> <span class="n">OneTimeWorkRequest</span><span class="p">.</span><span class="n">Builder</span><span class="p">&lt;</span><span class="n">MyImageLoadWorker</span><span class="p">&gt;()</span>
+    <span class="p">.</span><span class="n">addTag</span><span class="p">(</span><span class="s">"one-tag"</span><span class="p">)</span>
+    <span class="p">.</span><span class="n">build</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">WorkManager</code>提供了很多有用的API操作这些相同Tag的任务。例如，<code class="highlighter-rouge">WorkManager.cancelAllWorkByTag()</code> 可以取消具有相同Tag的一组任务；还可以通过<code class="highlighter-rouge">WorkManager.getStatusesByTag()</code>获取一组任务的状态列表。</p>
+
+<ol>
+  <li><strong>周期任务</strong></li>
+</ol>
+
+<p>有些业务场景是需要重复执行一个任务的。例如，在一个图片应用中，可能会有一个定期检查需要压缩图片的任务。这时候可使用到 <code class="highlighter-rouge">PeriodicWorkRequest.Builder</code> 来创建一个周期任务。跟一次性任务一样，通过<code class="highlighter-rouge">WorkManager.enqueue()</code> 方法加入到工作任务队列中。</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">val</span> <span class="py">photoCheckBuilder</span> <span class="p">=</span>
+        <span class="n">PeriodicWorkRequest</span><span class="p">.</span><span class="n">Builder</span><span class="p">&lt;</span><span class="n">PhotoCheckWorker</span><span class="p">&gt;(</span><span class="m">12</span><span class="p">,</span> <span class="n">TimeUnit</span><span class="p">.</span><span class="n">HOURS</span><span class="p">)</span>
+<span class="c1">// ...if you want, you can apply constraints to the builder here...
+</span>
+<span class="c1">// Create the actual work object:
+</span><span class="kd">val</span> <span class="py">photoCheckWork</span> <span class="p">=</span> <span class="n">photoCheckBuilder</span><span class="p">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1">// Then enqueue the recurring task:
+</span><span class="n">WorkManager</span><span class="p">.</span><span class="n">getInstance</span><span class="p">().</span><span class="n">enqueue</span><span class="p">(</span><span class="n">photoCheckWork</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>接下来的事情就交给 <code class="highlighter-rouge">WorkManager</code> 了。</p>
+
+<h4 id="0x03-引用">0x03 引用</h4>
+
+<p>https://developer.android.com/topic/libraries/architecture/workmanager/basics</p>
+
+        
+        <div class="post_footer">
+          <p>Published on Sep 29, 2018 in categories 
+          
+          <a href="http://localhost:4000/categories/#Android" title="Android">Android</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97">Android 后台任务处理指南</a>
+            </li>
+            
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="http://localhost:4000/js/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1-%E4%B8%8A',
+            owner: 'hylinux1024',
+            repo: 'hylinux1024.github.io',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+
