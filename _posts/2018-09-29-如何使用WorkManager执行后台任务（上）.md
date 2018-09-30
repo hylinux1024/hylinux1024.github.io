@@ -8,7 +8,7 @@ keywords: WorkManager,后台任务,Worker,WorkRequest
 
 #### 0x00 简述
 
-WorkManager 是 Android Jetpack中的一部分，它主要是封装了 Android 后台任务的调度逻辑。在前文《Android后台任务处理指南》一文中知道，WorkManager 是高级 API，它实际是封装了[`JobScheduler`](https://developer.android.com/reference/android/app/job/JobScheduler.html), [Firebase JobDispatcher](https://github.com/firebase/firebase-jobdispatcher-android#user-content-firebase-jobdispatcher-), 和 [`AlarmManager`](https://developer.android.com/reference/android/app/AlarmManager.html) 底层的使用，提供了简单且灵活易用的API，它有很多优势：
+WorkManager 是 Android Jetpack中的一部分，它主要是封装了 Android 后台任务的调度逻辑。在前文[《Android后台任务处理指南》](https://wecode.xyz/Android%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1%E5%A4%84%E7%90%86%E6%8C%87%E5%8D%97)一文中知道，WorkManager 是高级 API，它实际是封装了[`JobScheduler`](https://developer.android.com/reference/android/app/job/JobScheduler.html), [Firebase JobDispatcher](https://github.com/firebase/firebase-jobdispatcher-android#user-content-firebase-jobdispatcher-), 和 [`AlarmManager`](https://developer.android.com/reference/android/app/AlarmManager.html) 底层的使用，提供了简单且灵活易用的API，它有很多优势：
 
 - 支持异步一次性或周期任务
 - 支持网络、存储空间以及电量状态等约束
