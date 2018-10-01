@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="WorkManager,后台任务,Worker,WorkRequest" />
+        <meta name="description" content="后台任务处理指南" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> 如何使用WorkManager执行后台任务(下)  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> 如何使用WorkManager执行后台任务(下) </h2>
+        <h4 id="0x00-workmanager的高级用法">0x00 WorkManager的高级用法</h4>
+
+<p>在上一文中已经了解到<code class="highlighter-rouge">WorkManager</code>的基本用法之后，今天来看看它的一些高级用法：</p>
+
+<ul>
+  <li>链式任务调用</li>
+  <li>唯一任务序列</li>
+  <li>传递参数和获取返回值</li>
+</ul>
+
+<h4 id="0x01-链式任务chained-tasks">0x01 链式任务(Chained tasks)</h4>
+
+<p><code class="highlighter-rouge">WorkManager</code>在执行多个工作任务的时候，可以指定执行顺序。假设一个应用程序中有3个<code class="highlighter-rouge">OneTimeWorkRequest</code>对象：<code class="highlighter-rouge">workA</code>、<code class="highlighter-rouge">workB</code>、<code class="highlighter-rouge">workC</code>。这几个任务需要按照顺序执行，那么可以使用<code class="highlighter-rouge">WorkManager.beginWith()</code>方法加入<code class="highlighter-rouge">workA</code>，这时候会返回一个<code class="highlighter-rouge">WorkContinuation</code>对象，它定义了工作任务的执行序列。然后通过它再调用<code class="highlighter-rouge">WorkContinuation.then()</code>把<code class="highlighter-rouge">workB</code>和<code class="highlighter-rouge">workC</code>加入到执行队列中，最后执行<code class="highlighter-rouge">WorkManager.enqueue()</code>方法。</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">WorkManager</span><span class="p">.</span><span class="n">getInstance</span><span class="p">()</span>
+    <span class="p">.</span><span class="n">beginWith</span><span class="p">(</span><span class="n">workA</span><span class="p">)</span>
+        <span class="c1">// Note: WorkManager.beginWith() returns a
+</span>        <span class="c1">// WorkContinuation object; the following calls are
+</span>        <span class="c1">// to WorkContinuation methods
+</span>    <span class="p">.</span><span class="n">then</span><span class="p">(</span><span class="n">workB</span><span class="p">)</span>    <span class="c1">// FYI, then() returns a new WorkContinuation instance
+</span>    <span class="p">.</span><span class="n">then</span><span class="p">(</span><span class="n">workC</span><span class="p">)</span>
+    <span class="p">.</span><span class="n">enqueue</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">WorkManager</code>会按照指定的顺序来执行<code class="highlighter-rouge">workA</code>、<code class="highlighter-rouge">workB</code>、<code class="highlighter-rouge">workC</code>。如果其中有一个工作任务执行的时候返回<code class="highlighter-rouge">Worker.Result.FAILURE</code>，那么整个执行序列就会停止。</p>
+
+<p><code class="highlighter-rouge">WorkManager.beginWith()</code>方法可以传递多个<code class="highlighter-rouge">Worker</code>对象，表示可以<strong>并行执行</strong>的任务组，然后再调用<code class="highlighter-rouge">then()</code>方法。当这并行任务组都执行完之后才会执行接下来<code class="highlighter-rouge">then</code>中的工作任务。</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">WorkManager</span><span class="p">.</span><span class="n">getInstance</span><span class="p">()</span>
+    <span class="c1">// 首先，并行执行workA1,workA2,workA3这三个任务
+</span>    <span class="p">.</span><span class="n">beginWith</span><span class="p">(</span><span class="n">workA1</span><span class="p">,</span> <span class="n">workA2</span><span class="p">,</span> <span class="n">workA3</span><span class="p">)</span>
+    <span class="c1">// 当三个任务都完成之后, 开始执行workB:
+</span>    <span class="p">.</span><span class="n">then</span><span class="p">(</span><span class="n">workB</span><span class="p">)</span>
+    <span class="c1">// 最后再并行执行 workC1,workC2
+</span>    <span class="p">.</span><span class="n">then</span><span class="p">(</span><span class="n">workC1</span><span class="p">,</span> <span class="n">workC2</span><span class="p">)</span>
+    <span class="p">.</span><span class="n">enqueue</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>还可以通过<code class="highlighter-rouge">WorkContinuation.combine()</code>方法创建更加复杂的链接任务调用序列。它可以将两个<code class="highlighter-rouge">WorkContinuation</code>对象合并，假设要调用如下的任务序列：</p>
+
+<p><img src="../images/workcontinuation.png" alt="" /></p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">val</span> <span class="py">chain1</span> <span class="p">=</span> <span class="n">WorkManager</span><span class="p">.</span><span class="n">getInstance</span><span class="p">()</span>
+    <span class="p">.</span><span class="n">beginWith</span><span class="p">(</span><span class="n">workA</span><span class="p">)</span>
+    <span class="p">.</span><span class="n">then</span><span class="p">(</span><span class="n">workB</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">chain2</span> <span class="p">=</span> <span class="n">WorkManager</span><span class="p">.</span><span class="n">getInstance</span><span class="p">()</span>
+    <span class="p">.</span><span class="n">beginWith</span><span class="p">(</span><span class="n">workC</span><span class="p">)</span>
+    <span class="p">.</span><span class="n">then</span><span class="p">(</span><span class="n">workD</span><span class="p">)</span>
+<span class="kd">val</span> <span class="py">chain3</span> <span class="p">=</span> <span class="n">WorkContinuation</span>
+    <span class="p">.</span><span class="n">combine</span><span class="p">(</span><span class="n">chain1</span><span class="p">,</span> <span class="n">chain2</span><span class="p">)</span>
+    <span class="p">.</span><span class="n">then</span><span class="p">(</span><span class="n">workE</span><span class="p">)</span>
+<span class="n">chain3</span><span class="p">.</span><span class="n">enqueue</span><span class="p">()</span>
+</code></pre></div></div>
+
+<p>这个链式执行顺序是：子链 A-&gt;B 与子链 C-&gt;D 并行执行的，<code class="highlighter-rouge">workA</code>执行后再执行<code class="highlighter-rouge">workB</code>，以及<code class="highlighter-rouge">workC</code>执行后执行<code class="highlighter-rouge">workD</code> ；然后等待 <code class="highlighter-rouge">workB</code>以及<code class="highlighter-rouge">workD</code>都执行完，最后执行<code class="highlighter-rouge">workE</code>。</p>
+
+<p>需要注意的是，<code class="highlighter-rouge">WorkManager</code>无法保证两个子链的执行顺序，有可能<code class="highlighter-rouge">chain1</code>比<code class="highlighter-rouge">chain2</code>快，也有可能是<code class="highlighter-rouge">chain1</code>比<code class="highlighter-rouge">chain2</code>慢。</p>
+
+<h4 id="0x02-唯一任务序列unique-work-sequences">0x02 唯一任务序列(Unique work sequences)</h4>
+
+<p>在应用程序开发中，可能会多次把同一个链式任务添加到<code class="highlighter-rouge">WorkManager</code>中，但希望只有一个链式任务在执行，这时候可以使用唯一任务序列对链式任务指定处理规则。假设，做一个下载文件操作，对一个文件下载链接，我们不需要重复下载，只需要添加一次，后面再添加这个任务，就忽略掉，因为我们不希望重复多次下载同一个文件。所以当添加两个同样名称为”download”操作任务时，对于唯一任务序列来说，可以通过<code class="highlighter-rouge">ExistingWorkPolicy</code>中的<code class="highlighter-rouge">REPLACE</code>，<code class="highlighter-rouge"> KEEP</code> 和 <code class="highlighter-rouge">APPEND</code>，来指定添加的策略。</p>
+
+<ul>
+  <li>REPLACE：新任务将替换旧的</li>
+  <li>KEEP：新任务会被丢弃，旧的任务会被保持</li>
+  <li>APPEND：追加，旧任务执行之后再执行新的任务。</li>
+</ul>
+
+<p>使用<code class="highlighter-rouge">beginUniqueWork()</code>方法可以创建任务序列，并且可以指定唯一的一个名称(name)。然后再<code class="highlighter-rouge">ExistingWorkPolicy</code>指定任务的替换策略</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">WorkContinuation</span> <span class="n">continuation</span> <span class="p">=</span> <span class="n">mWorkManager</span>
+                <span class="p">.</span><span class="n">beginUniqueWork</span><span class="p">(</span><span class="s">"download"</span><span class="p">,</span>
+                       <span class="n">ExistingWorkPolicy</span><span class="p">.</span><span class="n">KEEP</span><span class="p">,</span>
+                       <span class="n">OneTimeWorkRequest</span><span class="p">.</span><span class="n">from</span><span class="p">(</span><span class="n">CleanupWorker</span><span class="p">))</span>
+</code></pre></div></div>
+
+<h4 id="0x03-传递参数和获取返回值">0x03 传递参数和获取返回值</h4>
+
+<p>任务执行可以传递参数以及获取到任务执行的结果。使用<code class="highlighter-rouge">WorkRequst.Builder.setInputData()</code>方法传递一个<code class="highlighter-rouge">Data</code>对象，它是key-value形式的对象，使用<code class="highlighter-rouge">Data.Builder</code>来创建。在<code class="highlighter-rouge">Worker</code>类中可以使用<code class="highlighter-rouge">Worker.getInputData()</code>获取到参数。</p>
+
+<p>同样地，在<code class="highlighter-rouge">Worker</code>中可以使用<code class="highlighter-rouge">Worker.setOutputData()</code>设置一个<code class="highlighter-rouge">Data</code>对象的返回值。要获取到这个返回值就通过<code class="highlighter-rouge">LiveData&lt;WorkStatus&gt;</code>。</p>
+
+<p>举个栗子：</p>
+
+<p>有一个下载任务，在<code class="highlighter-rouge">Worker</code>中获取传递过来的参数url，然后执行下载，最后设置下载结果。</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// the result key:
+</span><span class="k">const</span> <span class="kd">val</span> <span class="py">KEY_RESULT</span> <span class="p">=</span> <span class="s">"result"</span>
+<span class="kd">class</span> <span class="nc">DownloadWorker</span><span class="p">(</span><span class="n">context</span> <span class="p">:</span> <span class="n">Context</span><span class="p">,</span> <span class="n">params</span> <span class="p">:</span> <span class="n">WorkerParameters</span><span class="p">)</span> <span class="p">:</span> <span class="n">Worker</span><span class="p">(</span><span class="n">context</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>  <span class="p">{</span>
+    <span class="k">override</span> <span class="k">fun</span> <span class="nf">doWork</span><span class="p">():</span> <span class="n">Result</span> <span class="p">{</span>
+        <span class="c1">// 获取参数
+</span>        <span class="kd">val</span> <span class="py">url</span> <span class="p">=</span> <span class="n">getInputData</span><span class="p">(</span><span class="s">"url"</span><span class="p">)</span>
+        <span class="c1">// 执行下载
+</span>        <span class="kd">val</span> <span class="py">result</span> <span class="p">=</span> <span class="n">download</span><span class="p">(</span><span class="n">url</span><span class="p">);</span>
+        <span class="c1">// 设置下载结果
+</span>        <span class="kd">val</span> <span class="py">output</span><span class="p">:</span> <span class="n">Data</span> <span class="p">=</span> <span class="n">mapOf</span><span class="p">(</span><span class="n">KEY_RESULT</span> <span class="n">to</span> <span class="n">result</span><span class="p">).</span><span class="n">toWorkData</span><span class="p">()</span>
+        <span class="n">setOutputData</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="c1">// 任务执行成功
+</span>        <span class="k">return</span> <span class="n">Result</span><span class="p">.</span><span class="n">SUCCESS</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>然后，通过<code class="highlighter-rouge">WorkRequest</code>传递参数</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// 构造下载链接参数
+</span><span class="kd">val</span> <span class="py">urlData</span><span class="p">:</span> <span class="n">Data</span> <span class="p">=</span> <span class="n">mapOf</span><span class="p">(</span><span class="s">"url"</span> <span class="n">to</span> <span class="s">"https://developer.android.com/images/topic/libraries/architecture/workmanager-chain.svg"</span><span class="p">)</span>
+                     <span class="p">.</span><span class="n">toWorkData</span><span class="p">()</span>
+<span class="c1">// 构造WorkRequest并传递下载参数
+</span><span class="kd">val</span> <span class="py">downloadWork</span> <span class="p">=</span> <span class="n">OneTimeWorkRequest</span><span class="p">.</span><span class="n">Builder</span><span class="p">&lt;</span><span class="n">DownloadWorker</span><span class="p">&gt;()</span>
+        <span class="p">.</span><span class="n">setInputData</span><span class="p">(</span><span class="n">urlData</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1">// 交给WorkManager执行任务
+</span><span class="n">WorkManager</span><span class="p">.</span><span class="n">getInstance</span><span class="p">().</span><span class="n">enqueue</span><span class="p">(</span><span class="n">downloadWork</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>最后，通过<code class="highlighter-rouge">WorkStatus</code>获取返回值</p>
+
+<div class="language-kotlin highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">WorkManager</span><span class="p">.</span><span class="n">getInstance</span><span class="p">().</span><span class="n">getStatusById</span><span class="p">(</span><span class="n">downloadWork</span><span class="p">.</span><span class="n">id</span><span class="p">)</span>
+        <span class="p">.</span><span class="n">observe</span><span class="p">(</span><span class="k">this</span><span class="p">,</span> <span class="n">Observer</span> <span class="p">{</span> <span class="n">status</span> <span class="p">-&gt;</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">status</span> <span class="p">!=</span> <span class="k">null</span> <span class="p">&amp;&amp;</span> <span class="n">status</span><span class="p">.</span><span class="n">state</span><span class="p">.</span><span class="n">isFinished</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kd">val</span> <span class="py">myResult</span> <span class="p">=</span> <span class="n">status</span><span class="p">.</span><span class="n">outputData</span><span class="p">.</span><span class="n">getString</span><span class="p">(</span><span class="n">KEY_RESULT</span><span class="p">,</span>
+                      <span class="n">myDefaultValue</span><span class="p">)</span>
+                <span class="c1">// ... do something with the result ...
+</span>            <span class="p">}</span>
+        <span class="p">})</span>
+</code></pre></div></div>
+
+<h4 id="0x04-引用">0x04 引用</h4>
+
+<p>https://developer.android.com/topic/libraries/architecture/workmanager/advanced</p>
+
+<p>https://developer.android.com/reference/androidx/work/ExistingWorkPolicy</p>
+
+<p>http://clmirror.storage.googleapis.com/codelabs/android-workmanager/index.html?index=..%2F..%2Findex#0</p>
+
+        
+        <div class="post_footer">
+          <p>Published on Oct 01, 2018 in categories 
+          
+          <a href="http://localhost:4000/categories/#Android" title="Android">Android</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1-%E4%B8%8A">如何使用WorkManager执行后台任务(上)</a>
+            </li>
+            
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="http://localhost:4000/js/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1(%E4%B8%8B)',
+            owner: 'hylinux1024',
+            repo: 'hylinux1024.github.io',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+
