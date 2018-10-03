@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="ConstraintLayout,RelativeLayout" />
+        <meta name="description" content="是时候要用ConstraintLayout替换RelativeLayout了" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> 一文看懂ConstraintLayout的用法  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> 一文看懂ConstraintLayout的用法 </h2>
+        <p><code class="highlighter-rouge">ConstraintLayout</code> 相对于<code class="highlighter-rouge">RelativeLayout</code>来说性能更好，布局上也更加灵活。在最新的Google Android开发文档中是推荐使用<code class="highlighter-rouge">ConstraintLayout</code>的，下面来看看具体用法。</p>
+
+<h4 id="0x00-相对位置relative-positioning">0x00 相对位置(Relative positioning)</h4>
+
+<p>这个比较简单，看图解释，假设控件B要放在控件A的右侧，可以使用<code class="highlighter-rouge">layout_constraintLeft_toRightOf</code>属性。</p>
+
+<p><img src="../images/relative-positioning.png" alt="" /></p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;Button</span> <span class="na">android:id=</span><span class="s">"@+id/buttonA"</span> <span class="err">...</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;Button</span> <span class="na">android:id=</span><span class="s">"@+id/buttonB"</span> <span class="err">...</span>
+     <span class="na">app:layout_constraintLeft_toRightOf=</span><span class="s">"@+id/buttonA"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p>看图2可以了解控件约束属性代表的含义。</p>
+
+<p><img src="../images/relative-positioning-constraint.png" alt="" /></p>
+
+<p>类似相对位置的约束属性有：</p>
+
+<ul>
+  <li><code class="highlighter-rouge">layout_constraintLeft_toLeftOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintLeft_toRightOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintRight_toLeftOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintRight_toRightOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintTop_toTopOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintTop_toBottomOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintBottom_toTopOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintBottom_toBottomOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintBaseline_toBaselineOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintStart_toEndOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintStart_toStartOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintEnd_toStartOf</code></li>
+  <li><code class="highlighter-rouge">layout_constraintEnd_toEndOf</code></li>
+</ul>
+
+<h4 id="0x01-外边距margins">0x01 外边距(Margins)</h4>
+
+<p>这个属性也好理解，看图3</p>
+
+<p><img src="../images/relative-positioning-margins.png" alt="" /></p>
+
+<p>可以通过以下属性设置一个控件相对另一个控件的外边距：</p>
+
+<ul>
+  <li><code class="highlighter-rouge">android:layout_marginStart</code></li>
+  <li><code class="highlighter-rouge">android:layout_marginEnd</code></li>
+  <li><code class="highlighter-rouge">android:layout_marginLeft</code></li>
+  <li><code class="highlighter-rouge">android:layout_marginTop</code></li>
+  <li><code class="highlighter-rouge">android:layout_marginRight</code></li>
+  <li><code class="highlighter-rouge">android:layout_marginBottom</code></li>
+</ul>
+
+<p>属性值必须是大于或者等于0。</p>
+
+<p>接一下看一个<code class="highlighter-rouge">RelativeLayout</code> 没有的属性：</p>
+
+<h4 id="0x02-margins-when-connected-to-a-gone-widget">0x02 Margins when connected to a GONE widget</h4>
+
+<p>当一个相对的控件隐藏时，<code class="highlighter-rouge">ConstraintLayout</code>也可以设置一个不同的边距：</p>
+
+<ul>
+  <li><code class="highlighter-rouge">layout_goneMarginStart</code></li>
+  <li><code class="highlighter-rouge">layout_goneMarginEnd</code></li>
+  <li><code class="highlighter-rouge">layout_goneMarginLeft</code></li>
+  <li><code class="highlighter-rouge">layout_goneMarginTop</code></li>
+  <li><code class="highlighter-rouge">layout_goneMarginRight</code></li>
+  <li><code class="highlighter-rouge">layout_goneMarginBottom</code></li>
+</ul>
+
+<p>具体的栗子下面会讲到。</p>
+
+<h4 id="0x03-centering-positioning-and-bias">0x03 Centering positioning and bias</h4>
+
+<p>居中以及设置偏差</p>
+
+<p><img src="../images/centering-positioning.png" alt="" /></p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;android.support.constraint.ConstraintLayout</span> <span class="err">...</span><span class="nt">&gt;</span>
+	<span class="nt">&lt;Button</span> <span class="na">android:id=</span><span class="s">"@+id/button"</span> <span class="err">...</span>
+		<span class="na">app:layout_constraintLeft_toLeftOf=</span><span class="s">"parent"</span>
+		<span class="na">app:layout_constraintRight_toRightOf=</span><span class="s">"parent"</span><span class="nt">/&gt;</span>                                     
+<span class="nt">&lt;/android.support.constraint.ConstraintLayout&gt;</span>
+</code></pre></div></div>
+
+<p>还可以设置bias属性，表示子控件相对父控件的位置倾向，可以使用属性：</p>
+
+<ul>
+  <li><code class="highlighter-rouge">layout_constraintHorizontal_bias</code></li>
+  <li><code class="highlighter-rouge">layout_constraintVertical_bias</code></li>
+</ul>
+
+<p><img src="../images/centering-positioning-with-bias.png" alt="" /></p>
+
+<p>假设设置控件A相对父控件横向偏差是30%：</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;android.support.constraint.ConstraintLayout</span> <span class="err">...</span><span class="nt">&gt;</span>
+             <span class="nt">&lt;Button</span> <span class="na">android:id=</span><span class="s">"@+id/button"</span> <span class="err">...</span>
+                 <span class="na">app:layout_constraintHorizontal_bias=</span><span class="s">"0.3"</span>
+                 <span class="na">app:layout_constraintLeft_toLeftOf=</span><span class="s">"parent"</span>
+                 <span class="na">app:layout_constraintRight_toRightOf=</span><span class="s">"parent"</span><span class="nt">/&gt;</span>
+<span class="nt">&lt;/android.support.constraint.ConstraintLayout&gt;</span>
+</code></pre></div></div>
+
+<h4 id="0x04-弧形定位circular-positioning">0x04 弧形定位(Circular positioning)</h4>
+
+<p>这个属性是在1.1版本添加的。</p>
+
+<p><img src="../images/circular-positioning.png" alt="" /></p>
+
+<p>可以使用属性有：</p>
+
+<ul>
+  <li><code class="highlighter-rouge">layout_constraintCircle</code> : 相对控件的id</li>
+  <li><code class="highlighter-rouge">layout_constraintCircleRadius</code> : 相对控件中心的距离，也就是圆的半径</li>
+  <li><code class="highlighter-rouge">layout_constraintCircleAngle</code> : 相对夹角 (从 0 ~ 360度)</li>
+</ul>
+
+<p>例如，图6代码示例</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;Button</span> <span class="na">android:id=</span><span class="s">"@+id/buttonA"</span> <span class="err">...</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;Button</span> <span class="na">android:id=</span><span class="s">"@+id/buttonB"</span> <span class="err">...</span>
+	<span class="na">app:layout_constraintCircle=</span><span class="s">"@+id/buttonA"</span>
+	<span class="na">app:layout_constraintCircleRadius=</span><span class="s">"100dp"</span>
+	<span class="na">app:layout_constraintCircleAngle=</span><span class="s">"45"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<h4 id="0x05-visibility-behavior">0x05 Visibility behavior</h4>
+
+<p><img src="/Users/lancelot/hylinux1024.github.io/images/visibility-behavior.png" alt="" /></p>
+
+<p>一般情况下，设置<code class="highlighter-rouge">GONE</code>属性后，控件就不会出现在布局中了，B控件对A控件的margin属性也就没有作用了。</p>
+
+<p>但是<code class="highlighter-rouge">ConstraintLayout</code> 能对已经设置<code class="highlighter-rouge">GONE</code>属性的控件进行特殊处理。当A控件设置<code class="highlighter-rouge">GONE</code>之后，A控件相当于变成了一个点，<strong>B控件相对于对A的约束仍然是起作用的</strong>。图7的代码示例，A控件设置成了<code class="highlighter-rouge">GONE</code>,当B控件的<code class="highlighter-rouge">margin</code>属性还是有作用的。</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;android.support.constraint.ConstraintLayout</span> <span class="err">...</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;Button</span>
+        <span class="na">android:id=</span><span class="s">"@+id/buttonA"</span>
+        <span class="na">android:layout_width=</span><span class="s">"wrap_content"</span>
+        <span class="na">android:layout_height=</span><span class="s">"wrap_content"</span>
+        <span class="na">android:text=</span><span class="s">"button A"</span>
+        <span class="na">android:visibility=</span><span class="s">"gone"</span>
+        <span class="na">app:layout_constraintLeft_toLeftOf=</span><span class="s">"parent"</span> <span class="nt">/&gt;</span>
+	<span class="c">&lt;!--当A控件设置Gone之后，B控件的margin属性是起作用的，即左边距还是30dp--&gt;</span>
+    <span class="nt">&lt;Button</span>
+        <span class="na">android:id=</span><span class="s">"@+id/buttonB"</span>
+        <span class="na">android:layout_width=</span><span class="s">"wrap_content"</span>
+        <span class="na">android:layout_height=</span><span class="s">"wrap_content"</span>
+        <span class="na">android:layout_margin=</span><span class="s">"30dp"</span>
+        <span class="na">android:text=</span><span class="s">"button B"</span>
+        <span class="na">app:layout_constraintLeft_toRightOf=</span><span class="s">"@+id/buttonA"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/android.support.constraint.ConstraintLayout&gt;</span>
+</code></pre></div></div>
+
+<p>然而有时候，<strong>B控件是不希望相对于隐藏控件的属性还起作用</strong>。这时候可以用到上面<strong>0x02</strong>提到的<code class="highlighter-rouge">goneMargin</code>属性。</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;android.support.constraint.ConstraintLayout</span> <span class="err">...</span><span class="nt">&gt;</span>
+
+    <span class="nt">&lt;Button</span>
+        <span class="na">android:id=</span><span class="s">"@+id/buttonA"</span>
+        <span class="na">android:layout_width=</span><span class="s">"wrap_content"</span>
+        <span class="na">android:layout_height=</span><span class="s">"wrap_content"</span>
+        <span class="na">android:text=</span><span class="s">"button A"</span>
+        <span class="na">android:visibility=</span><span class="s">"gone"</span>
+        <span class="na">app:layout_constraintLeft_toLeftOf=</span><span class="s">"parent"</span> <span class="nt">/&gt;</span>
+	<span class="c">&lt;!--当A控件设置Gone之后，希望B控件的左边距为0dp，那么可以设置layout_goneMarginLeft属性--&gt;</span>
+    <span class="nt">&lt;Button</span>
+        <span class="na">android:id=</span><span class="s">"@+id/buttonB"</span>
+        <span class="na">android:layout_width=</span><span class="s">"wrap_content"</span>
+        <span class="na">android:layout_height=</span><span class="s">"wrap_content"</span>
+        <span class="na">android:layout_margin=</span><span class="s">"30dp"</span>
+        <span class="na">android:text=</span><span class="s">"button B"</span>
+        <span class="na">app:layout_goneMarginLeft=</span><span class="s">"0dp"</span>
+        <span class="na">app:layout_constraintLeft_toRightOf=</span><span class="s">"@+id/buttonA"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/android.support.constraint.ConstraintLayout&gt;</span>
+</code></pre></div></div>
+
+<h4 id="0x06-尺寸约束dimensions-constraints">0x06 尺寸约束(Dimensions constraints)</h4>
+
+<p><strong>设置最小或最大尺寸</strong></p>
+
+<p>可以使用以下属性：</p>
+
+<ul>
+  <li><code class="highlighter-rouge">android:minWidth</code></li>
+  <li><code class="highlighter-rouge">android:minHeight</code></li>
+  <li><code class="highlighter-rouge">android:maxWidth</code></li>
+  <li><code class="highlighter-rouge">android:maxHeight</code></li>
+</ul>
+
+<p>当<code class="highlighter-rouge">ConstraintLayout</code>宽高设置为<code class="highlighter-rouge">wrap_content</code>时，以上属性可以起作用。</p>
+
+<p><strong>设置百分比布局</strong></p>
+
+<p>当<code class="highlighter-rouge">ConstraintLayout</code> 子布局的宽或高设置为0dp时，可以对宽或高设置百分比，例如设置一个按钮的宽是屏幕宽度的30%，那么可以这样处理：</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;android.support.constraint.ConstraintLayout</span> <span class="err">...</span><span class="nt">&gt;</span>
+    <span class="c">&lt;!--按钮width属性设置为0dp,然后需要指定layout_constraintWidth_default，以及layout_constraintWidth_percent两个属性--&gt;</span>
+    <span class="nt">&lt;Button</span>
+        <span class="na">android:id=</span><span class="s">"@+id/buttonB"</span>
+        <span class="na">android:layout_width=</span><span class="s">"0dp"</span>
+        <span class="na">android:layout_height=</span><span class="s">"wrap_content"</span>
+        <span class="na">android:text=</span><span class="s">"button B"</span>
+        <span class="na">app:layout_constraintLeft_toLeftOf=</span><span class="s">"parent"</span>
+        <span class="na">app:layout_constraintWidth_default=</span><span class="s">"percent"</span>
+        <span class="na">app:layout_constraintWidth_percent=</span><span class="s">"0.3"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/android.support.constraint.ConstraintLayout&gt;</span>
+</code></pre></div></div>
+
+<p>设置宽度百分比布局：</p>
+
+<ol>
+  <li><code class="highlighter-rouge">layout_width</code>或者<code class="highlighter-rouge">layout_height</code> 设置为0dp</li>
+  <li>设置<code class="highlighter-rouge">layout_constraintWidth_default="percent"</code>或者<code class="highlighter-rouge">layout_constraintHeight_default="percent"</code></li>
+  <li>通过<code class="highlighter-rouge">layout_constraintWidth_percent</code>或者<code class="highlighter-rouge">layout_constraintHeight_percent</code>指定百分比</li>
+</ol>
+
+<p><strong>设置宽高比例</strong></p>
+
+<p>当<code class="highlighter-rouge">layout_width</code>或者<code class="highlighter-rouge">layout_height</code>设置为0dp时，还可以通过<code class="highlighter-rouge">layout_constraintDimensionRatio</code>设置宽高比例。该比例表示<code class="highlighter-rouge">width:height</code>的值。</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;Button</span> 
+	<span class="na">android:layout_width=</span><span class="s">"wrap_content"</span>
+	<span class="na">android:layout_height=</span><span class="s">"0dp"</span>
+	<span class="na">app:layout_constraintDimensionRatio=</span><span class="s">"1:1"</span> <span class="nt">/&gt;</span>
+</code></pre></div></div>
+
+<p>当<code class="highlighter-rouge">layout_width</code>与<code class="highlighter-rouge">layout_height</code>都设置为0dp时，通过<code class="highlighter-rouge">app:layout_constraintDimensionRatio</code> 指定宽高的比例。这时控件的宽高将按照该比例相对于父布局的大小设置宽高。</p>
+
+<div class="language-xml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nt">&lt;android.support.constraint.ConstraintLayout</span> <span class="err">...</span><span class="nt">&gt;</span>
+    <span class="nt">&lt;Button</span>
+        <span class="na">android:layout_width=</span><span class="s">"0dp"</span>
+        <span class="na">android:layout_height=</span><span class="s">"0dp"</span>
+        <span class="na">app:layout_constraintBottom_toBottomOf=</span><span class="s">"parent"</span>
+        <span class="na">app:layout_constraintDimensionRatio=</span><span class="s">"h,16:9"</span>
+        <span class="na">app:layout_constraintTop_toTopOf=</span><span class="s">"parent"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;/android.support.constraint.ConstraintLayout&gt;</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">h,16:9</code>的含义是<code class="highlighter-rouge">h:w=16:9</code> 也可设置<code class="highlighter-rouge">w,9:16</code>效果是一样的。</p>
+
+<p><img src="../images/constraint-ratio.png" alt="" /></p>
+
+<h4 id="0x07-chains">0x07 Chains</h4>
+
+<p>在横轴或或者数轴上的控件相互约束时，可以组成一个<strong>链式约束</strong>。</p>
+
+<p><img src="../images/constraint-chain.png" alt="" /></p>
+
+<p>图9中，A控件与B控件相互约束，这就是一个简单的链式约束。</p>
+
+<p><strong>链头</strong></p>
+
+<p><img src="../images/constraint-chain-head.png" alt="" /></p>
+
+<p><strong>Chain Style</strong></p>
+
+<p>可以通过<code class="highlighter-rouge">layout_constraintHorizontal_chainStyle</code>或<code class="highlighter-rouge">layout_constraintVertical_chainStyle</code>设置链式控件的样式。这个属性有点像<code class="highlighter-rouge">LinearLayout</code>中的<code class="highlighter-rouge">weight</code> 属性平分布局。</p>
+
+<ul>
+  <li><code class="highlighter-rouge">CHAIN_SPREAD</code></li>
+  <li>Weighted chain</li>
+  <li><code class="highlighter-rouge">CHAIN_SPREAD_INSIDE</code></li>
+  <li><code class="highlighter-rouge">CHAIN_PACKED</code></li>
+</ul>
+
+<p><img src="../images/constraint-chain-style.png" alt="" /></p>
+
+<p><strong>设置权重</strong></p>
+
+<ul>
+  <li><code class="highlighter-rouge">layout_constraintHorizontal_weight</code></li>
+  <li><code class="highlighter-rouge">layout_constraintVertical_weight</code></li>
+</ul>
+
+<h4 id="0x08-引用">0x08 引用</h4>
+
+<p>https://developer.android.com/reference/android/support/constraint/ConstraintLayout</p>
+
+        
+        <div class="post_footer">
+          <p>Published on Oct 02, 2018 in categories 
+          
+          <a href="http://localhost:4000/categories/#Android" title="Android">Android</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1(%E4%B8%8B)">如何使用WorkManager执行后台任务(下)</a>
+            </li>
+            
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="http://localhost:4000/js/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/%E4%B8%80%E6%96%87%E7%9C%8B%E6%87%82ConstraintLayout%E7%9A%84%E7%94%A8%E6%B3%95',
+            owner: 'hylinux1024',
+            repo: 'hylinux1024.github.io',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+

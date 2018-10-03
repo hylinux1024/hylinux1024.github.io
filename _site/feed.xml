@@ -1,4 +1,280 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-10-01T17:39:25+08:00</updated><id>http://localhost:4000/</id><title type="html">Thinking Tech</title><author><name>hylinux</name></author><entry><title type="html">如何使用WorkManager执行后台任务(下)</title><link href="http://localhost:4000/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1(%E4%B8%8B)" rel="alternate" type="text/html" title="如何使用WorkManager执行后台任务(下)" /><published>2018-10-01T00:00:00+08:00</published><updated>2018-10-01T00:00:00+08:00</updated><id>http://localhost:4000/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1(%E4%B8%8B)</id><content type="html" xml:base="http://localhost:4000/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1(%E4%B8%8B)">&lt;h4 id=&quot;0x00-workmanager的高级用法&quot;&gt;0x00 WorkManager的高级用法&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-10-03T11:32:50+08:00</updated><id>http://localhost:4000/</id><title type="html">Thinking Tech</title><author><name>hylinux</name></author><entry><title type="html">一文看懂ConstraintLayout的用法</title><link href="http://localhost:4000/%E4%B8%80%E6%96%87%E7%9C%8B%E6%87%82ConstraintLayout%E7%9A%84%E7%94%A8%E6%B3%95" rel="alternate" type="text/html" title="一文看懂ConstraintLayout的用法" /><published>2018-10-02T00:00:00+08:00</published><updated>2018-10-02T00:00:00+08:00</updated><id>http://localhost:4000/%E4%B8%80%E6%96%87%E7%9C%8B%E6%87%82ConstraintLayout%E7%9A%84%E7%94%A8%E6%B3%95</id><content type="html" xml:base="http://localhost:4000/%E4%B8%80%E6%96%87%E7%9C%8B%E6%87%82ConstraintLayout%E7%9A%84%E7%94%A8%E6%B3%95">&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;ConstraintLayout&lt;/code&gt; 相对于&lt;code class=&quot;highlighter-rouge&quot;&gt;RelativeLayout&lt;/code&gt;来说性能更好，布局上也更加灵活。在最新的Google Android开发文档中是推荐使用&lt;code class=&quot;highlighter-rouge&quot;&gt;ConstraintLayout&lt;/code&gt;的，下面来看看具体用法。&lt;/p&gt;
+
+&lt;h4 id=&quot;0x00-相对位置relative-positioning&quot;&gt;0x00 相对位置(Relative positioning)&lt;/h4&gt;
+
+&lt;p&gt;这个比较简单，看图解释，假设控件B要放在控件A的右侧，可以使用&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintLeft_toRightOf&lt;/code&gt;属性。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/relative-positioning.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;android:id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonA&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;android:id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonB&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt;
+     &lt;span class=&quot;na&quot;&gt;app:layout_constraintLeft_toRightOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonA&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;看图2可以了解控件约束属性代表的含义。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/relative-positioning-constraint.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;类似相对位置的约束属性有：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintLeft_toLeftOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintLeft_toRightOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintRight_toLeftOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintRight_toRightOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintTop_toTopOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintTop_toBottomOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintBottom_toTopOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintBottom_toBottomOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintBaseline_toBaselineOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintStart_toEndOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintStart_toStartOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintEnd_toStartOf&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintEnd_toEndOf&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;0x01-外边距margins&quot;&gt;0x01 外边距(Margins)&lt;/h4&gt;
+
+&lt;p&gt;这个属性也好理解，看图3&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/relative-positioning-margins.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以通过以下属性设置一个控件相对另一个控件的外边距：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;android:layout_marginStart&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;android:layout_marginEnd&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;android:layout_marginLeft&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;android:layout_marginTop&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;android:layout_marginRight&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;android:layout_marginBottom&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;属性值必须是大于或者等于0。&lt;/p&gt;
+
+&lt;p&gt;接一下看一个&lt;code class=&quot;highlighter-rouge&quot;&gt;RelativeLayout&lt;/code&gt; 没有的属性：&lt;/p&gt;
+
+&lt;h4 id=&quot;0x02-margins-when-connected-to-a-gone-widget&quot;&gt;0x02 Margins when connected to a GONE widget&lt;/h4&gt;
+
+&lt;p&gt;当一个相对的控件隐藏时，&lt;code class=&quot;highlighter-rouge&quot;&gt;ConstraintLayout&lt;/code&gt;也可以设置一个不同的边距：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_goneMarginStart&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_goneMarginEnd&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_goneMarginLeft&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_goneMarginTop&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_goneMarginRight&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_goneMarginBottom&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;具体的栗子下面会讲到。&lt;/p&gt;
+
+&lt;h4 id=&quot;0x03-centering-positioning-and-bias&quot;&gt;0x03 Centering positioning and bias&lt;/h4&gt;
+
+&lt;p&gt;居中以及设置偏差&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/centering-positioning.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;android.support.constraint.ConstraintLayout&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;android:id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/button&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt;
+		&lt;span class=&quot;na&quot;&gt;app:layout_constraintLeft_toLeftOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;parent&quot;&lt;/span&gt;
+		&lt;span class=&quot;na&quot;&gt;app:layout_constraintRight_toRightOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;parent&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;                                     
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/android.support.constraint.ConstraintLayout&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;还可以设置bias属性，表示子控件相对父控件的位置倾向，可以使用属性：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintHorizontal_bias&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintVertical_bias&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/centering-positioning-with-bias.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;假设设置控件A相对父控件横向偏差是30%：&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;android.support.constraint.ConstraintLayout&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+             &lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;android:id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/button&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt;
+                 &lt;span class=&quot;na&quot;&gt;app:layout_constraintHorizontal_bias=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0.3&quot;&lt;/span&gt;
+                 &lt;span class=&quot;na&quot;&gt;app:layout_constraintLeft_toLeftOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;parent&quot;&lt;/span&gt;
+                 &lt;span class=&quot;na&quot;&gt;app:layout_constraintRight_toRightOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;parent&quot;&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/android.support.constraint.ConstraintLayout&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;0x04-弧形定位circular-positioning&quot;&gt;0x04 弧形定位(Circular positioning)&lt;/h4&gt;
+
+&lt;p&gt;这个属性是在1.1版本添加的。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/circular-positioning.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;可以使用属性有：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintCircle&lt;/code&gt; : 相对控件的id&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintCircleRadius&lt;/code&gt; : 相对控件中心的距离，也就是圆的半径&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintCircleAngle&lt;/code&gt; : 相对夹角 (从 0 ~ 360度)&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;例如，图6代码示例&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;android:id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonA&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt; &lt;span class=&quot;na&quot;&gt;android:id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonB&quot;&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt;
+	&lt;span class=&quot;na&quot;&gt;app:layout_constraintCircle=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonA&quot;&lt;/span&gt;
+	&lt;span class=&quot;na&quot;&gt;app:layout_constraintCircleRadius=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;100dp&quot;&lt;/span&gt;
+	&lt;span class=&quot;na&quot;&gt;app:layout_constraintCircleAngle=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;45&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;0x05-visibility-behavior&quot;&gt;0x05 Visibility behavior&lt;/h4&gt;
+
+&lt;p&gt;&lt;img src=&quot;/Users/lancelot/hylinux1024.github.io/images/visibility-behavior.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;一般情况下，设置&lt;code class=&quot;highlighter-rouge&quot;&gt;GONE&lt;/code&gt;属性后，控件就不会出现在布局中了，B控件对A控件的margin属性也就没有作用了。&lt;/p&gt;
+
+&lt;p&gt;但是&lt;code class=&quot;highlighter-rouge&quot;&gt;ConstraintLayout&lt;/code&gt; 能对已经设置&lt;code class=&quot;highlighter-rouge&quot;&gt;GONE&lt;/code&gt;属性的控件进行特殊处理。当A控件设置&lt;code class=&quot;highlighter-rouge&quot;&gt;GONE&lt;/code&gt;之后，A控件相当于变成了一个点，&lt;strong&gt;B控件相对于对A的约束仍然是起作用的&lt;/strong&gt;。图7的代码示例，A控件设置成了&lt;code class=&quot;highlighter-rouge&quot;&gt;GONE&lt;/code&gt;,当B控件的&lt;code class=&quot;highlighter-rouge&quot;&gt;margin&lt;/code&gt;属性还是有作用的。&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;android.support.constraint.ConstraintLayout&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonA&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_width=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;wrap_content&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_height=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;wrap_content&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:text=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;button A&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:visibility=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;gone&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app:layout_constraintLeft_toLeftOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;parent&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;&amp;lt;!--当A控件设置Gone之后，B控件的margin属性是起作用的，即左边距还是30dp--&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonB&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_width=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;wrap_content&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_height=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;wrap_content&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_margin=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;30dp&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:text=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;button B&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app:layout_constraintLeft_toRightOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonA&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/android.support.constraint.ConstraintLayout&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;然而有时候，&lt;strong&gt;B控件是不希望相对于隐藏控件的属性还起作用&lt;/strong&gt;。这时候可以用到上面&lt;strong&gt;0x02&lt;/strong&gt;提到的&lt;code class=&quot;highlighter-rouge&quot;&gt;goneMargin&lt;/code&gt;属性。&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;android.support.constraint.ConstraintLayout&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonA&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_width=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;wrap_content&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_height=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;wrap_content&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:text=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;button A&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:visibility=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;gone&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app:layout_constraintLeft_toLeftOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;parent&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+	&lt;span class=&quot;c&quot;&gt;&amp;lt;!--当A控件设置Gone之后，希望B控件的左边距为0dp，那么可以设置layout_goneMarginLeft属性--&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonB&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_width=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;wrap_content&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_height=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;wrap_content&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_margin=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;30dp&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:text=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;button B&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app:layout_goneMarginLeft=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0dp&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app:layout_constraintLeft_toRightOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonA&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/android.support.constraint.ConstraintLayout&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;0x06-尺寸约束dimensions-constraints&quot;&gt;0x06 尺寸约束(Dimensions constraints)&lt;/h4&gt;
+
+&lt;p&gt;&lt;strong&gt;设置最小或最大尺寸&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;可以使用以下属性：&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;android:minWidth&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;android:minHeight&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;android:maxWidth&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;android:maxHeight&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;当&lt;code class=&quot;highlighter-rouge&quot;&gt;ConstraintLayout&lt;/code&gt;宽高设置为&lt;code class=&quot;highlighter-rouge&quot;&gt;wrap_content&lt;/code&gt;时，以上属性可以起作用。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;设置百分比布局&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;当&lt;code class=&quot;highlighter-rouge&quot;&gt;ConstraintLayout&lt;/code&gt; 子布局的宽或高设置为0dp时，可以对宽或高设置百分比，例如设置一个按钮的宽是屏幕宽度的30%，那么可以这样处理：&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;android.support.constraint.ConstraintLayout&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;c&quot;&gt;&amp;lt;!--按钮width属性设置为0dp,然后需要指定layout_constraintWidth_default，以及layout_constraintWidth_percent两个属性--&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:id=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@+id/buttonB&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_width=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0dp&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_height=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;wrap_content&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:text=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;button B&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app:layout_constraintLeft_toLeftOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;parent&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app:layout_constraintWidth_default=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;percent&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app:layout_constraintWidth_percent=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0.3&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/android.support.constraint.ConstraintLayout&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;设置宽度百分比布局：&lt;/p&gt;
+
+&lt;ol&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_width&lt;/code&gt;或者&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_height&lt;/code&gt; 设置为0dp&lt;/li&gt;
+  &lt;li&gt;设置&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintWidth_default=&quot;percent&quot;&lt;/code&gt;或者&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintHeight_default=&quot;percent&quot;&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;通过&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintWidth_percent&lt;/code&gt;或者&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintHeight_percent&lt;/code&gt;指定百分比&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;p&gt;&lt;strong&gt;设置宽高比例&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;当&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_width&lt;/code&gt;或者&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_height&lt;/code&gt;设置为0dp时，还可以通过&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintDimensionRatio&lt;/code&gt;设置宽高比例。该比例表示&lt;code class=&quot;highlighter-rouge&quot;&gt;width:height&lt;/code&gt;的值。&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt; 
+	&lt;span class=&quot;na&quot;&gt;android:layout_width=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;wrap_content&quot;&lt;/span&gt;
+	&lt;span class=&quot;na&quot;&gt;android:layout_height=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0dp&quot;&lt;/span&gt;
+	&lt;span class=&quot;na&quot;&gt;app:layout_constraintDimensionRatio=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;1:1&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;当&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_width&lt;/code&gt;与&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_height&lt;/code&gt;都设置为0dp时，通过&lt;code class=&quot;highlighter-rouge&quot;&gt;app:layout_constraintDimensionRatio&lt;/code&gt; 指定宽高的比例。这时控件的宽高将按照该比例相对于父布局的大小设置宽高。&lt;/p&gt;
+
+&lt;div class=&quot;language-xml highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nt&quot;&gt;&amp;lt;android.support.constraint.ConstraintLayout&lt;/span&gt; &lt;span class=&quot;err&quot;&gt;...&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;&amp;gt;&lt;/span&gt;
+    &lt;span class=&quot;nt&quot;&gt;&amp;lt;Button&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_width=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0dp&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;android:layout_height=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;0dp&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app:layout_constraintBottom_toBottomOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;parent&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app:layout_constraintDimensionRatio=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;h,16:9&quot;&lt;/span&gt;
+        &lt;span class=&quot;na&quot;&gt;app:layout_constraintTop_toTopOf=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;parent&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;nt&quot;&gt;&amp;lt;/android.support.constraint.ConstraintLayout&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;h,16:9&lt;/code&gt;的含义是&lt;code class=&quot;highlighter-rouge&quot;&gt;h:w=16:9&lt;/code&gt; 也可设置&lt;code class=&quot;highlighter-rouge&quot;&gt;w,9:16&lt;/code&gt;效果是一样的。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/constraint-ratio.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;h4 id=&quot;0x07-chains&quot;&gt;0x07 Chains&lt;/h4&gt;
+
+&lt;p&gt;在横轴或或者数轴上的控件相互约束时，可以组成一个&lt;strong&gt;链式约束&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/constraint-chain.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;图9中，A控件与B控件相互约束，这就是一个简单的链式约束。&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;链头&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/constraint-chain-head.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Chain Style&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;可以通过&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintHorizontal_chainStyle&lt;/code&gt;或&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintVertical_chainStyle&lt;/code&gt;设置链式控件的样式。这个属性有点像&lt;code class=&quot;highlighter-rouge&quot;&gt;LinearLayout&lt;/code&gt;中的&lt;code class=&quot;highlighter-rouge&quot;&gt;weight&lt;/code&gt; 属性平分布局。&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;CHAIN_SPREAD&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;Weighted chain&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;CHAIN_SPREAD_INSIDE&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;CHAIN_PACKED&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;&lt;img src=&quot;../images/constraint-chain-style.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;设置权重&lt;/strong&gt;&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintHorizontal_weight&lt;/code&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;layout_constraintVertical_weight&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h4 id=&quot;0x08-引用&quot;&gt;0x08 引用&lt;/h4&gt;
+
+&lt;p&gt;https://developer.android.com/reference/android/support/constraint/ConstraintLayout&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">ConstraintLayout 相对于RelativeLayout来说性能更好，布局上也更加灵活。在最新的Google Android开发文档中是推荐使用ConstraintLayout的，下面来看看具体用法。</summary></entry><entry><title type="html">如何使用WorkManager执行后台任务(下)</title><link href="http://localhost:4000/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1(%E4%B8%8B)" rel="alternate" type="text/html" title="如何使用WorkManager执行后台任务(下)" /><published>2018-10-01T00:00:00+08:00</published><updated>2018-10-01T00:00:00+08:00</updated><id>http://localhost:4000/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1(%E4%B8%8B)</id><content type="html" xml:base="http://localhost:4000/%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8WorkManager%E6%89%A7%E8%A1%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1(%E4%B8%8B)">&lt;h4 id=&quot;0x00-workmanager的高级用法&quot;&gt;0x00 WorkManager的高级用法&lt;/h4&gt;
 
 &lt;p&gt;在上一文中已经了解到&lt;code class=&quot;highlighter-rouge&quot;&gt;WorkManager&lt;/code&gt;的基本用法之后，今天来看看它的一些高级用法：&lt;/p&gt;
 
@@ -1262,95 +1538,4 @@ y^{(m)}\end{bmatrix}\\
 
 &lt;h3 id=&quot;参考文档&quot;&gt;参考文档&lt;/h3&gt;
 
-&lt;p&gt;http://cs229.stanford.edu/materials.html&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">线性回归属于监督学习算法中的一种，也是最简单的一种算法。本文将讲述以下内容</summary></entry><entry><title type="html">老司机带路——15个Android撸代码常见的坑</title><link href="http://localhost:4000/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF-15%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91" rel="alternate" type="text/html" title="老司机带路——15个Android撸代码常见的坑" /><published>2017-03-22T00:00:00+08:00</published><updated>2017-03-22T00:00:00+08:00</updated><id>http://localhost:4000/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF%E2%80%94%E2%80%9415%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91</id><content type="html" xml:base="http://localhost:4000/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF-15%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91">&lt;p&gt;老司机为何能够成为老司机，不是因为开车开得多，而是撸多了…&lt;/p&gt;
-
-&lt;h3 id=&quot;0x00-使用-startactivityforresult-后在-onactivityresult-中没有正确回调到-activityresult_ok&quot;&gt;0x00 使用 startActivityForResult 后在 onActivityResult 中没有正确回调到 Activity.RESULT_OK&lt;/h3&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;要正确获取到 &lt;code class=&quot;highlighter-rouge&quot;&gt;RESULT_OK&lt;/code&gt; 的状态码，&lt;code class=&quot;highlighter-rouge&quot;&gt;Activity&lt;/code&gt; 的启动模式不能为设置为的 &lt;code class=&quot;highlighter-rouge&quot;&gt;singleTask&lt;/code&gt; 或者 &lt;code class=&quot;highlighter-rouge&quot;&gt;singleInstance&lt;/code&gt;&lt;/li&gt;
-  &lt;li&gt;调用 &lt;code class=&quot;highlighter-rouge&quot;&gt;startActivityForResult(intent,requestCode)&lt;/code&gt; 方法时第二个参数不应该使用过大的整数，例如超过 &lt;strong&gt;65535&lt;/strong&gt;&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3 id=&quot;0x01-activity-的-oncreate-方法中操作-view-相关&quot;&gt;0x01 Activity 的 onCreate() 方法中操作 View 相关&lt;/h3&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;不能直接获取 &lt;code class=&quot;highlighter-rouge&quot;&gt;View&lt;/code&gt;的宽高，而应在 &lt;code class=&quot;highlighter-rouge&quot;&gt;view.post()&lt;/code&gt; 里面操作&lt;/li&gt;
-  &lt;li&gt;不能调用 &lt;code class=&quot;highlighter-rouge&quot;&gt;PopupWindow&lt;/code&gt; 的 &lt;code class=&quot;highlighter-rouge&quot;&gt;show&lt;/code&gt; 方法显示，也应在 &lt;code class=&quot;highlighter-rouge&quot;&gt;view.post()&lt;/code&gt; 里面操作&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3 id=&quot;0x02-transactiontoolargeexception-异常&quot;&gt;0x02 TransactionTooLargeException 异常&lt;/h3&gt;
-
-&lt;p&gt;这个错误主要发生在 &lt;code class=&quot;highlighter-rouge&quot;&gt;Intent &lt;/code&gt; 中传递了大量的数据。&lt;/p&gt;
-
-&lt;p&gt;例如有一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;Activity &lt;/code&gt; 页面跳转中，经常会使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;Intent&lt;/code&gt; 传递数据，但是稍不留神就会把一个很大的对象(列表，&lt;code class=&quot;highlighter-rouge&quot;&gt;bitmap&lt;/code&gt; 等)传递过去，这时候就会出现这个异常。&lt;/p&gt;
-
-&lt;p&gt;建议不要在 &lt;code class=&quot;highlighter-rouge&quot;&gt;Intent&lt;/code&gt; 中传递大数据，应该使用持久化的方式共享数据。而且数据过多也会影响&lt;code class=&quot;highlighter-rouge&quot;&gt;Activity &lt;/code&gt; 的启动速度。&lt;/p&gt;
-
-&lt;p&gt;类似问题 &lt;code class=&quot;highlighter-rouge&quot;&gt;startActivity()&lt;/code&gt; 时发生以下错误&lt;/p&gt;
-
-&lt;blockquote&gt;
-  &lt;p&gt;java.lang.SecurityException: Unable to find app for caller android.app.ApplicationThreadProxy。This log means that your app is having trouble handling a communication intent. Sometimes problems like this can be cause by sending an intent with big extras. Try to reduce the dimension of the image or, and this is the best way, save your image on the sd and put in the extras only the Uri of that image。&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;即不要在 &lt;code class=&quot;highlighter-rouge&quot;&gt;Intent&lt;/code&gt; 中传递大量的数据数据，否则会抛异常。&lt;/p&gt;
-
-&lt;h3 id=&quot;0x03-fragmenttransactionsetcustomanimations-后动画没有效果&quot;&gt;0x03 FragmentTransaction.setCustomAnimations() 后动画没有效果&lt;/h3&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;setCustomAnimations  &lt;/code&gt; 要在 &lt;code class=&quot;highlighter-rouge&quot;&gt;replace()&lt;/code&gt;，&lt;code class=&quot;highlighter-rouge&quot;&gt;add()&lt;/code&gt; 或 &lt;code class=&quot;highlighter-rouge&quot;&gt;remove()&lt;/code&gt; 等对 &lt;code class=&quot;highlighter-rouge&quot;&gt;Fragment&lt;/code&gt; 添加或者移除的方法前面。&lt;/p&gt;
-
-&lt;h3 id=&quot;0x04-应用使用多进程应该注意的问题&quot;&gt;0x04 应用使用多进程应该注意的问题&lt;/h3&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Application&lt;/code&gt; 会被初始化多次，即 &lt;code class=&quot;highlighter-rouge&quot;&gt;onCreate()&lt;/code&gt; 方法会执行多次。在这里的一些初始化逻辑，例如数据库初始化，就需要根据判断当前进程的名称来进行初始化。&lt;/li&gt;
-  &lt;li&gt;主进程与子进程数据共享的问题。由于不存在同一个内存空间，数据共享可以考虑使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;ContentProvider&lt;/code&gt;。&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3 id=&quot;0x05-应用打包后-h5-无法访问到-webview-与-js-交互的自定义-jsbridge-类&quot;&gt;0x05 应用打包后 H5 无法访问到 WebView 与 JS 交互的自定义 JSBridge 类&lt;/h3&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;WebView&lt;/code&gt; 通过 &lt;code class=&quot;highlighter-rouge&quot;&gt;addJavascriptInterface()&lt;/code&gt; 注入本地实现的方法类 &lt;code class=&quot;highlighter-rouge&quot;&gt;JsBridge&lt;/code&gt; 供 H5 访问，但是打包时应该把自定义的 &lt;code class=&quot;highlighter-rouge&quot;&gt;JSBridge&lt;/code&gt; 类加入到混淆规则里面，否则混淆后 H5 将有可能无法访问本地方法。&lt;/p&gt;
-
-&lt;h3 id=&quot;0x06-app-端使用-webviewloadurl-执行-js-方法后无响应&quot;&gt;0x06 App 端使用 WebView.loadUrl() 执行 JS 方法后无响应&lt;/h3&gt;
-
-&lt;ol&gt;
-  &lt;li&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;WebView&lt;/code&gt; 通过 &lt;code class=&quot;highlighter-rouge&quot;&gt;loadUrl()&lt;/code&gt; 执行 JS 方法后却无响应，但是前端确定已提供。这时候应该考虑使用主线程（例如 &lt;code class=&quot;highlighter-rouge&quot;&gt;WebView.post()&lt;/code&gt; ）来执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;loadUrl()&lt;/code&gt;；&lt;/li&gt;
-  &lt;li&gt;通过 H5 调用本地方法时，如果 H5 是异步调用，那么也应该考虑把本地方法的实现放在主线程中。&lt;/li&gt;
-&lt;/ol&gt;
-
-&lt;h3 id=&quot;0x07-ui-控件的样式出现了很奇诡的渲染例如花屏闪动等的问题&quot;&gt;0x07 UI 控件的样式出现了很奇诡的渲染，例如花屏、闪动等的问题&lt;/h3&gt;
-
-&lt;p&gt;有些机型使用硬件加速出现了一些奇诡的UI问题，可以检查一下控件所在 &lt;code class=&quot;highlighter-rouge&quot;&gt;Activity&lt;/code&gt; 是否配置了硬件加速，多数情况下去掉硬件加速就 OK 了。&lt;/p&gt;
-
-&lt;p&gt;如果需要硬件加速的配置，可以考虑在控件本身上使用，而不是 &lt;code class=&quot;highlighter-rouge&quot;&gt;Activity&lt;/code&gt; 上。&lt;/p&gt;
-
-&lt;h3 id=&quot;0x08-activity-与-fragment-控件-id-重复的问题&quot;&gt;0x08 Activity 与 Fragment 控件 ID 重复的问题&lt;/h3&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Activity&lt;/code&gt; 中使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;Fragment&lt;/code&gt; ，&lt;code class=&quot;highlighter-rouge&quot;&gt;Activity&lt;/code&gt; 中有一个控件 ID 为 &lt;code class=&quot;highlighter-rouge&quot;&gt;R.id.widget_btn&lt;/code&gt; ，但是在 &lt;code class=&quot;highlighter-rouge&quot;&gt;Fragment&lt;/code&gt; 里面也有一个控件 ID 为 &lt;code class=&quot;highlighter-rouge&quot;&gt;R.id.widget_btn&lt;/code&gt; ，那么在 &lt;code class=&quot;highlighter-rouge&quot;&gt;Fragment&lt;/code&gt; 里面使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;getActivity().findViewById()&lt;/code&gt; 时就无法取到正确的控件引用。&lt;/p&gt;
-
-&lt;h3 id=&quot;0x09-webview-无法弹起-h5-中的-alert-和-comfirm-对话框的问题&quot;&gt;0x09 WebView 无法弹起 H5 中的 alert 和 comfirm 对话框的问题&lt;/h3&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;WebView&lt;/code&gt; 是一个承载体，各种内容的渲染需要使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;WebViewChromClient&lt;/code&gt; 去实现，所以需要设置一个默认的 &lt;code class=&quot;highlighter-rouge&quot;&gt;WebChromeClient&lt;/code&gt; 实现。但是一般情况下实现自定义 &lt;code class=&quot;highlighter-rouge&quot;&gt;WebView&lt;/code&gt; 都会重写 &lt;code class=&quot;highlighter-rouge&quot;&gt;onAlert&lt;/code&gt; 和 &lt;code class=&quot;highlighter-rouge&quot;&gt;onConfirm&lt;/code&gt; 方法，使用 &lt;code class=&quot;highlighter-rouge&quot;&gt;AlertDialog&lt;/code&gt; 来展示 &lt;code class=&quot;highlighter-rouge&quot;&gt;H5&lt;/code&gt; 中的 &lt;code class=&quot;highlighter-rouge&quot;&gt;alert&lt;/code&gt; 或者 &lt;code class=&quot;highlighter-rouge&quot;&gt;confirm&lt;/code&gt; 对话框。&lt;/p&gt;
-
-&lt;h3 id=&quot;0x10-gridview-中的-item-无法居中问题&quot;&gt;0x10 GridView 中的 Item 无法居中问题&lt;/h3&gt;
-
-&lt;p&gt;查看一下 &lt;code class=&quot;highlighter-rouge&quot;&gt;GridView&lt;/code&gt; 的布局文件是否设置了 &lt;code class=&quot;highlighter-rouge&quot;&gt;android:scrollbarStyle=&quot;outsideInset&quot;&lt;/code&gt; 属性，如果有，去掉这个属性。&lt;/p&gt;
-
-&lt;h3 id=&quot;0x11-edittext-textcursordrawable-属性直接用-color-在很多手机上光标是不会闪动&quot;&gt;0x11 EditText textCursorDrawable 属性直接用 color 在很多手机上光标是不会闪动&lt;/h3&gt;
-
-&lt;p&gt;需要用 &lt;code class=&quot;highlighter-rouge&quot;&gt;drawable&lt;/code&gt; 来设置这个属性，写一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;drawable&lt;/code&gt; 文件，例如&lt;/p&gt;
-
-&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shape&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;xmlns:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;android&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;http://schemas.android.com/apk/res/android&quot;&lt;/span&gt; 			   	&lt;span class=&quot;nl&quot;&gt;android:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;rectangle&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-	&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;solid&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;android:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;color&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;@color/white&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
-	&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;size&lt;/span&gt; &lt;span class=&quot;nl&quot;&gt;android:&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;width&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s&quot;&gt;&quot;1dp&quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
-&lt;span class=&quot;o&quot;&gt;&amp;lt;/&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;shape&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
-&lt;h3 id=&quot;0x12-在-listfragment-中-set-footer-后-javalangillegalstateexception问题&quot;&gt;0x12 在 ListFragment 中 set footer 后 java.lang.IllegalStateException问题&lt;/h3&gt;
-
-&lt;p&gt;不要 &lt;code class=&quot;highlighter-rouge&quot;&gt;ListFragment&lt;/code&gt; 的 &lt;code class=&quot;highlighter-rouge&quot;&gt;onCreateView()&lt;/code&gt; 中设置 &lt;code class=&quot;highlighter-rouge&quot;&gt;footer&lt;/code&gt; ，要在 &lt;code class=&quot;highlighter-rouge&quot;&gt;onActivityCreate()&lt;/code&gt; 中设置，否则会 &lt;code class=&quot;highlighter-rouge&quot;&gt;Caused by: java.lang.IllegalStateException: Content view not yet created&lt;/code&gt; 。&lt;/p&gt;
-
-&lt;h3 id=&quot;0x13-开源项目-tabpageindicator-tab-默认情况只显示-6-个中文字符过多的字符被截断了&quot;&gt;0x13 开源项目 TabPageIndicator Tab 默认情况只显示 6 个中文字符，过多的字符被截断了&lt;/h3&gt;
-
-&lt;p&gt;可修改 &lt;code class=&quot;highlighter-rouge&quot;&gt;TabView&lt;/code&gt; 中的 &lt;code class=&quot;highlighter-rouge&quot;&gt;mMaxTabWidth&lt;/code&gt; 的值，默认时 &lt;code class=&quot;highlighter-rouge&quot;&gt;mMaxTabWidth = (int) (MeasureSpec.getSize(widthMeasureSpec) * 0.4f);&lt;/code&gt; 修改为 &lt;code class=&quot;highlighter-rouge&quot;&gt;mMaxTabWidth = (int) (MeasureSpec.getSize(widthMeasureSpec) * 1f);&lt;/code&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;0x14-spannablestringbuilder-修饰文本影响-listview-性能问题&quot;&gt;0x14 SpannableStringBuilder 修饰文本影响 ListView 性能问题&lt;/h3&gt;
-
-&lt;p&gt;通常需要在一个列表中对 &lt;code class=&quot;highlighter-rouge&quot;&gt;Item&lt;/code&gt; 的文本作一些特殊的修饰处理，例如对文本添加简单的图标，文本颜色，字体高亮等等效果，这时候 &lt;code class=&quot;highlighter-rouge&quot;&gt;SpannableStringBuilder&lt;/code&gt; 就可以帮上忙了。但如果在 &lt;code class=&quot;highlighter-rouge&quot;&gt;getView()&lt;/code&gt; 方法里构造 &lt;code class=&quot;highlighter-rouge&quot;&gt;Spannable&lt;/code&gt; 对象，明显会影响列表的展示的效率，应该在线程中先这些 &lt;code class=&quot;highlighter-rouge&quot;&gt;Spannable&lt;/code&gt; 数据构造好，而 &lt;code class=&quot;highlighter-rouge&quot;&gt;getView()&lt;/code&gt; 尽量少做影响列表性能的操作。&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">老司机为何能够成为老司机，不是因为开车开得多，而是撸多了…</summary></entry></feed>
+&lt;p&gt;http://cs229.stanford.edu/materials.html&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">线性回归属于监督学习算法中的一种，也是最简单的一种算法。本文将讲述以下内容</summary></entry></feed>
