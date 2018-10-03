@@ -12,7 +12,7 @@ ShenZhen, China \| Computer Software
 
 *Education:* 浙江工商大学
 
-Scholar, CS/IT
+Bachelor, Information management and information system
 
 *Contact:* `print '%s@%s' % ('wecodexyz', 'gmail.com')  #via Python`
 
