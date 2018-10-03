@@ -6,13 +6,11 @@ keywords: Young, hylinux
 permalink: /about/
 ---
 
-**Software Engineer at [Telebox, Inc.](http://www.telebox.io)**
+**技术 leader at [Telebox, Inc.](http://www.telebox.io)**
 
-ShenZhen, China \| Computer Software
+ShenZhen, China 
 
-*Education:* 浙江工商大学
-
-Bachelor, Information management and information system
+*Education:* 浙江工商大学，信息管理与信息系统专业
 
 *Contact:* `print '%s@%s' % ('wecodexyz', 'gmail.com')  #via Python`
 
