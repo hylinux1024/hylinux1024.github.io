@@ -6,7 +6,7 @@ keywords: Young, hylinux
 permalink: /about/
 ---
 
-**技术 leader at [Telebox, Inc.](http://www.telebox.io)**
+**Tech lead for APP developing at [Telebox, Inc.](http://www.telebox.io)DG**
 
 ShenZhen, China 
 
