@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="源码阅读,Stack,数据结构" />
+        <meta name="description" content="栈是一种非常基础的数据结构，我们看看Java标准实现" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> 源码阅读之Java栈的实现  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> 源码阅读之Java栈的实现 </h2>
+        <h4 id="0x00-栈">0x00 栈</h4>
+
+<p>栈是 <code class="highlighter-rouge">Last-In-First-Out</code> （后进先出）的线性表。对栈的操作主要有两个：入栈(push)和出栈(pop)。因此它也是一种操作受限的线性表。尽管如此，它在计算机中应用非常广泛，是一种非常基础的数据结构。</p>
+
+<h4 id="0x01-源码">0x01 源码</h4>
+
+<p>从源码中可以看出栈也是一种非常简单的数据结构。栈的源码非常简洁，只有100多行代码。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">Stack</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">Vector</span><span class="o">&lt;</span><span class="n">E</span><span class="o">&gt;</span> <span class="o">{</span>
+ 	
+    <span class="kd">public</span> <span class="nf">Stack</span><span class="o">()</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="c1">//入栈操作</span>
+    <span class="kd">public</span> <span class="n">E</span> <span class="nf">push</span><span class="o">(</span><span class="n">E</span> <span class="n">item</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">addElement</span><span class="o">(</span><span class="n">item</span><span class="o">);</span>
+
+        <span class="k">return</span> <span class="n">item</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="c1">//出栈操作</span>
+    <span class="kd">public</span> <span class="kd">synchronized</span> <span class="n">E</span> <span class="nf">pop</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">E</span>       <span class="n">obj</span><span class="o">;</span>
+        <span class="kt">int</span>     <span class="n">len</span> <span class="o">=</span> <span class="n">size</span><span class="o">();</span>
+
+        <span class="n">obj</span> <span class="o">=</span> <span class="n">peek</span><span class="o">();</span>
+        <span class="n">removeElementAt</span><span class="o">(</span><span class="n">len</span> <span class="o">-</span> <span class="mi">1</span><span class="o">);</span>
+
+        <span class="k">return</span> <span class="n">obj</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="c1">//查看栈元素，不会删除</span>
+    <span class="kd">public</span> <span class="kd">synchronized</span> <span class="n">E</span> <span class="nf">peek</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kt">int</span>     <span class="n">len</span> <span class="o">=</span> <span class="n">size</span><span class="o">();</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">len</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span>
+            <span class="k">throw</span> <span class="k">new</span> <span class="nf">EmptyStackException</span><span class="o">();</span>
+        <span class="k">return</span> <span class="nf">elementAt</span><span class="o">(</span><span class="n">len</span> <span class="o">-</span> <span class="mi">1</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="c1">//检查是否为空栈</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">empty</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="nf">size</span><span class="o">()</span> <span class="o">==</span> <span class="mi">0</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="c1">//查找元素，如果找到则返回从栈顶开始计数的位置，否则返回-1</span>
+    <span class="kd">public</span> <span class="kd">synchronized</span> <span class="kt">int</span> <span class="nf">search</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">lastIndexOf</span><span class="o">(</span><span class="n">o</span><span class="o">);</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="nf">size</span><span class="o">()</span> <span class="o">-</span> <span class="n">i</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="cm">/** use serialVersionUID from JDK 1.0.2 for interoperability */</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="kt">long</span> <span class="n">serialVersionUID</span> <span class="o">=</span> <span class="mi">1224463164541339165L</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>它继承于 <code class="highlighter-rouge">Vector</code> 类，这个跟前面讲的 <code class="highlighter-rouge">ArrayList</code> 是一样的，只不过 <code class="highlighter-rouge">Vector</code> 类方法是同步的，因此 <code class="highlighter-rouge">Stack</code> 也是线程安全的。</p>
+
+<h5 id="push">push</h5>
+
+<p>入栈</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="n">E</span> <span class="nf">push</span><span class="o">(</span><span class="n">E</span> <span class="n">item</span><span class="o">)</span> <span class="o">{</span>
+	<span class="n">addElement</span><span class="o">(</span><span class="n">item</span><span class="o">);</span>
+
+	<span class="k">return</span> <span class="n">item</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>虽然此方法没有声明 <code class="highlighter-rouge">synchronized</code>，但内部调用一个 <code class="highlighter-rouge">addElement</code> 来实现入栈操作。这个操作方法是在父类中实现的，它被声明为线程安全的，因此它也是线程安全的。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">synchronized</span> <span class="kt">void</span> <span class="nf">addElement</span><span class="o">(</span><span class="n">E</span> <span class="n">obj</span><span class="o">)</span> <span class="o">{</span>
+	<span class="n">modCount</span><span class="o">++;</span>
+	<span class="n">ensureCapacityHelper</span><span class="o">(</span><span class="n">elementCount</span> <span class="o">+</span> <span class="mi">1</span><span class="o">);</span>
+	<span class="n">elementData</span><span class="o">[</span><span class="n">elementCount</span><span class="o">++]</span> <span class="o">=</span> <span class="n">obj</span><span class="o">;</span>
+<span class="o">}</span>
+
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">ensureCapacityHelper</span><span class="o">(</span><span class="kt">int</span> <span class="n">minCapacity</span><span class="o">)</span> <span class="o">{</span>
+	<span class="c1">// overflow-conscious code</span>
+	<span class="k">if</span> <span class="o">(</span><span class="n">minCapacity</span> <span class="o">-</span> <span class="n">elementData</span><span class="o">.</span><span class="na">length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span>
+		<span class="n">grow</span><span class="o">(</span><span class="n">minCapacity</span><span class="o">);</span>
+<span class="o">}</span>
+<span class="c1">//扩容方法</span>
+<span class="c1">//这里跟 ArrayList 扩容算法有点不一样，ArrayList 一次是扩容为原来的1.5倍，Vector 默认扩容为原来的1倍</span>
+<span class="kd">private</span> <span class="kt">void</span> <span class="nf">grow</span><span class="o">(</span><span class="kt">int</span> <span class="n">minCapacity</span><span class="o">)</span> <span class="o">{</span>
+	<span class="c1">// overflow-conscious code</span>
+	<span class="kt">int</span> <span class="n">oldCapacity</span> <span class="o">=</span> <span class="n">elementData</span><span class="o">.</span><span class="na">length</span><span class="o">;</span>
+	<span class="kt">int</span> <span class="n">newCapacity</span> <span class="o">=</span> <span class="n">oldCapacity</span> <span class="o">+</span> <span class="o">((</span><span class="n">capacityIncrement</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span> <span class="o">?</span>
+                                         <span class="n">capacityIncrement</span> <span class="o">:</span> <span class="n">oldCapacity</span><span class="o">);</span>
+	<span class="k">if</span> <span class="o">(</span><span class="n">newCapacity</span> <span class="o">-</span> <span class="n">minCapacity</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="o">)</span>
+		<span class="n">newCapacity</span> <span class="o">=</span> <span class="n">minCapacity</span><span class="o">;</span>
+	<span class="k">if</span> <span class="o">(</span><span class="n">newCapacity</span> <span class="o">-</span> <span class="n">MAX_ARRAY_SIZE</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="o">)</span>
+		<span class="n">newCapacity</span> <span class="o">=</span> <span class="n">hugeCapacity</span><span class="o">(</span><span class="n">minCapacity</span><span class="o">);</span>
+	<span class="n">elementData</span> <span class="o">=</span> <span class="n">Arrays</span><span class="o">.</span><span class="na">copyOf</span><span class="o">(</span><span class="n">elementData</span><span class="o">,</span> <span class="n">newCapacity</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>虽然 <code class="highlighter-rouge">push</code> 方法没有声明 <code class="highlighter-rouge">synchronized</code> 但 <code class="highlighter-rouge">addElement</code> 方法中有。在这个方法里</p>
+
+<ul>
+  <li>首先把 <code class="highlighter-rouge">modCount</code> 加 1，记录一次对数据结构的操作。</li>
+  <li>然后检查数组容量是否足够，不够则扩容。</li>
+  <li>最后把元素对象添加到数组末尾。</li>
+</ul>
+
+<p>需要注意的是<strong><code class="highlighter-rouge">Vector</code>的扩容策略是默认一次扩容为原来的1倍，这与<code class="highlighter-rouge">ArrayList</code> 一次扩容原来的1.5倍不同</strong>。</p>
+
+<h5 id="pop">pop</h5>
+
+<p>出栈</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">synchronized</span> <span class="n">E</span> <span class="nf">pop</span><span class="o">()</span> <span class="o">{</span>
+	<span class="n">E</span>       <span class="n">obj</span><span class="o">;</span>
+	<span class="kt">int</span>     <span class="n">len</span> <span class="o">=</span> <span class="n">size</span><span class="o">();</span>
+
+	<span class="n">obj</span> <span class="o">=</span> <span class="n">peek</span><span class="o">();</span>
+	<span class="n">removeElementAt</span><span class="o">(</span><span class="n">len</span> <span class="o">-</span> <span class="mi">1</span><span class="o">);</span>
+
+	<span class="k">return</span> <span class="n">obj</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">pop</code> 方法被声明为 <code class="highlighter-rouge">synchronized</code> ，是线程安全的方法。它通过 <code class="highlighter-rouge">peek</code> 方法获取到栈顶元素对象，然后调用父类的 <code class="highlighter-rouge">removeElementAt</code> 方法把栈顶元素删除。</p>
+
+<h5 id="peek">peek</h5>
+
+<p>查看栈顶元素</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">synchronized</span> <span class="n">E</span> <span class="nf">peek</span><span class="o">()</span> <span class="o">{</span>
+    <span class="kt">int</span>     <span class="n">len</span> <span class="o">=</span> <span class="n">size</span><span class="o">();</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">len</span> <span class="o">==</span> <span class="mi">0</span><span class="o">)</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">EmptyStackException</span><span class="o">();</span>
+    <span class="k">return</span> <span class="nf">elementAt</span><span class="o">(</span><span class="n">len</span> <span class="o">-</span> <span class="mi">1</span><span class="o">);</span>
+<span class="o">}</span>
+
+</code></pre></div></div>
+
+<p>这个方法也是线程安全的。可以看出如果栈的大小为0时，执行 <code class="highlighter-rouge">peek</code> 方法会抛出 <code class="highlighter-rouge">EmptyStackException</code> 异常。</p>
+
+<h5 id="search">search</h5>
+
+<p>在栈中搜索元素</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">synchronized</span> <span class="kt">int</span> <span class="nf">search</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">lastIndexOf</span><span class="o">(</span><span class="n">o</span><span class="o">);</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="nf">size</span><span class="o">()</span> <span class="o">-</span> <span class="n">i</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>继续查看父类代码</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">synchronized</span> <span class="kt">int</span> <span class="nf">lastIndexOf</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="nf">lastIndexOf</span><span class="o">(</span><span class="n">o</span><span class="o">,</span> <span class="n">elementCount</span><span class="o">-</span><span class="mi">1</span><span class="o">);</span>
+<span class="o">}</span>
+
+<span class="kd">public</span> <span class="kd">synchronized</span> <span class="kt">int</span> <span class="nf">lastIndexOf</span><span class="o">(</span><span class="n">Object</span> <span class="n">o</span><span class="o">,</span> <span class="kt">int</span> <span class="n">index</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">elementCount</span><span class="o">)</span>
+        <span class="k">throw</span> <span class="k">new</span> <span class="nf">IndexOutOfBoundsException</span><span class="o">(</span><span class="n">index</span> <span class="o">+</span> <span class="s">" &gt;= "</span><span class="o">+</span> <span class="n">elementCount</span><span class="o">);</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">o</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span><span class="c1">//如果查找的元素是空的则遍历找到最接近栈的空元素</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">index</span><span class="o">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span><span class="o">--)</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">elementData</span><span class="o">[</span><span class="n">i</span><span class="o">]==</span><span class="kc">null</span><span class="o">)</span>
+                <span class="k">return</span> <span class="n">i</span><span class="o">;</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">index</span><span class="o">;</span> <span class="n">i</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="o">;</span> <span class="n">i</span><span class="o">--)</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">o</span><span class="o">.</span><span class="na">equals</span><span class="o">(</span><span class="n">elementData</span><span class="o">[</span><span class="n">i</span><span class="o">]))</span><span class="c1">//通过equals方法来判断两个元素是否相同</span>
+                <span class="k">return</span> <span class="n">i</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="k">return</span> <span class="o">-</span><span class="mi">1</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>在栈中查询一个元素需要遍历，时间复杂度为O(n)。</p>
+
+<h4 id="0x02-总结">0x02 总结</h4>
+
+<p>栈是一种<code class="highlighter-rouge">LIFO</code>的数据结构，它基于 <code class="highlighter-rouge">Vector</code> 来实现，所有的方法都是线程安全的。入栈和出栈操作的时间复杂度为O(1)，查找元素的时间复杂度为O(n)。</p>
+
+        
+        <div class="post_footer">
+          <p>Published on Oct 18, 2018 in categories 
+          
+          <a href="http://localhost:4000/categories/#数据结构" title="数据结构">数据结构</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BLinkedList%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82">源码阅读之LinkedList实现细节</a>
+            </li>
+            
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="http://localhost:4000/js/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BJava%E6%A0%88%E7%9A%84%E5%AE%9E%E7%8E%B0',
+            owner: 'hylinux1024',
+            repo: 'hylinux1024.github.io',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+

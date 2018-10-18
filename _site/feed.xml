@@ -1,4 +1,189 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-10-18T15:11:33+08:00</updated><id>http://localhost:4000/</id><title type="html">Thinking Tech</title><author><name>hylinux</name></author><entry><title type="html">源码阅读之LinkedList实现细节</title><link href="http://localhost:4000/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BLinkedList%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82" rel="alternate" type="text/html" title="源码阅读之LinkedList实现细节" /><published>2018-10-17T00:00:00+08:00</published><updated>2018-10-17T00:00:00+08:00</updated><id>http://localhost:4000/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BLinkedList%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82</id><content type="html" xml:base="http://localhost:4000/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BLinkedList%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82">&lt;h4 id=&quot;0x00-描述&quot;&gt;0x00 描述&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-10-18T18:45:16+08:00</updated><id>http://localhost:4000/</id><title type="html">Thinking Tech</title><author><name>hylinux</name></author><entry><title type="html">源码阅读之Java栈的实现</title><link href="http://localhost:4000/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BJava%E6%A0%88%E7%9A%84%E5%AE%9E%E7%8E%B0" rel="alternate" type="text/html" title="源码阅读之Java栈的实现" /><published>2018-10-18T00:00:00+08:00</published><updated>2018-10-18T00:00:00+08:00</updated><id>http://localhost:4000/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BJava%E6%A0%88%E7%9A%84%E5%AE%9E%E7%8E%B0</id><content type="html" xml:base="http://localhost:4000/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BJava%E6%A0%88%E7%9A%84%E5%AE%9E%E7%8E%B0">&lt;h4 id=&quot;0x00-栈&quot;&gt;0x00 栈&lt;/h4&gt;
+
+&lt;p&gt;栈是 &lt;code class=&quot;highlighter-rouge&quot;&gt;Last-In-First-Out&lt;/code&gt; （后进先出）的线性表。对栈的操作主要有两个：入栈(push)和出栈(pop)。因此它也是一种操作受限的线性表。尽管如此，它在计算机中应用非常广泛，是一种非常基础的数据结构。&lt;/p&gt;
+
+&lt;h4 id=&quot;0x01-源码&quot;&gt;0x01 源码&lt;/h4&gt;
+
+&lt;p&gt;从源码中可以看出栈也是一种非常简单的数据结构。栈的源码非常简洁，只有100多行代码。&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nc&quot;&gt;Stack&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;E&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Vector&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;E&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+ 	
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;Stack&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//入栈操作&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;E&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;E&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;item&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;addElement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;item&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;item&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//出栈操作&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;synchronized&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;E&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;pop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;E&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+
+        &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;peek&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;n&quot;&gt;removeElementAt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//查看栈元素，不会删除&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;synchronized&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;E&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;peek&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;EmptyStackException&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;elementAt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//检查是否为空栈&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;boolean&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;empty&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;c1&quot;&gt;//查找元素，如果找到则返回从栈顶开始计数的位置，否则返回-1&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;synchronized&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;search&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Object&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lastIndexOf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+        &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+        &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+    &lt;span class=&quot;cm&quot;&gt;/** use serialVersionUID from JDK 1.0.2 for interoperability */&lt;/span&gt;
+    &lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;static&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;final&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;long&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;serialVersionUID&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1224463164541339165L&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;它继承于 &lt;code class=&quot;highlighter-rouge&quot;&gt;Vector&lt;/code&gt; 类，这个跟前面讲的 &lt;code class=&quot;highlighter-rouge&quot;&gt;ArrayList&lt;/code&gt; 是一样的，只不过 &lt;code class=&quot;highlighter-rouge&quot;&gt;Vector&lt;/code&gt; 类方法是同步的，因此 &lt;code class=&quot;highlighter-rouge&quot;&gt;Stack&lt;/code&gt; 也是线程安全的。&lt;/p&gt;
+
+&lt;h5 id=&quot;push&quot;&gt;push&lt;/h5&gt;
+
+&lt;p&gt;入栈&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;E&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;push&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;E&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;item&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;addElement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;item&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;item&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;虽然此方法没有声明 &lt;code class=&quot;highlighter-rouge&quot;&gt;synchronized&lt;/code&gt;，但内部调用一个 &lt;code class=&quot;highlighter-rouge&quot;&gt;addElement&lt;/code&gt; 来实现入栈操作。这个操作方法是在父类中实现的，它被声明为线程安全的，因此它也是线程安全的。&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;synchronized&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;addElement&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;E&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;modCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++;&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;ensureCapacityHelper&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elementCount&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;elementData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elementCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;++]&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;ensureCapacityHelper&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;minCapacity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;c1&quot;&gt;// overflow-conscious code&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;minCapacity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elementData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;grow&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;minCapacity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;//扩容方法&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;//这里跟 ArrayList 扩容算法有点不一样，ArrayList 一次是扩容为原来的1.5倍，Vector 默认扩容为原来的1倍&lt;/span&gt;
+&lt;span class=&quot;kd&quot;&gt;private&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;void&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;grow&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;minCapacity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;c1&quot;&gt;// overflow-conscious code&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;oldCapacity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elementData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;length&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;newCapacity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;oldCapacity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;((&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;capacityIncrement&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;?&lt;/span&gt;
+                                         &lt;span class=&quot;n&quot;&gt;capacityIncrement&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;oldCapacity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;newCapacity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;minCapacity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;newCapacity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;minCapacity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;newCapacity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;MAX_ARRAY_SIZE&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+		&lt;span class=&quot;n&quot;&gt;newCapacity&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;hugeCapacity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;minCapacity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;elementData&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;Arrays&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;copyOf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elementData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;newCapacity&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;虽然 &lt;code class=&quot;highlighter-rouge&quot;&gt;push&lt;/code&gt; 方法没有声明 &lt;code class=&quot;highlighter-rouge&quot;&gt;synchronized&lt;/code&gt; 但 &lt;code class=&quot;highlighter-rouge&quot;&gt;addElement&lt;/code&gt; 方法中有。在这个方法里&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;首先把 &lt;code class=&quot;highlighter-rouge&quot;&gt;modCount&lt;/code&gt; 加 1，记录一次对数据结构的操作。&lt;/li&gt;
+  &lt;li&gt;然后检查数组容量是否足够，不够则扩容。&lt;/li&gt;
+  &lt;li&gt;最后把元素对象添加到数组末尾。&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;需要注意的是&lt;strong&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Vector&lt;/code&gt;的扩容策略是默认一次扩容为原来的1倍，这与&lt;code class=&quot;highlighter-rouge&quot;&gt;ArrayList&lt;/code&gt; 一次扩容原来的1.5倍不同&lt;/strong&gt;。&lt;/p&gt;
+
+&lt;h5 id=&quot;pop&quot;&gt;pop&lt;/h5&gt;
+
+&lt;p&gt;出栈&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;synchronized&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;E&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;pop&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;E&lt;/span&gt;       &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+	&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+
+	&lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;peek&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+	&lt;span class=&quot;n&quot;&gt;removeElementAt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;obj&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;pop&lt;/code&gt; 方法被声明为 &lt;code class=&quot;highlighter-rouge&quot;&gt;synchronized&lt;/code&gt; ，是线程安全的方法。它通过 &lt;code class=&quot;highlighter-rouge&quot;&gt;peek&lt;/code&gt; 方法获取到栈顶元素对象，然后调用父类的 &lt;code class=&quot;highlighter-rouge&quot;&gt;removeElementAt&lt;/code&gt; 方法把栈顶元素删除。&lt;/p&gt;
+
+&lt;h5 id=&quot;peek&quot;&gt;peek&lt;/h5&gt;
+
+&lt;p&gt;查看栈顶元素&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;synchronized&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;E&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;peek&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt;     &lt;span class=&quot;n&quot;&gt;len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;EmptyStackException&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;();&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;elementAt&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;len&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;这个方法也是线程安全的。可以看出如果栈的大小为0时，执行 &lt;code class=&quot;highlighter-rouge&quot;&gt;peek&lt;/code&gt; 方法会抛出 &lt;code class=&quot;highlighter-rouge&quot;&gt;EmptyStackException&lt;/code&gt; 异常。&lt;/p&gt;
+
+&lt;h5 id=&quot;search&quot;&gt;search&lt;/h5&gt;
+
+&lt;p&gt;在栈中搜索元素&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;synchronized&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;search&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Object&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;lastIndexOf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;size&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;继续查看父类代码&lt;/p&gt;
+
+&lt;div class=&quot;language-java highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;synchronized&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;lastIndexOf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Object&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;lastIndexOf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elementCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;kd&quot;&gt;public&lt;/span&gt; &lt;span class=&quot;kd&quot;&gt;synchronized&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;lastIndexOf&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;Object&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;index&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;index&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elementCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;throw&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;new&lt;/span&gt; &lt;span class=&quot;nf&quot;&gt;IndexOutOfBoundsException&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;index&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;&quot; &amp;gt;= &quot;&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;+&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;elementCount&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;);&lt;/span&gt;
+
+    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;==&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;//如果查找的元素是空的则遍历找到最接近栈的空元素&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;index&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;--)&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elementData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]==&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;null&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;else&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;{&lt;/span&gt;
+        &lt;span class=&quot;k&quot;&gt;for&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;kt&quot;&gt;int&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;index&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;gt;=&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;--)&lt;/span&gt;
+            &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;o&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;na&quot;&gt;equals&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;elementData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]))&lt;/span&gt;&lt;span class=&quot;c1&quot;&gt;//通过equals方法来判断两个元素是否相同&lt;/span&gt;
+                &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;i&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+    &lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;p&gt;在栈中查询一个元素需要遍历，时间复杂度为O(n)。&lt;/p&gt;
+
+&lt;h4 id=&quot;0x02-总结&quot;&gt;0x02 总结&lt;/h4&gt;
+
+&lt;p&gt;栈是一种&lt;code class=&quot;highlighter-rouge&quot;&gt;LIFO&lt;/code&gt;的数据结构，它基于 &lt;code class=&quot;highlighter-rouge&quot;&gt;Vector&lt;/code&gt; 来实现，所有的方法都是线程安全的。入栈和出栈操作的时间复杂度为O(1)，查找元素的时间复杂度为O(n)。&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">0x00 栈</summary></entry><entry><title type="html">源码阅读之LinkedList实现细节</title><link href="http://localhost:4000/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BLinkedList%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82" rel="alternate" type="text/html" title="源码阅读之LinkedList实现细节" /><published>2018-10-17T00:00:00+08:00</published><updated>2018-10-17T00:00:00+08:00</updated><id>http://localhost:4000/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BLinkedList%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82</id><content type="html" xml:base="http://localhost:4000/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BLinkedList%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82">&lt;h4 id=&quot;0x00-描述&quot;&gt;0x00 描述&lt;/h4&gt;
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;LinkedList&lt;/code&gt; 是一个双向链表，这是一个基础的数据结构。打开 &lt;code class=&quot;highlighter-rouge&quot;&gt;LinkedList&lt;/code&gt; 源码，可以看到它继承于 &lt;code class=&quot;highlighter-rouge&quot;&gt;AbstractSequentialList&lt;/code&gt; ，这个是 &lt;code class=&quot;highlighter-rouge&quot;&gt;AbstractList&lt;/code&gt; 的子类。同时也实现了 &lt;code class=&quot;highlighter-rouge&quot;&gt;List&lt;/code&gt; 、&lt;code class=&quot;highlighter-rouge&quot;&gt;Deque&lt;/code&gt; 、&lt;code class=&quot;highlighter-rouge&quot;&gt;Clone&lt;/code&gt;、&lt;code class=&quot;highlighter-rouge&quot;&gt;Serializable&lt;/code&gt; 接口。所以简化的类关系图可以表示为&lt;/p&gt;
 
@@ -1919,177 +2104,4 @@ set_target_properties( # Specifies the target library.
 unlink /name/supervisor.sock
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
 
-&lt;p&gt;https://blog.csdn.net/LHWorldBlog/article/details/78518696&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">0x00 代理服务</summary></entry><entry><title type="html">机器学习之逻辑回归</title><link href="http://localhost:4000/logisitic-regression" rel="alternate" type="text/html" title="机器学习之逻辑回归" /><published>2017-08-20T00:00:00+08:00</published><updated>2017-08-20T00:00:00+08:00</updated><id>http://localhost:4000/logisitic-regression</id><content type="html" xml:base="http://localhost:4000/logisitic-regression">&lt;p&gt;[TOC]&lt;/p&gt;
-
-&lt;p&gt;本文主要内容&lt;/p&gt;
-
-&lt;ul&gt;
-  &lt;li&gt;逻辑回归（Logistic Regression）模型&lt;/li&gt;
-  &lt;li&gt;决策边界（Decision Boundary）&lt;/li&gt;
-  &lt;li&gt;成本函数（Cost Function）&lt;/li&gt;
-  &lt;li&gt;梯度下降法（Gradient Descent）&lt;/li&gt;
-  &lt;li&gt;多分类问题&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;p&gt;逻辑回归（Logistic Regression）是机器学习中的监督学习算法，主要用于分类任务。这些任务预测的标签（label）通常为 {0,1}，或者说是一个概率值。 例如我们预测一封邮件是否为垃圾邮件；预测天气是否为晴天、阴天、雨天和雪天等。&lt;/p&gt;
-
-&lt;h3 id=&quot;逻辑回归logistic-regression模型&quot;&gt;逻辑回归（Logistic Regression）模型&lt;/h3&gt;
-
-&lt;p&gt;从上文《机器学习之线性回归》我们知道线性回归的模型为
-&lt;script type=&quot;math/tex&quot;&gt;h_\theta(x)=\theta_0+\theta_1x_1+...+\theta_nx_n=\theta^Tx&lt;/script&gt;
-可以从上面模型通过函数 g 对线性回归进行变换
-&lt;script type=&quot;math/tex&quot;&gt;h_\theta(x)=g(\theta^Tx) \tag 1&lt;/script&gt;
-其中
-&lt;script type=&quot;math/tex&quot;&gt;g(z)=\frac 1 {1+e^{-z}} \tag 2&lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;其中g(z) 是 &lt;strong&gt;sigmoid 函数或者叫逻辑函数&lt;/strong&gt;。可以看出 0&amp;lt;= g(z)&amp;lt;=1&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/sigmoid_functio.jpeg&quot; alt=&quot;sigmoid function&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;由 (1) 和 (2)
-&lt;script type=&quot;math/tex&quot;&gt;h_\theta(x)=\frac 1 {1+e^{-\theta^Tx}} \tag 3&lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;这就是&lt;strong&gt;逻辑回归的数学模型&lt;/strong&gt;。&lt;/p&gt;
-
-&lt;p&gt;因为预测值 h(x) 是在{0,1}，故还可以用概率的角度进行解析这个模型的预测结果。&lt;/p&gt;
-
-&lt;p&gt;以预测垃圾邮件为例，如果 y=1 表示这封邮件时垃圾邮件，那么预测模型可以表示&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;h_\theta(x)=P(y=1|x;\theta) \tag 4&lt;/script&gt;
-
-&lt;h3 id=&quot;决策边界decision-boundary&quot;&gt;决策边界（Decision Boundary）&lt;/h3&gt;
-
-&lt;p&gt;我们知道 sigmoid 函数的值是在 {0,1} 范围，当 \(h_\theta(x)\geq0.5\) 时，预测y=1，反之则预测 y=0。&lt;/p&gt;
-
-&lt;p&gt;根据 sigmoid 函数可以知道要预测 \(h_\theta(x)\geq0.5\) 那么等价于 \(\theta^Tx\geq0\)&lt;/p&gt;
-
-&lt;p&gt;我们以这张来自于 Andrew Ng 机器学习课程的 ppt 来说明。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/decision_boundary.png&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;假设通过训练得出
-&lt;script type=&quot;math/tex&quot;&gt;\theta=\begin{bmatrix}
--3\\
-1\\
-1
-\end{bmatrix}&lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;那么
-&lt;script type=&quot;math/tex&quot;&gt;x_1+x_2=3 \tag 5&lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;就是&lt;strong&gt;决策边界&lt;/strong&gt;。当&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;x_1+x_2\geq3&lt;/script&gt;
-
-&lt;p&gt;表示预测值 y=1，反之预测值 y=0。&lt;/p&gt;
-
-&lt;p&gt;除了线性决策边界，还可以是曲线的。&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/non-linear-decision-boundary.png&quot; alt=&quot;non-linear-decision-boundary&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;这里的决策边界就是&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;x_1+x_2=1 \tag 6&lt;/script&gt;
-
-&lt;p&gt;以上两个例子都是简单的边界，当然实际情况下，决策边界有能是复杂的图形，甚至是高维度的。&lt;/p&gt;
-
-&lt;h3 id=&quot;成本函数cost-function&quot;&gt;成本函数（Cost Function）&lt;/h3&gt;
-
-&lt;p&gt;回忆一下线性回归中的成本函数&lt;/p&gt;
-
-&lt;p&gt;&lt;script type=&quot;math/tex&quot;&gt;J(\theta)=\frac 1 {2m} \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})^2&lt;/script&gt;
-我们定义函数&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;Cost(h_\theta(x),y)=\frac 1 2 (h_\theta(x)-y)^2&lt;/script&gt;
-
-&lt;p&gt;那么成本函数就可以写成&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;J(\theta)=\frac 1 m \sum_{i=1}^mCost(h_\theta(x),y)&lt;/script&gt;
-
-&lt;p&gt;&lt;strong&gt;逻辑回归的成本函数（Cost Function）&lt;/strong&gt;&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
-Cost(h_\theta(x),y)=
-\begin{cases}
--log(h_\theta(x)) &amp; \text{if $y$ =1} \\
--log(1-h_\theta(x)) &amp; \text{if $y$ =0}
-\end{cases} \tag 7 %]]&gt;&lt;/script&gt;
-
-&lt;p&gt;当 y=1 时&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/minus-logx.png?imageView2/2/w/200/h/200&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;当 y=0 时&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/minus-log1-x.png?imageView2/2/w/200/h/200&quot; alt=&quot;&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;由于 y 取值是{0,1}，我们可以把公式 (7) 写成&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;Cost(h_\theta(x),y)=-ylog(h_\theta(x))-(1-y)log(1-h_\theta(x)) \\ y\in {\{0,1\}}\tag 8&lt;/script&gt;
-
-&lt;h3 id=&quot;梯度下降法gradient-descent&quot;&gt;梯度下降法（Gradient Descent）&lt;/h3&gt;
-
-&lt;p&gt;由上文可以知道成本函数为&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;J(\theta)=-\frac 1 m \sum_{i=1}^{m}(y^{(i)}log(h_\theta(x^{(i)}))+(1-y^{(i)})log(1-h_\theta(x^{(i)})))&lt;/script&gt;
-
-&lt;p&gt;要求\(min_{\theta}J(\theta)\)，需要使用微分求导公式&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;f(x)'=(log_ax)'=\frac 1 x lna&lt;/script&gt;
-
-&lt;p&gt;同时为了简单起见，求导时可以假设只有一个样本，这样可以把∑符号去掉，方便推导。&lt;/p&gt;
-
-&lt;p&gt;因为上文中 log 函数默认是以 e 底的&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;log(h_\theta(x))' =\frac 1 {h_\theta(x)} \frac d {d\theta}h_\theta(x)&lt;/script&gt;
-
-&lt;p&gt;因为&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;g(z)=\frac 1 {1+e^{-z}}&lt;/script&gt;
-
-&lt;p&gt;有
-&lt;script type=&quot;math/tex&quot;&gt;% &lt;![CDATA[
-\begin{equation}\begin{split}g(z)'&amp;=\frac d {dz}(1+e^{-z})^{-1} \\
-&amp;=-(1+e^{-z})^{-2} \cdot (e^{-z})\cdot(-1)\\
-&amp;=\frac {e^{-z}} {(1+e^{-z})^2}\\
-&amp;=g(z) \cdot (\frac {e^{-z}} {1+e^{-z}})\\
-&amp;=g(z)(1-g(z))
-\end{split}\end{equation} %]]&gt;&lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;那么有&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;\frac d {d\theta_j}g(\theta^Tx)=g(\theta^Tx)(1-g(\theta^Tx))\theta_j&lt;/script&gt;
-
-&lt;p&gt;于是
-&lt;script type=&quot;math/tex&quot;&gt;J(\theta_j)'=\frac 1 m \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
-j \in {\{0,1,2...n\}}
-\tag 9&lt;/script&gt;&lt;/p&gt;
-
-&lt;p&gt;这个式子形式上与线性回归的\(J(\theta)\)的偏导数是很相似的，但是需要注意的是
-\
-预测函数 h(x) 是不一样的。&lt;/p&gt;
-
-&lt;p&gt;根据梯度下降法&lt;/p&gt;
-
-&lt;script type=&quot;math/tex; mode=display&quot;&gt;% &lt;![CDATA[
-\begin{equation}\begin{split}repeat &amp;\{\\
-&amp;\theta_j := \theta_j-\alpha\frac 1 m \sum_{i=1}^m(h_\theta(x^{(i)})-y^{(i)})x^{(i)}_j \\
-\}
-\end{split}\end{equation} %]]&gt;&lt;/script&gt;
-
-&lt;h3 id=&quot;多分类问题&quot;&gt;多分类问题&lt;/h3&gt;
-
-&lt;p&gt;对于二分类问题，我们很容易就可以建立模型。如果预测一个多分类问题，我们应该如何做呢？我们还是以Andrew Ng的ppt来说明&lt;/p&gt;
-
-&lt;p&gt;&lt;img src=&quot;http://angrycode.qiniudn.com/multi-class.png&quot; alt=&quot;multi-class&quot; /&gt;&lt;/p&gt;
-
-&lt;p&gt;例如要预测一个三分类的问题，假设要预测class1，那么就可以其他两类class2，class3当做一个分类，这样转换成一个二分类问题。这时候我们就需要根据已有的训练数据构造新的训练数据。预测class2，class3时，以此类推。这样就需要有三个不同训练数据。&lt;/p&gt;
-
-&lt;p&gt;当有一个新的数据进行预测时，我们只要计算下面式子的最大值就可以了&lt;/p&gt;
-
-&lt;p&gt;ß
-&lt;script type=&quot;math/tex&quot;&gt;\max_i h_\theta(x^{(i)})\\ i\in\{1,2,3\}&lt;/script&gt;&lt;/p&gt;
-
-&lt;h3 id=&quot;参考文献&quot;&gt;参考文献&lt;/h3&gt;
-
-&lt;p&gt;Andrew Ng coursera 机器学习课程&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">[TOC]</summary></entry></feed>
+&lt;p&gt;https://blog.csdn.net/LHWorldBlog/article/details/78518696&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">0x00 代理服务</summary></entry></feed>
