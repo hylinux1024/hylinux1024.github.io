@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="源码阅读,OKHttp" />
+        <meta name="description" content="OKHttp 是目前 Android 平台主流的网络请求的基础框架。因此我们有必要对其源码进行阅读学习，了解其内部的原理、项目结构、以及请求的执行过程。" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> 源码分析OKHttp的执行过程  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> 源码分析OKHttp的执行过程 </h2>
+        <p><code class="highlighter-rouge">OKHttp</code> 是目前 <code class="highlighter-rouge">Android</code> 平台主流的网络请求的基础框架。因此我们有必要对其源码进行阅读学习，了解其内部的原理、项目结构、以及请求的执行过程。</p>
+
+<p>它的项目地址为：https://github.com/square/okhttp</p>
+
+<h4 id="0x00-简单使用">0x00 简单使用</h4>
+
+<p>先从一个简单的官方示例来看，这是一个同步 <code class="highlighter-rouge">GET</code> 请求</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">GetExample</span> <span class="o">{</span>
+  <span class="c1">//1.http客户端</span>
+  <span class="n">OkHttpClient</span> <span class="n">client</span> <span class="o">=</span> <span class="k">new</span> <span class="n">OkHttpClient</span><span class="o">();</span>
+    
+  <span class="n">String</span> <span class="nf">run</span><span class="o">(</span><span class="n">String</span> <span class="n">url</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+    <span class="c1">//2.构造请求</span>
+    <span class="n">Request</span> <span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Request</span><span class="o">.</span><span class="na">Builder</span><span class="o">()</span>
+        <span class="o">.</span><span class="na">url</span><span class="o">(</span><span class="n">url</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+	<span class="c1">//3.执行请求，获取响应数据</span>
+    <span class="k">try</span> <span class="o">(</span><span class="n">Response</span> <span class="n">response</span> <span class="o">=</span> <span class="n">client</span><span class="o">.</span><span class="na">newCall</span><span class="o">(</span><span class="n">request</span><span class="o">).</span><span class="na">execute</span><span class="o">())</span> <span class="o">{</span>
+      <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="na">body</span><span class="o">().</span><span class="na">string</span><span class="o">();</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="kd">static</span> <span class="kt">void</span> <span class="nf">main</span><span class="o">(</span><span class="n">String</span><span class="o">[]</span> <span class="n">args</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+    <span class="n">GetExample</span> <span class="n">example</span> <span class="o">=</span> <span class="k">new</span> <span class="n">GetExample</span><span class="o">();</span>
+    <span class="n">String</span> <span class="n">response</span> <span class="o">=</span> <span class="n">example</span><span class="o">.</span><span class="na">run</span><span class="o">(</span><span class="s">"https://raw.github.com/square/okhttp/master/README.md"</span><span class="o">);</span>
+    <span class="n">System</span><span class="o">.</span><span class="na">out</span><span class="o">.</span><span class="na">println</span><span class="o">(</span><span class="n">response</span><span class="o">);</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>可以看出这个 <code class="highlighter-rouge">GET</code> 请求操作是很简单的。有几个很重要的接口</p>
+
+<ul>
+  <li><code class="highlighter-rouge">OKHttpClient</code> ： 它代表着 <code class="highlighter-rouge">http</code> 客户端</li>
+  <li><code class="highlighter-rouge">Request</code>：它封装了请求对象，可以构造一个 <code class="highlighter-rouge">http</code> 请求对象</li>
+  <li><code class="highlighter-rouge">Response</code>：封装了响应结果</li>
+  <li><code class="highlighter-rouge">Call</code> ：<code class="highlighter-rouge">client.newCall</code>调用后生成一个请求执行对象<code class="highlighter-rouge">Call</code>，它封装了请求执行过程。</li>
+</ul>
+
+<p>这几个接口是程序员在使用 <code class="highlighter-rouge">OKHttp</code> 库中经常遇到的。</p>
+
+<p>接下来将从这个示例开始阅读 <code class="highlighter-rouge">OkHttp</code> 的源码</p>
+
+<h4 id="0x01-callexecute">0x01 Call.execute()</h4>
+
+<p>跟进源码后发现这个方法是在 <code class="highlighter-rouge">Call</code> 中的接口</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * A call is a request that has been prepared for execution. A call can be canceled. As this object
+ * represents a single request/response pair (stream), it cannot be executed twice.
+ */</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Call</span> <span class="kd">extends</span> <span class="n">Cloneable</span> <span class="o">{</span>
+  <span class="c1">//...</span>
+  <span class="c1">//同步执行请求</span>
+  <span class="n">Response</span> <span class="nf">execute</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">;</span>
+
+  <span class="c1">//将请求加入队列</span>
+  <span class="kt">void</span> <span class="nf">enqueue</span><span class="o">(</span><span class="n">Callback</span> <span class="n">responseCallback</span><span class="o">);</span>
+
+  <span class="c1">//...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>从源码注释知道，<code class="highlighter-rouge">Call</code> 是一个准备请求的执行对象，它可以被取消，代表一个 “请求/响应” 对，不能执行两次。</p>
+
+<h5 id="realcall">RealCall</h5>
+
+<p><code class="highlighter-rouge">Call</code> 的实现类是 <code class="highlighter-rouge">RealCall</code>，因此 <code class="highlighter-rouge">execute</code> 方法</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Override</span> <span class="kd">public</span> <span class="n">Response</span> <span class="nf">execute</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+    <span class="kd">synchronized</span> <span class="o">(</span><span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">if</span> <span class="o">(</span><span class="n">executed</span><span class="o">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">IllegalStateException</span><span class="o">(</span><span class="s">"Already Executed"</span><span class="o">);</span>
+      <span class="n">executed</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="n">captureCallStackTrace</span><span class="o">();</span>
+    <span class="n">eventListener</span><span class="o">.</span><span class="na">callStart</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+    <span class="k">try</span> <span class="o">{</span>
+      <span class="n">client</span><span class="o">.</span><span class="na">dispatcher</span><span class="o">().</span><span class="na">executed</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+      <span class="n">Response</span> <span class="n">result</span> <span class="o">=</span> <span class="n">getResponseWithInterceptorChain</span><span class="o">();</span>
+      <span class="k">if</span> <span class="o">(</span><span class="n">result</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">IOException</span><span class="o">(</span><span class="s">"Canceled"</span><span class="o">);</span>
+      <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+    <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">eventListener</span><span class="o">.</span><span class="na">callFailed</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+      <span class="k">throw</span> <span class="n">e</span><span class="o">;</span>
+    <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+      <span class="n">client</span><span class="o">.</span><span class="na">dispatcher</span><span class="o">().</span><span class="na">finished</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>这个方法也不是很长，逻辑很简单：</p>
+
+<ul>
+  <li>同步锁检查该请求是否已经执行，如果没有则标记<code class="highlighter-rouge">executed = ture</code>，否则抛出异常</li>
+  <li>调用了回调函数<code class="highlighter-rouge">callStart</code></li>
+  <li><code class="highlighter-rouge">okhttp</code>客户端调用<code class="highlighter-rouge">dispatcher</code> 将执行请求对象</li>
+  <li>调用了<code class="highlighter-rouge">getResponseWithInterceptorChain</code> 方法获取到响应数据<code class="highlighter-rouge">Response</code>，这个方法很重要，后面会继续跟进</li>
+  <li>然后是对请求失败的回调<code class="highlighter-rouge">callFailed</code></li>
+  <li>最后还是使用<code class="highlighter-rouge">dispather</code>对象调用<code class="highlighter-rouge">finished</code>方法，完成请求</li>
+</ul>
+
+<p>这里的逻辑还是比较清晰的，出现两个重要的方法</p>
+
+<ol>
+  <li><code class="highlighter-rouge">dispatcher.execute</code></li>
+  <li><code class="highlighter-rouge">getResponseWithInterceptorChain</code></li>
+</ol>
+
+<p>接下来分别看这两个方法</p>
+
+<h4 id="0x02-dispatcher">0x02 Dispatcher</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">Dispatcher</span> <span class="o">{</span>
+ 	
+  <span class="cm">/** Executes calls. Created lazily. */</span>
+  <span class="kd">private</span> <span class="nd">@Nullable</span> <span class="n">ExecutorService</span> <span class="n">executorService</span><span class="o">;</span>
+
+  <span class="cm">/** Ready async calls in the order they'll be run. */</span>
+  <span class="kd">private</span> <span class="kd">final</span> <span class="n">Deque</span><span class="o">&lt;</span><span class="n">AsyncCall</span><span class="o">&gt;</span> <span class="n">readyAsyncCalls</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayDeque</span><span class="o">&lt;&gt;();</span>
+
+  <span class="cm">/** Running asynchronous calls. Includes canceled calls that haven't finished yet. */</span>
+  <span class="kd">private</span> <span class="kd">final</span> <span class="n">Deque</span><span class="o">&lt;</span><span class="n">AsyncCall</span><span class="o">&gt;</span> <span class="n">runningAsyncCalls</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayDeque</span><span class="o">&lt;&gt;();</span>
+
+  <span class="cm">/** Running synchronous calls. Includes canceled calls that haven't finished yet. */</span>
+  <span class="kd">private</span> <span class="kd">final</span> <span class="n">Deque</span><span class="o">&lt;</span><span class="n">RealCall</span><span class="o">&gt;</span> <span class="n">runningSyncCalls</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayDeque</span><span class="o">&lt;&gt;();</span>
+  <span class="c1">//...</span>
+
+  <span class="kd">synchronized</span> <span class="kt">void</span> <span class="nf">enqueue</span><span class="o">(</span><span class="n">AsyncCall</span> <span class="n">call</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">runningAsyncCalls</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&lt;</span> <span class="n">maxRequests</span> <span class="o">&amp;&amp;</span> <span class="n">runningCallsForHost</span><span class="o">(</span><span class="n">call</span><span class="o">)</span> <span class="o">&lt;</span> <span class="n">maxRequestsPerHost</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">runningAsyncCalls</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">call</span><span class="o">);</span>
+      <span class="n">executorService</span><span class="o">().</span><span class="na">execute</span><span class="o">(</span><span class="n">call</span><span class="o">);</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+      <span class="n">readyAsyncCalls</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">call</span><span class="o">);</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+
+  <span class="cm">/** Used by {@code Call#execute} to signal it is in-flight. */</span>
+  <span class="kd">synchronized</span> <span class="kt">void</span> <span class="nf">executed</span><span class="o">(</span><span class="n">RealCall</span> <span class="n">call</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">runningSyncCalls</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">call</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="cm">/** Used by {@code AsyncCall#run} to signal completion. */</span>
+  <span class="kt">void</span> <span class="nf">finished</span><span class="o">(</span><span class="n">AsyncCall</span> <span class="n">call</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">finished</span><span class="o">(</span><span class="n">runningAsyncCalls</span><span class="o">,</span> <span class="n">call</span><span class="o">,</span> <span class="kc">true</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="cm">/** Used by {@code Call#execute} to signal completion. */</span>
+  <span class="kt">void</span> <span class="nf">finished</span><span class="o">(</span><span class="n">RealCall</span> <span class="n">call</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">finished</span><span class="o">(</span><span class="n">runningSyncCalls</span><span class="o">,</span> <span class="n">call</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="kd">private</span> <span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="kt">void</span> <span class="nf">finished</span><span class="o">(</span><span class="n">Deque</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="n">calls</span><span class="o">,</span> <span class="n">T</span> <span class="n">call</span><span class="o">,</span> <span class="kt">boolean</span> <span class="n">promoteCalls</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kt">int</span> <span class="n">runningCallsCount</span><span class="o">;</span>
+    <span class="n">Runnable</span> <span class="n">idleCallback</span><span class="o">;</span>
+    <span class="kd">synchronized</span> <span class="o">(</span><span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">if</span> <span class="o">(!</span><span class="n">calls</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">call</span><span class="o">))</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">AssertionError</span><span class="o">(</span><span class="s">"Call wasn't in-flight!"</span><span class="o">);</span>
+      <span class="k">if</span> <span class="o">(</span><span class="n">promoteCalls</span><span class="o">)</span> <span class="n">promoteCalls</span><span class="o">();</span>
+      <span class="n">runningCallsCount</span> <span class="o">=</span> <span class="n">runningCallsCount</span><span class="o">();</span>
+      <span class="n">idleCallback</span> <span class="o">=</span> <span class="k">this</span><span class="o">.</span><span class="na">idleCallback</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="k">if</span> <span class="o">(</span><span class="n">runningCallsCount</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">idleCallback</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">idleCallback</span><span class="o">.</span><span class="na">run</span><span class="o">();</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>可以看出<code class="highlighter-rouge">Dispatcher</code> 是一个调度器，它内部有一个线程池<code class="highlighter-rouge">executorService</code> ,还有三个队列，分别代表同步请求进行队列、异步请求等待队列、异步请求执行队列。</p>
+
+<p>我们发现<strong>调用<code class="highlighter-rouge">execute</code>方法时就是将<code class="highlighter-rouge">Call</code>对象加入到同步请求进行队列<code class="highlighter-rouge">runningSyncCalls</code>中，而调用<code class="highlighter-rouge">finished</code> 方法则是将<code class="highlighter-rouge">Call</code>请求从队列中移除</strong></p>
+
+<h4 id="0x03-getresponsewithinterceptorchain">0x03 getResponseWithInterceptorChain</h4>
+
+<p>现在在回到<code class="highlighter-rouge">RealCall</code> 源码中，这个方法可以说是<code class="highlighter-rouge">OkHttp</code>最关键的部分了</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Response</span> <span class="nf">getResponseWithInterceptorChain</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+    <span class="c1">// Build a full stack of interceptors.</span>
+    <span class="n">List</span><span class="o">&lt;</span><span class="n">Interceptor</span><span class="o">&gt;</span> <span class="n">interceptors</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;();</span>
+    <span class="n">interceptors</span><span class="o">.</span><span class="na">addAll</span><span class="o">(</span><span class="n">client</span><span class="o">.</span><span class="na">interceptors</span><span class="o">());</span><span class="c1">//添加程序员自定义的的拦截器</span>
+    <span class="n">interceptors</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">retryAndFollowUpInterceptor</span><span class="o">);</span><span class="c1">//重试和重定向拦截器</span>
+    <span class="n">interceptors</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">BridgeInterceptor</span><span class="o">(</span><span class="n">client</span><span class="o">.</span><span class="na">cookieJar</span><span class="o">()));</span><span class="c1">//处理cookie的拦截器</span>
+    <span class="n">interceptors</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">CacheInterceptor</span><span class="o">(</span><span class="n">client</span><span class="o">.</span><span class="na">internalCache</span><span class="o">()));</span><span class="c1">//处理缓存的拦截器</span>
+    <span class="n">interceptors</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">ConnectInterceptor</span><span class="o">(</span><span class="n">client</span><span class="o">));</span><span class="c1">//负责连接的拦截器</span>
+    <span class="k">if</span> <span class="o">(!</span><span class="n">forWebSocket</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">interceptors</span><span class="o">.</span><span class="na">addAll</span><span class="o">(</span><span class="n">client</span><span class="o">.</span><span class="na">networkInterceptors</span><span class="o">());</span><span class="c1">//添加程序员自定义的network拦截器</span>
+    <span class="o">}</span>
+    <span class="n">interceptors</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="k">new</span> <span class="n">CallServerInterceptor</span><span class="o">(</span><span class="n">forWebSocket</span><span class="o">));</span><span class="c1">//调用服务拦截器</span>
+
+    <span class="n">Interceptor</span><span class="o">.</span><span class="na">Chain</span> <span class="n">chain</span> <span class="o">=</span> <span class="k">new</span> <span class="n">RealInterceptorChain</span><span class="o">(</span><span class="n">interceptors</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="kc">null</span><span class="o">,</span> <span class="mi">0</span><span class="o">,</span>
+        <span class="n">originalRequest</span><span class="o">,</span> <span class="k">this</span><span class="o">,</span> <span class="n">eventListener</span><span class="o">,</span> <span class="n">client</span><span class="o">.</span><span class="na">connectTimeoutMillis</span><span class="o">(),</span>
+        <span class="n">client</span><span class="o">.</span><span class="na">readTimeoutMillis</span><span class="o">(),</span> <span class="n">client</span><span class="o">.</span><span class="na">writeTimeoutMillis</span><span class="o">());</span>
+
+    <span class="k">return</span> <span class="n">chain</span><span class="o">.</span><span class="na">proceed</span><span class="o">(</span><span class="n">originalRequest</span><span class="o">);</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>在添加了一系列的拦截器之后，又构造了一个拦截器责任链，这个<code class="highlighter-rouge">RealInterceptorChain</code> 包含了所有的拦截器对象。然后调用<code class="highlighter-rouge">chain.proceed</code>方法开始执行请求，这时就到了<code class="highlighter-rouge">RealInterceptorChain</code> 这个类中。</p>
+
+<h4 id="0x04-realinterceptorchain">0x04 RealInterceptorChain</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Override</span> <span class="kd">public</span> <span class="n">Response</span> <span class="nf">proceed</span><span class="o">(</span><span class="n">Request</span> <span class="n">request</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+    <span class="k">return</span> <span class="nf">proceed</span><span class="o">(</span><span class="n">request</span><span class="o">,</span> <span class="n">streamAllocation</span><span class="o">,</span> <span class="n">httpCodec</span><span class="o">,</span> <span class="n">connection</span><span class="o">);</span>
+  <span class="o">}</span>
+
+  <span class="kd">public</span> <span class="n">Response</span> <span class="nf">proceed</span><span class="o">(</span><span class="n">Request</span> <span class="n">request</span><span class="o">,</span> <span class="n">StreamAllocation</span> <span class="n">streamAllocation</span><span class="o">,</span> <span class="n">HttpCodec</span> <span class="n">httpCodec</span><span class="o">,</span>
+      <span class="n">RealConnection</span> <span class="n">connection</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">index</span> <span class="o">&gt;=</span> <span class="n">interceptors</span><span class="o">.</span><span class="na">size</span><span class="o">())</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">AssertionError</span><span class="o">();</span>
+
+    <span class="n">calls</span><span class="o">++;</span>
+
+    <span class="c1">//省略无关代码...</span>
+
+    <span class="c1">//1. 执行拦截器责任链中的下一个拦截器</span>
+    <span class="n">RealInterceptorChain</span> <span class="n">next</span> <span class="o">=</span> <span class="k">new</span> <span class="n">RealInterceptorChain</span><span class="o">(</span><span class="n">interceptors</span><span class="o">,</span> <span class="n">streamAllocation</span><span class="o">,</span> <span class="n">httpCodec</span><span class="o">,</span>
+        <span class="n">connection</span><span class="o">,</span> <span class="n">index</span> <span class="o">+</span> <span class="mi">1</span><span class="o">,</span> <span class="n">request</span><span class="o">,</span> <span class="n">call</span><span class="o">,</span> <span class="n">eventListener</span><span class="o">,</span> <span class="n">connectTimeout</span><span class="o">,</span> <span class="n">readTimeout</span><span class="o">,</span>
+        <span class="n">writeTimeout</span><span class="o">);</span>
+    <span class="c1">//2. 获取当前的拦截器</span>
+    <span class="n">Interceptor</span> <span class="n">interceptor</span> <span class="o">=</span> <span class="n">interceptors</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">index</span><span class="o">);</span>
+    <span class="c1">//3. 执行拦截，并返回响应</span>
+    <span class="n">Response</span> <span class="n">response</span> <span class="o">=</span> <span class="n">interceptor</span><span class="o">.</span><span class="na">intercept</span><span class="o">(</span><span class="n">next</span><span class="o">);</span>
+
+    <span class="c1">//省略...</span>
+
+    <span class="k">return</span> <span class="n">response</span><span class="o">;</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>可以看到，在<code class="highlighter-rouge">proceed</code>方法，又构造了<code class="highlighter-rouge">RealInterceptorChain</code>并且调用了<code class="highlighter-rouge">interceptor.intercept</code>方法，</p>
+
+<p>而这个方法中又会调用<code class="highlighter-rouge">next.proceed</code>方法，直至返回<code class="highlighter-rouge">response</code>。这个过程有点像递归调用。</p>
+
+<h4 id="0x05-interceptor">0x05 Interceptor</h4>
+
+<p>拦截器，它是一个接口，内部还有一个<code class="highlighter-rouge">Chain</code>接口</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Interceptor</span> <span class="o">{</span>
+  <span class="n">Response</span> <span class="nf">intercept</span><span class="o">(</span><span class="n">Chain</span> <span class="n">chain</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">;</span>
+
+  <span class="kd">interface</span> <span class="nc">Chain</span> <span class="o">{</span>
+    <span class="n">Request</span> <span class="nf">request</span><span class="o">();</span>
+
+    <span class="n">Response</span> <span class="nf">proceed</span><span class="o">(</span><span class="n">Request</span> <span class="n">request</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span><span class="o">;</span>
+
+    <span class="cm">/**
+     * Returns the connection the request will be executed on. This is only available in the chains
+     * of network interceptors; for application interceptors this is always null.
+     */</span>
+    <span class="nd">@Nullable</span> <span class="n">Connection</span> <span class="nf">connection</span><span class="o">();</span>
+
+    <span class="n">Call</span> <span class="nf">call</span><span class="o">();</span>
+
+    <span class="kt">int</span> <span class="nf">connectTimeoutMillis</span><span class="o">();</span>
+
+    <span class="n">Chain</span> <span class="nf">withConnectTimeout</span><span class="o">(</span><span class="kt">int</span> <span class="n">timeout</span><span class="o">,</span> <span class="n">TimeUnit</span> <span class="n">unit</span><span class="o">);</span>
+
+    <span class="kt">int</span> <span class="nf">readTimeoutMillis</span><span class="o">();</span>
+
+    <span class="n">Chain</span> <span class="nf">withReadTimeout</span><span class="o">(</span><span class="kt">int</span> <span class="n">timeout</span><span class="o">,</span> <span class="n">TimeUnit</span> <span class="n">unit</span><span class="o">);</span>
+
+    <span class="kt">int</span> <span class="nf">writeTimeoutMillis</span><span class="o">();</span>
+
+    <span class="n">Chain</span> <span class="nf">withWriteTimeout</span><span class="o">(</span><span class="kt">int</span> <span class="n">timeout</span><span class="o">,</span> <span class="n">TimeUnit</span> <span class="n">unit</span><span class="o">);</span>
+  <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>所有的拦截器都需要实现这个接口。</p>
+
+<h4 id="0x06-异步的情况">0x06 异步的情况</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">final</span> <span class="kd">class</span> <span class="nc">AsynchronousGet</span> <span class="o">{</span>
+  <span class="kd">private</span> <span class="kd">final</span> <span class="n">OkHttpClient</span> <span class="n">client</span> <span class="o">=</span> <span class="k">new</span> <span class="n">OkHttpClient</span><span class="o">();</span>
+
+  <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+    <span class="n">Request</span> <span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Request</span><span class="o">.</span><span class="na">Builder</span><span class="o">()</span>
+        <span class="o">.</span><span class="na">url</span><span class="o">(</span><span class="s">"http://publicobject.com/helloworld.txt"</span><span class="o">)</span>
+        <span class="o">.</span><span class="na">build</span><span class="o">();</span>
+	<span class="c1">//调用enqueue方法，并设置回调接口</span>
+    <span class="n">client</span><span class="o">.</span><span class="na">newCall</span><span class="o">(</span><span class="n">request</span><span class="o">).</span><span class="na">enqueue</span><span class="o">(</span><span class="k">new</span> <span class="n">Callback</span><span class="o">()</span> <span class="o">{</span>
+      <span class="nd">@Override</span> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFailure</span><span class="o">(</span><span class="n">Call</span> <span class="n">call</span><span class="o">,</span> <span class="n">IOException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">e</span><span class="o">.</span><span class="na">printStackTrace</span><span class="o">();</span>
+      <span class="o">}</span>
+
+      <span class="nd">@Override</span> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onResponse</span><span class="o">(</span><span class="n">Call</span> <span class="n">call</span><span class="o">,</span> <span class="n">Response</span> <span class="n">response</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">IOException</span> <span class="o">{</span>
+       	<span class="c1">//这里获取到响应结果数据</span>
+      <span class="o">}</span>
+    <span class="o">});</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>然后我们再看<code class="highlighter-rouge">RealCall</code>中的<code class="highlighter-rouge">enqueue</code>方法</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Override</span> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">enqueue</span><span class="o">(</span><span class="n">Callback</span> <span class="n">responseCallback</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">synchronized</span> <span class="o">(</span><span class="k">this</span><span class="o">)</span> <span class="o">{</span>
+      <span class="k">if</span> <span class="o">(</span><span class="n">executed</span><span class="o">)</span> <span class="k">throw</span> <span class="k">new</span> <span class="n">IllegalStateException</span><span class="o">(</span><span class="s">"Already Executed"</span><span class="o">);</span>
+      <span class="n">executed</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="n">captureCallStackTrace</span><span class="o">();</span>
+    <span class="n">eventListener</span><span class="o">.</span><span class="na">callStart</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+    <span class="c1">//最终执行了dispatcher的enqueue方法</span>
+    <span class="n">client</span><span class="o">.</span><span class="na">dispatcher</span><span class="o">().</span><span class="na">enqueue</span><span class="o">(</span><span class="k">new</span> <span class="n">AsyncCall</span><span class="o">(</span><span class="n">responseCallback</span><span class="o">));</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>其实是执行了<code class="highlighter-rouge">dispatcher</code>中的<code class="highlighter-rouge">enqueue</code>方法</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">synchronized</span> <span class="kt">void</span> <span class="nf">enqueue</span><span class="o">(</span><span class="n">AsyncCall</span> <span class="n">call</span><span class="o">)</span> <span class="o">{</span>
+    <span class="k">if</span> <span class="o">(</span><span class="n">runningAsyncCalls</span><span class="o">.</span><span class="na">size</span><span class="o">()</span> <span class="o">&lt;</span> <span class="n">maxRequests</span> <span class="o">&amp;&amp;</span> <span class="n">runningCallsForHost</span><span class="o">(</span><span class="n">call</span><span class="o">)</span> <span class="o">&lt;</span> <span class="n">maxRequestsPerHost</span><span class="o">)</span> <span class="o">{</span>
+      <span class="n">runningAsyncCalls</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">call</span><span class="o">);</span>
+      <span class="n">executorService</span><span class="o">().</span><span class="na">execute</span><span class="o">(</span><span class="n">call</span><span class="o">);</span>
+    <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+      <span class="n">readyAsyncCalls</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">call</span><span class="o">);</span>
+    <span class="o">}</span>
+  <span class="o">}</span>
+</code></pre></div></div>
+
+<p>在<code class="highlighter-rouge">dispatcher</code>中通过线程池来执行<code class="highlighter-rouge">AsyncCall</code>对象，因此跟进到<code class="highlighter-rouge">AsyncCall</code>中的<code class="highlighter-rouge">execute</code>方法</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Override</span> <span class="kd">protected</span> <span class="kt">void</span> <span class="nf">execute</span><span class="o">()</span> <span class="o">{</span>
+      <span class="kt">boolean</span> <span class="n">signalledCallback</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+      <span class="k">try</span> <span class="o">{</span>
+        <span class="c1">//最终还是调用了getResponseWithInterceptorChain()！！！</span>
+        <span class="n">Response</span> <span class="n">response</span> <span class="o">=</span> <span class="n">getResponseWithInterceptorChain</span><span class="o">();</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">retryAndFollowUpInterceptor</span><span class="o">.</span><span class="na">isCanceled</span><span class="o">())</span> <span class="o">{</span>
+          <span class="n">signalledCallback</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+          <span class="n">responseCallback</span><span class="o">.</span><span class="na">onFailure</span><span class="o">(</span><span class="n">RealCall</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="k">new</span> <span class="n">IOException</span><span class="o">(</span><span class="s">"Canceled"</span><span class="o">));</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+          <span class="n">signalledCallback</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+          <span class="n">responseCallback</span><span class="o">.</span><span class="na">onResponse</span><span class="o">(</span><span class="n">RealCall</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">response</span><span class="o">);</span>
+        <span class="o">}</span>
+      <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">signalledCallback</span><span class="o">)</span> <span class="o">{</span>
+          <span class="c1">// Do not signal the callback twice!</span>
+          <span class="n">Platform</span><span class="o">.</span><span class="na">get</span><span class="o">().</span><span class="na">log</span><span class="o">(</span><span class="n">INFO</span><span class="o">,</span> <span class="s">"Callback failure for "</span> <span class="o">+</span> <span class="n">toLoggableString</span><span class="o">(),</span> <span class="n">e</span><span class="o">);</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+          <span class="n">eventListener</span><span class="o">.</span><span class="na">callFailed</span><span class="o">(</span><span class="n">RealCall</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+          <span class="n">responseCallback</span><span class="o">.</span><span class="na">onFailure</span><span class="o">(</span><span class="n">RealCall</span><span class="o">.</span><span class="na">this</span><span class="o">,</span> <span class="n">e</span><span class="o">);</span>
+        <span class="o">}</span>
+      <span class="o">}</span> <span class="k">finally</span> <span class="o">{</span>
+        <span class="n">client</span><span class="o">.</span><span class="na">dispatcher</span><span class="o">().</span><span class="na">finished</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+      <span class="o">}</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p><strong>发现最终还是执行了<code class="highlighter-rouge">getResponseWithInterceptorChain</code></strong>，因此不管是同步还是异步、最终的流程还是一样。</p>
+
+<h4 id="0x07-总结">0x07 总结</h4>
+
+<ol>
+  <li><code class="highlighter-rouge">OKHttpClient</code></li>
+</ol>
+
+<p>这是一个 <code class="highlighter-rouge">http</code> 客户端。构建很简单，可以使用无参构造函数。其内部是通过 <code class="highlighter-rouge">Builder</code> 对象进行构建的。也可以通过其内部静态类 <code class="highlighter-rouge">Builder</code> 来构建，然后通过 <code class="highlighter-rouge">builder</code> 设置 <code class="highlighter-rouge">OkHttpClient</code> 构造参数。</p>
+
+<ol>
+  <li><code class="highlighter-rouge">Request</code></li>
+</ol>
+
+<p>请求对象。其内部也是使用 <code class="highlighter-rouge">Builder</code> 模式封装了构造的过程，通过<code class="highlighter-rouge">Builder</code>使用链式调用也是目前很多开源库中常见的模式。</p>
+
+<ol>
+  <li><code class="highlighter-rouge">Response</code></li>
+</ol>
+
+<p>响应结果。客户端执行后返回响应结果，通过 <code class="highlighter-rouge">Response</code> 可以很方便的获取到响应数据。</p>
+
+<ol>
+  <li><code class="highlighter-rouge">Call</code></li>
+</ol>
+
+<p>请求执行。可以执行同步或者异步的请求，分别将请求发送到<code class="highlighter-rouge">dispatcher</code></p>
+
+<ol>
+  <li><code class="highlighter-rouge">Dispatcher</code></li>
+</ol>
+
+<p>调度器。其内部有一个线程池，并维护了三个队列：同步进行请求队列、异步请求等待队列、异步请求进行队列。</p>
+
+<p>还有两个重要的方法<code class="highlighter-rouge">execute</code>和<code class="highlighter-rouge">enqueue</code>方法，分别代表同步、异步的方法。这两个方法的最终的执行流程都是一样的</p>
+
+<ol>
+  <li><code class="highlighter-rouge">Interceptor</code></li>
+</ol>
+
+<p>拦截器。拦截器在<code class="highlighter-rouge">OKHttpClient</code>中使是用责任链模式来实现的。<code class="highlighter-rouge">Okhttp</code> 中的关键的流程是通过拦截器责任链来完成的。</p>
+
+
+        
+        <div class="post_footer">
+          <p>Published on Oct 27, 2018 in categories 
+          
+          <a href="http://localhost:4000/categories/#开源库" title="开源库">开源库</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E4%B9%8BJava%E6%A0%88%E7%9A%84%E5%AE%9E%E7%8E%B0">源码阅读之Java栈的实现</a>
+            </li>
+            
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="http://localhost:4000/js/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90OKHttp%E7%9A%84%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B',
+            owner: 'hylinux1024',
+            repo: 'hylinux1024.github.io',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+
