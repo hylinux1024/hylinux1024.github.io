@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="模块化,架构" />
+        <meta name="description" content="随着业务的发展 App 开发技术也越来越成熟，对开发者来说 App 代码量也迅速地增长到一个数量级。对于如何架构 App 已经每个开发者面临的实际问题。好的架构可以提高开发者的效率，降低维护成本。" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> App 组件化/模块化之路——构建开发架构思路  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> App 组件化/模块化之路——构建开发架构思路 </h2>
+        <p>随着业务的发展 App 开发技术也越来越成熟，对开发者来说 App 代码量也迅速地增长到一个数量级。对于如何架构 App 已经每个开发者面临的实际问题。好的架构可以提高开发者的效率，降低维护成本。</p>
+
+<p>由于业务增长引起项目中代码量激增，以及历史遗留问题和结构混乱，作为一个有代码洁癖的程序员，很早就开始思考如何组织 App 架构的问题了。目前遇到的主要有以下几点问题：</p>
+
+<ol>
+  <li>代码量激增引起结构混乱</li>
+  <li>各个模块相互引用且耦合度高</li>
+  <li>无法独立开发或者调试组件代码</li>
+  <li>无法应对组件插拔的需求（例如：产品经理今天把这个功能加上，第二天又去掉，第三天又加回来T_T）</li>
+</ol>
+
+<h4 id="0x00-app-架构图">0x00 App 架构图</h4>
+
+<p>在阅读了大量的文档之后，根据实际项目开发遇到的问题，我总结了以下架构。由于水平有限，有不合理的欢迎拍砖</p>
+
+<p><img src="../images/app-structure.png" alt="App 架构图" /></p>
+
+<p>自上而下将 App 分为：</p>
+
+<ul>
+  <li><strong>应用层</strong></li>
+  <li><strong>业务层</strong></li>
+  <li><strong>内核层</strong></li>
+</ul>
+
+<h4 id="0x01-内核层">0x01 内核层</h4>
+
+<p>内核层是包含了为 App 提供公共服务的的一些库。例如：公共资源、网络库、日志工具、数据库、图片加载等核心库。这些是整个 App 基础库。</p>
+
+<h4 id="0x02-业务层">0x02 业务层</h4>
+
+<p>我认为这一层是整个 App 架构的关键。因为根据实际业务需求，这一层会分离出许多独立组件（其实就是对应于 Android Studio 的 Module），但这些组件可以独立运行，相当于一个小应用（组件如何独立运行将在应用层中会详细解析）。并且这些组件不再像传统的方式进行相互引用，而是采用了<strong>组件路由</strong>进行各个组件的通信。</p>
+
+<p>比如组件 A 中需要跳转到组件 B 中的一个 Activity 页面，传统的做法是在 <code class="highlighter-rouge">ModuleAActivity</code> 中</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Intent</span> <span class="n">intent</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Intent</span><span class="o">(</span><span class="k">this</span><span class="o">,</span><span class="n">ModuleBActivity</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+<span class="n">intent</span><span class="o">.</span><span class="na">putExtra</span><span class="o">(</span><span class="s">"data"</span><span class="o">,</span> <span class="n">data</span><span class="o">);</span>
+<span class="n">startActivity</span><span class="o">(</span><span class="n">intent</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>这样 Module A 与 Module B 耦合度就很强</p>
+
+<p>比较好的做法应该是</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">Intent</span> <span class="n">intent</span> <span class="o">=</span> <span class="n">Router</span><span class="o">.</span><span class="na">route</span><span class="o">(</span><span class="n">context</span><span class="o">,</span><span class="s">"BPackageName.ModuleBActivity"</span><span class="o">,</span><span class="n">data</span><span class="o">);</span>
+<span class="n">startActivity</span><span class="o">(</span><span class="n">intent</span><span class="o">);</span>
+</code></pre></div></div>
+
+<p>当然实现上面的路由原理也有很多方式，例如可以使用 Android 系统的<strong>隐式调用</strong>实现跳转通信。</p>
+
+<p>在 Manifest 文件中</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">&lt;</span><span class="n">activity</span> <span class="nl">android:</span><span class="n">name</span><span class="o">=</span><span class="s">".ModuleBActivity"</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="n">intent</span><span class="o">-</span><span class="n">filter</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="n">data</span>
+            <span class="nl">android:</span><span class="n">host</span><span class="o">=</span><span class="s">"moduleb"</span>
+            <span class="nl">android:</span><span class="n">path</span><span class="o">=</span><span class="s">"/entry"</span>
+            <span class="nl">android:</span><span class="n">scheme</span><span class="o">=</span><span class="s">"router"</span><span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="n">action</span> <span class="nl">android:</span><span class="n">name</span><span class="o">=</span><span class="s">"android.intent.action.VIEW"</span><span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="n">category</span> <span class="nl">android:</span><span class="n">name</span><span class="o">=</span><span class="s">"android.intent.category.DEFAULT"</span><span class="o">/&gt;</span>
+        <span class="o">&lt;</span><span class="n">category</span> <span class="nl">android:</span><span class="n">name</span><span class="o">=</span><span class="s">"android.intent.category.BROWSABLE"</span><span class="o">/&gt;</span>
+    <span class="o">&lt;/</span><span class="n">intent</span><span class="o">-</span><span class="n">filter</span><span class="o">&gt;</span>
+<span class="o">&lt;/</span><span class="n">activity</span><span class="o">&gt;</span>
+</code></pre></div></div>
+
+<p>实际调用</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">String</span> <span class="n">url</span> <span class="o">=</span> <span class="s">"router://moduleb/entry"</span><span class="o">;</span>
+<span class="n">Intent</span> <span class="n">intent</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Intent</span><span class="o">(</span><span class="n">Intent</span><span class="o">.</span><span class="na">ACTION_VIEW</span><span class="o">,</span> <span class="n">Uri</span><span class="o">.</span><span class="na">parse</span><span class="o">(</span><span class="n">url</span><span class="o">));</span>
+<span class="n">intent</span><span class="o">.</span><span class="na">setFlags</span><span class="o">(</span><span class="n">Intent</span><span class="o">.</span><span class="na">FLAG_ACTIVITY_NEW_TASK</span><span class="o">);</span>
+<span class="n">PackageManager</span> <span class="n">packageManager</span> <span class="o">=</span> <span class="n">getPackageManager</span><span class="o">();</span>
+<span class="n">List</span><span class="o">&lt;</span><span class="n">ResolveInfo</span><span class="o">&gt;</span> <span class="n">activities</span> <span class="o">=</span> <span class="n">packageManager</span><span class="o">.</span><span class="na">queryIntentActivities</span><span class="o">(</span><span class="n">intent</span><span class="o">,</span> <span class="mi">0</span><span class="o">);</span>
+<span class="k">if</span> <span class="o">(!</span><span class="n">activities</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">())</span> <span class="o">{</span>
+    <span class="n">startActivity</span><span class="o">(</span><span class="n">intent</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>Router 层目前有一个比较好的开源框架可以参考，来自 alibaba 的开源项目：<a href="https://github.com/alibaba/ARouter" title="ARouter">ARouter</a></p>
+
+<h5 id="sdk-编码思维">SDK 编码思维</h5>
+
+<p>业务层要实现比较好组件分离，对程序猿现在编码思维要转换一下，要切换到 <strong>SDK 思维</strong>。</p>
+
+<p>那什么是 <strong>SDK 思维</strong>呢？</p>
+
+<p>想想项目中引用他人编写的库的接口使用方式，就不难理解了。<strong>即站在使用者的角度上思考：如何使用接口才是最方便的？</strong>例如公司现有好几个 App 产品，每个 App 都需要使用同样的授权登录。那么这个授权登录模块就可以独立成一个组件。</p>
+
+<p>假设将授权登录组件命名为<strong>auth</strong>。那么其它组件在使用的时候可能类似以下代码片段</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">AuthApi</span><span class="o">.</span><span class="na">authorize</span><span class="o">(</span><span class="n">context</span><span class="o">,</span><span class="n">userId</span><span class="o">,</span><span class="n">password</span><span class="o">).</span><span class="na">onAuthorizeFinished</span><span class="o">(</span>
+	<span class="n">authInfo</span><span class="o">-&gt;</span><span class="n">doAuthorizeWorks</span><span class="o">(</span><span class="n">authInfo</span><span class="o">)</span><span class="c1">//处理登录后的逻辑，把授权码保存用于请求其他业务接口，例如请求用户信息等</span>
+<span class="o">);</span>
+</code></pre></div></div>
+
+<p>所以，作者觉得接口设计或者提供应该是<strong>利他主义</strong>的。当然这纯粹是作者的一家之言，欢迎继续拍砖。</p>
+
+<h4 id="0x03-应用层">0x03 应用层</h4>
+
+<p>顾名思义，这一层是对整个 App 的整合，也是 App 的入口。这里有 <strong>Main</strong> 和 <strong>Dev</strong>。其中 <strong>Main</strong> 是对各个业务组件的整合，是最终打包的产品的上层应用。而组件入口是独立运行和调试各个组件的子应用。</p>
+
+<p><strong>Dev</strong> 在 Android Studiao 中是对应一个 <strong>Application</strong> 。在 gradle 中配置为</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">apply</span> <span class="nl">plugin:</span> <span class="s1">'com.android.application'</span>
+</code></pre></div></div>
+
+<p>它是一个可以独立运行的子工程，要调试 Module A 那么在 <strong>Dev</strong> 中将引用该组件</p>
+
+<div class="language-groovy highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">dependencies</span> <span class="o">{</span>
+    <span class="n">compile</span> <span class="nf">fileTree</span><span class="o">(</span><span class="nl">dir:</span> <span class="s1">'libs'</span><span class="o">,</span> <span class="nl">include:</span> <span class="o">[</span><span class="s1">'*.jar'</span><span class="o">])</span>
+    <span class="n">compile</span> <span class="nf">project</span><span class="o">(</span><span class="s1">':moduleA'</span><span class="o">)</span>
+    <span class="o">...</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+
+        
+        <div class="post_footer">
+          <p>Published on Jul 09, 2017 in categories 
+          
+          <a href="http://localhost:4000/categories/#模块化" title="模块化">模块化</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/%E8%80%81%E5%8F%B8%E6%9C%BA%E5%B8%A6%E8%B7%AF-15%E4%B8%AAAndroid%E6%92%B8%E4%BB%A3%E7%A0%81%E5%B8%B8%E8%A7%81%E7%9A%84%E5%9D%91">老司机带路——15个Android撸代码常见的坑</a>
+            </li>
+            
+            
+            <li>
+                <span>下一篇</span>
+                <a href="/linear-regression">机器学习之线性回归</a>
+            </li>
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="http://localhost:4000/js/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/App-%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B9%8B%E8%B7%AF-%E6%9E%84%E5%BB%BA%E5%BC%80%E5%8F%91%E6%9E%B6%E6%9E%84%E6%80%9D%E8%B7%AF',
+            owner: 'hylinux1024',
+            repo: 'hylinux1024.github.io',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+
