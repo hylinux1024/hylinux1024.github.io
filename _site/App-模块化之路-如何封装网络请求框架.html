@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="模块化,架构" />
+        <meta name="description" content="在 App 开发中网络请求是每个开发者必备的开发库，也出现了许多优秀开源的网络请求库。" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> App 模块化之路——如何封装网络请求框架  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> App 模块化之路——如何封装网络请求框架 </h2>
+        <p>在 App 开发中网络请求是每个开发者必备的开发库，也出现了许多优秀开源的网络请求库。例如</p>
+
+<ul>
+  <li><a href="https://github.com/square/okhttp" title="okhttp">okhttp</a></li>
+  <li><a href="https://github.com/loopj/android-async-http" title="android-async-http">retrofit</a></li>
+  <li><a href="https://github.com/wecodexyz/Componentization/wiki" title="App 组件化/模块化开发架构思路">android-async-http</a></li>
+</ul>
+
+<p>这些网络请求库很大程度上提高程序猿的编码效率。但是随着业务的发展，App 变得越来越大，我们将这些网络请求库加入到项目中直接使用，对我们<strong>业务类</strong>的入侵是非常强的。如果要进行<strong>业务分离</strong>时，这些网络请求代码将是一个阻止我们进一步工作的绊脚石。对开发者来说是非常痛苦的。</p>
+
+<p>因此我们构建的网络请求框架要可以解决以下问题：</p>
+
+<ul>
+  <li>分离业务与网络请求代码</li>
+  <li>网络库可以很容易的被替换</li>
+  <li>网络库可以很方便的复用</li>
+</ul>
+
+<p>所以在 <a href="https://github.com/wecodexyz/Componentization/wiki" title="App 组件化/模块化开发架构思路">App 组件化/模块化开发架构思路</a> 一文中，我们把网络请求作为<strong>内核层</strong>的一个组件。</p>
+
+<h4 id="0x00-封装第三方网络请求接口">0x00 封装第三方网络请求接口</h4>
+
+<p>一般来说，目前绝大部分 App 的数据请求都是使用 HTTP 协议，而数据交换的协议使用 json 格式。因此可以封装一个通用的请求接口。（当然还有其他一些协议，例如微信的 <a href="https://github.com/Tencent/mars" title="mars">mars</a> ，但是封装的思路是一致的，本文为了简单说明，暂时使用通用网络请求框架，不排除以后会对 <a href="https://github.com/Tencent/mars" title="mars">mars</a> 的封装）</p>
+
+<p>首先预览一下框架结构</p>
+
+<p><img src="../images/request-architecture.png" alt="request-architecture" /></p>
+
+<h4 id="0x01-irequest">0x01 IRequest</h4>
+
+<p>这个类封装了网络请求的通用接口，定义请求接口 <code class="highlighter-rouge">doRequest()</code> 、获取请求连接 <code class="highlighter-rouge">getUrl()</code> 、获取请求方法 <code class="highlighter-rouge">getHttpMethod()</code> 等。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">IRequest</span> <span class="o">{</span>
+    <span class="kd">enum</span> <span class="n">HttpMethod</span> <span class="o">{</span>
+        <span class="n">GET</span><span class="o">,</span> <span class="n">POST</span><span class="o">,</span> <span class="n">PUT</span><span class="o">,</span> <span class="n">DELETE</span>
+    <span class="o">}</span>
+	<span class="c1">//... 为了减少代码的篇幅，省略一些对本文说明不重要的片段，本文代码可以在</span>
+  	<span class="c1">//https://github.com/wecodexyz/Componentization 获取到</span>
+    <span class="kt">void</span> <span class="nf">addParams</span><span class="o">(</span><span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">params</span><span class="o">);</span>
+
+    <span class="n">String</span> <span class="nf">getUrl</span><span class="o">();</span>
+
+    <span class="n">Pair</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="nf">doRequest</span><span class="o">();</span>
+
+    <span class="kt">boolean</span> <span class="nf">isSupportCache</span><span class="o">();</span>
+
+    <span class="kt">void</span> <span class="nf">addHeader</span><span class="o">(</span><span class="n">String</span> <span class="n">key</span><span class="o">,</span> <span class="n">String</span> <span class="n">value</span><span class="o">);</span>
+
+    <span class="n">HttpMethod</span> <span class="nf">getHttpMethod</span><span class="o">();</span>
+  
+	<span class="c1">//... 为了减少代码的篇幅，省略一些对本文说明不重要的片段，本文代码可以在</span>
+  	<span class="c1">//https://github.com/wecodexyz/Componentization 获取到</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="0x02-request">0x02 Request</h4>
+
+<p>这个类是个抽象类，对 <code class="highlighter-rouge">IRequest</code> 的实现。目前是一个简单封装的实现。</p>
+
+<h4 id="0x03-requestwrapper">0x03 RequestWrapper</h4>
+
+<p>这个类是一个泛型类，继承于 <code class="highlighter-rouge">Request</code> 并对第三方请求库的封装。例如本文就是对 <code class="highlighter-rouge">okhttp</code> 的封装，而泛型 T 对象就是请求得到的具体数据类型。如果要对其他请求库进行封装，就可以参考这个类的实现。</p>
+
+<p><strong>注意这个类封装是纯粹的网络请求，不应该包含业务类相关的代码。</strong>否则无解决上文提出的三个问题。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">RequestWrapper</span> <span class="kd">extends</span> <span class="n">Request</span> <span class="o">{</span>
+
+    <span class="c1">//... 为了减少代码的篇幅，省略一些对本文说明不重要的片段，本文代码可以在</span>
+  	<span class="c1">//https://github.com/wecodexyz/Componentization 获取到</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">Pair</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="nf">doRequest</span><span class="o">()</span> <span class="o">{</span>
+        <span class="n">Pair</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Pair</span><span class="o">&lt;&gt;(</span><span class="n">ERROR_NETWORK</span><span class="o">,</span> <span class="s">""</span><span class="o">);</span>
+        <span class="n">okhttp3</span><span class="o">.</span><span class="na">Request</span> <span class="n">request</span> <span class="o">=</span> <span class="kc">null</span><span class="o">;</span>
+
+        <span class="k">if</span> <span class="o">(</span><span class="n">getHttpMethod</span><span class="o">()</span> <span class="o">==</span> <span class="n">HttpMethod</span><span class="o">.</span><span class="na">POST</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">request</span> <span class="o">=</span> <span class="n">requestBuilder</span><span class="o">().</span><span class="na">url</span><span class="o">(</span><span class="n">getUrl</span><span class="o">()).</span><span class="na">post</span><span class="o">(</span><span class="n">requestBody</span><span class="o">()).</span><span class="na">build</span><span class="o">();</span>
+        <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+            <span class="n">request</span> <span class="o">=</span> <span class="n">requestBuilder</span><span class="o">().</span><span class="na">url</span><span class="o">(</span><span class="n">getUrlWithParams</span><span class="o">()).</span><span class="na">build</span><span class="o">();</span>
+        <span class="o">}</span>
+        <span class="k">try</span> <span class="o">{</span>
+            <span class="n">Response</span> <span class="n">response</span> <span class="o">=</span> <span class="n">mClient</span><span class="o">.</span><span class="na">newCall</span><span class="o">(</span><span class="n">request</span><span class="o">).</span><span class="na">execute</span><span class="o">();</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">response</span><span class="o">.</span><span class="na">isSuccessful</span><span class="o">())</span> <span class="o">{</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Pair</span><span class="o">&lt;&gt;(</span><span class="n">response</span><span class="o">.</span><span class="na">code</span><span class="o">(),</span> <span class="n">response</span><span class="o">.</span><span class="na">body</span><span class="o">().</span><span class="na">string</span><span class="o">());</span>
+            <span class="o">}</span> <span class="k">else</span> <span class="o">{</span>
+                <span class="n">result</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Pair</span><span class="o">&lt;&gt;(</span><span class="n">response</span><span class="o">.</span><span class="na">code</span><span class="o">(),</span> <span class="n">response</span><span class="o">.</span><span class="na">message</span><span class="o">());</span>
+            <span class="o">}</span>
+        <span class="o">}</span> <span class="k">catch</span> <span class="o">(</span><span class="n">IOException</span> <span class="n">e</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">Log</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="n">TAG</span><span class="o">,</span> <span class="n">e</span><span class="o">.</span><span class="na">getMessage</span><span class="o">());</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="c1">//... 为了减少代码的篇幅，省略一些对本文说明不重要的片段，本文代码可以在</span>
+  	<span class="c1">//https://github.com/wecodexyz/Componentization 获取到</span>
+
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>关键的代码是在 <code class="highlighter-rouge">doRequest()</code> 方法中，该方法实现了网络请求的代码，返回一个 <code class="highlighter-rouge">Pair&lt;Integer,String&gt;</code> 对象，该对象的 <code class="highlighter-rouge">first</code> 属性是一个请求 <code class="highlighter-rouge">code</code> ，用于标识网络请求码（即是网络请求返回的200,404,301等）。而 <code class="highlighter-rouge">second</code> 就是网络请求的数据。</p>
+
+<h4 id="0x04-basetextrequest">0x04 BaseTextRequest</h4>
+
+<p>这个类就是网络请求框架提供给业务类使用的一个接口。本文一开始就提出来 json 作为交互数据请求的协议。那么此类的封装就有利于业务数据的访问。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">BaseTextRequest</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="kd">extends</span> <span class="n">RequestWrapper</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="nf">BaseTextRequest</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">context</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">Flowable</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">request</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">Flowable</span><span class="o">.</span><span class="na">fromCallable</span><span class="o">(</span><span class="k">new</span> <span class="n">Callable</span><span class="o">&lt;</span><span class="n">Pair</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;&gt;()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="n">Pair</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="nf">call</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+                <span class="n">Pair</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">result</span> <span class="o">=</span> <span class="n">doRequest</span><span class="o">();</span>
+                <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+            <span class="o">}</span>
+        <span class="o">}).</span><span class="na">flatMap</span><span class="o">(</span><span class="k">new</span> <span class="n">Function</span><span class="o">&lt;</span><span class="n">Pair</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;,</span> <span class="n">Publisher</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;&gt;()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="n">Publisher</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="nf">apply</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="n">Pair</span><span class="o">&lt;</span><span class="n">Integer</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">pair</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+                <span class="k">if</span> <span class="o">(</span><span class="n">isSuccessful</span><span class="o">(</span><span class="n">pair</span><span class="o">.</span><span class="na">first</span><span class="o">))</span> <span class="o">{</span>
+                    <span class="k">return</span> <span class="n">Flowable</span><span class="o">.</span><span class="na">just</span><span class="o">(</span><span class="n">onRequestFinish</span><span class="o">(</span><span class="n">pair</span><span class="o">.</span><span class="na">second</span><span class="o">));</span>
+                <span class="o">}</span>
+                <span class="k">return</span> <span class="n">Flowable</span><span class="o">.</span><span class="na">just</span><span class="o">(</span><span class="n">onRequestError</span><span class="o">(</span><span class="n">pair</span><span class="o">.</span><span class="na">first</span><span class="o">,</span> <span class="n">pair</span><span class="o">.</span><span class="na">second</span><span class="o">));</span>
+            <span class="o">}</span>
+        <span class="o">});</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isSupportCache</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="kc">true</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">protected</span> <span class="kd">abstract</span> <span class="n">T</span> <span class="nf">onRequestFinish</span><span class="o">(</span><span class="n">String</span> <span class="n">result</span><span class="o">);</span>
+
+    <span class="kd">protected</span> <span class="kd">abstract</span> <span class="n">T</span> <span class="nf">onRequestError</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="n">String</span> <span class="n">message</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>由于请求网络是耗时的操作，<a href="https://github.com/ReactiveX/RxJava" title="RxJava">rxjava2</a> 来实现网络请求异步操作。<code class="highlighter-rouge">request</code> 是对 <strong>RequestWrapper.doRequest()</strong> 方法的封装，并得到一个 <code class="highlighter-rouge">Flowable</code> 对象。同时定义了 <code class="highlighter-rouge">onRequestFinish()</code> 和 <code class="highlighter-rouge">onRequestError()</code> 两个方法。</p>
+
+<p>这两个方法就是具体业务类要处理的逻辑。</p>
+
+<h4 id="0x05-simpletextrequest">0x05 SimpleTextRequest</h4>
+
+<p>假设有一个请求业务数据接口，返回数据是一个字符串。那么我们使用我们的框架就是这样来使用。本文例子是请求我们项目中的 README.md 的内容。用起来非常简单，只要继承于 <strong>BaseTextRequest</strong>，并实现 <code class="highlighter-rouge">getUrl()</code> 、<code class="highlighter-rouge">onRequestFinish()</code> <code class="highlighter-rouge">onRequestError()</code>、<code class="highlighter-rouge">getHttpMethod()</code> 这几个方法。</p>
+
+<p><strong>注意严格来说这是一个业务类，所以是不应该放在 core 目录下的。</strong></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SimpleTextRequest</span> <span class="kd">extends</span> <span class="n">BaseTextRequest</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="nf">SimpleTextRequest</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">,</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">params</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">context</span><span class="o">);</span>
+        <span class="n">addParams</span><span class="o">(</span><span class="n">params</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getUrl</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="s">"https://raw.githubusercontent.com/wecodexyz/Componentization/master/README.md"</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">HttpMethod</span> <span class="nf">getHttpMethod</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">HttpMethod</span><span class="o">.</span><span class="na">GET</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="n">String</span> <span class="nf">onRequestFinish</span><span class="o">(</span><span class="n">String</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+      	<span class="c1">//这里可以实现对 json 数据的解析，例如使用 JSONObject </span>
+      	<span class="c1">//对象解析具体的业务</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="n">String</span> <span class="nf">onRequestError</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="n">String</span> <span class="n">message</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">message</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="0x06-测试请求框架">0x06 测试请求框架</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimpleTextRequest</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="kc">null</span><span class="o">);</span>
+        <span class="n">request</span><span class="o">.</span><span class="na">request</span><span class="o">()</span>
+                <span class="o">.</span><span class="na">subscribeOn</span><span class="o">(</span><span class="n">Schedulers</span><span class="o">.</span><span class="na">computation</span><span class="o">())</span>
+                <span class="o">.</span><span class="na">observeOn</span><span class="o">(</span><span class="n">AndroidSchedulers</span><span class="o">.</span><span class="na">mainThread</span><span class="o">())</span>
+                <span class="o">.</span><span class="na">subscribe</span><span class="o">(</span><span class="k">new</span> <span class="n">Consumer</span><span class="o">&lt;</span><span class="n">String</span><span class="o">&gt;()</span> <span class="o">{</span>
+                    <span class="nd">@Override</span>
+                    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">accept</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="n">String</span> <span class="n">s</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+                        <span class="n">textView</span><span class="o">.</span><span class="na">setText</span><span class="o">(</span><span class="n">s</span><span class="o">);</span>
+                      	<span class="c1">//这里返回接口请求的数据</span>
+                    <span class="o">}</span>
+                <span class="o">},</span> <span class="k">new</span> <span class="n">Consumer</span><span class="o">&lt;</span><span class="n">Throwable</span><span class="o">&gt;()</span> <span class="o">{</span>
+                    <span class="nd">@Override</span>
+                    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">accept</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="n">Throwable</span> <span class="n">throwable</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+                        <span class="n">textView</span><span class="o">.</span><span class="na">setText</span><span class="o">(</span><span class="n">throwable</span><span class="o">.</span><span class="na">getMessage</span><span class="o">());</span>
+                    <span class="o">}</span>
+                <span class="o">});</span>
+</code></pre></div></div>
+
+<p>本文运行的结果</p>
+
+<p><img src="../images/request-demo.png" alt="request-demo" /></p>
+
+
+        
+        <div class="post_footer">
+          <p>Published on Jul 10, 2017 in categories 
+          
+          <a href="http://localhost:4000/categories/#模块化" title="模块化">模块化</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/App-%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B9%8B%E8%B7%AF-%E6%9E%84%E5%BB%BA%E5%BC%80%E5%8F%91%E6%9E%B6%E6%9E%84%E6%80%9D%E8%B7%AF">App 模块化之路——构建开发架构思路</a>
+            </li>
+            
+            
+            <li>
+                <span>下一篇</span>
+                <a href="/App-%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B9%8B%E8%B7%AF-Repository%E6%A8%A1%E5%BC%8F">App 模块化之路——Repository模式</a>
+            </li>
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="http://localhost:4000/js/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/App-%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B9%8B%E8%B7%AF-%E5%A6%82%E4%BD%95%E5%B0%81%E8%A3%85%E7%BD%91%E7%BB%9C%E8%AF%B7%E6%B1%82%E6%A1%86%E6%9E%B6',
+            owner: 'hylinux1024',
+            repo: 'hylinux1024.github.io',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+

@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="模块化,架构" />
+        <meta name="description" content="开发一个 App 会涉及到很多网络请求 API ，例如登录注册接口、用户信息接口、业务列表请求接口等等。而本文介绍的是如何模块化设计这些接口，使得项目中更好地复用代码。当然这仅仅是一家之言，欢迎留言拍砖。" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> App 模块化之路——使用SDK的思路进行模块化设计接口  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> App 模块化之路——使用SDK的思路进行模块化设计接口 </h2>
+        <p>在不久之前分享一篇<a href="https://mp.weixin.qq.com/s/JBcx9qn3e9A9fGiMxuxH4Q">《App 组件化/模块化之路——如何封装网络请求框架》</a>文章介绍了我在项目中封装网络请求框架的思路。开发一个 App 会涉及到很多网络请求 API ，例如登录注册接口、用户信息接口、业务列表请求接口等等。而本文介绍的是如何模块化设计这些接口，使得项目中更好地复用代码。当然这仅仅是一家之言，欢迎留言拍砖。</p>
+
+<h3 id="0x00-问题">0x00 问题</h3>
+
+<p>网络请求中最常见的莫过于<strong>用户授权登录模块</strong>了。现在以此模块为例，大概有以下接口</p>
+
+<ul>
+  <li>登录 sign_in</li>
+  <li>注册 sign_up</li>
+  <li>找回密码 find_password</li>
+  <li>获取短信验证码 get_validate_code</li>
+  <li>获取用户信息 user_info</li>
+  <li>修改用户信息 edit_user</li>
+  <li>绑定手机号 bind_phone</li>
+</ul>
+
+<p>假设一个 App 中有这些接口，那么如何设计这些接口呢？按照我们之前设计的网络请求框架就是把每一个具体的 API (例如登录接口) 写一个 Request 类。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">SignInRequest</span> <span class="kd">extends</span> <span class="n">BaseTextRequest</span><span class="o">&lt;</span><span class="n">SignInResult</span><span class="o">&gt;</span> <span class="o">{</span>
+
+    <span class="kd">public</span> <span class="nf">SimpleTextRequest</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">,</span> <span class="n">Map</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">params</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">(</span><span class="n">context</span><span class="o">);</span>
+        <span class="n">addParams</span><span class="o">(</span><span class="n">params</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="nf">getUrl</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="s">"https://api.angrycode.net/signin"</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">HttpMethod</span> <span class="nf">getHttpMethod</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">HttpMethod</span><span class="o">.</span><span class="na">POST</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="n">SignInResult</span> <span class="nf">onRequestFinish</span><span class="o">(</span><span class="n">String</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">SignInResult</span><span class="o">.</span><span class="na">parse</span><span class="o">(</span><span class="n">result</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">protected</span> <span class="n">SignInResult</span> <span class="nf">onRequestError</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="n">String</span> <span class="n">message</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">new</span> <span class="nf">SignInResult</span><span class="o">(</span><span class="n">code</span><span class="o">,</span><span class="n">message</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>类似的注册接口对应一个 SignUpRequest 类，于是这样有多少个接口就又多少个 Request 类。</p>
+
+<p>如果你的 App 业务比较复杂，那么 Request 类数目就会暴增，这时候如何组织管理这些 Request 类就是一个问题了。</p>
+
+<h3 id="0x01-接口模块化">0x01 接口模块化</h3>
+
+<p>思路其实也简单。不错，为了让你的接口更好的复用，我们把整个模块相关的接口进行整体设计。对外统一接口和回调方法。我们来看代码。</p>
+
+<h4 id="authcontract">AuthContract</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="cm">/**
+ * Created by wecodexyz@gmail.com on 2017/10/14 下午5:57.
+ * GitHub - https://github.com/wecodexyz
+ * Description:
+ */</span>
+
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">AuthContract</span> <span class="o">{</span>
+   
+    <span class="kd">interface</span> <span class="nc">Presenter</span> <span class="o">{</span>
+        <span class="cm">/**
+         * 登录：/api/1.0/user/sign/in
+         *
+         * @param account  手机或邮箱
+         * @param password 登录密码
+         * @param type     类型：0-普通登录、1-邮箱登录、2-手机登录
+         */</span>
+        <span class="kt">void</span> <span class="nf">signIn</span><span class="o">(</span><span class="n">String</span> <span class="n">account</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">,</span> <span class="nd">@SignInType</span> <span class="kt">int</span> <span class="n">type</span><span class="o">);</span>
+
+        <span class="cm">/**
+         * 注册：/api/1.0/user/sign/up
+         
+         * @param nick_name 用户昵称 optional
+         * @param signature 用户签名 optional
+         */</span>
+        <span class="kt">void</span> <span class="nf">signUp</span><span class="o">(</span><span class="n">String</span> <span class="n">account</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">,</span> <span class="nd">@SignInType</span> <span class="kt">int</span> <span class="n">type</span><span class="o">,</span> <span class="n">String</span> <span class="n">code</span><span class="o">,</span> <span class="n">String</span> <span class="n">nick_name</span><span class="o">,</span> <span class="n">String</span> <span class="n">signature</span><span class="o">);</span>
+        <span class="cm">/**
+         * 登出：/api/1.0/user/sign/out
+         */</span>
+        <span class="kt">void</span> <span class="nf">signOut</span><span class="o">();</span>
+        <span class="cm">/**
+         * 修改密码：/api/1.0/user/password/update
+         *
+         * @param old_password 原密码
+         * @param new_password 新密码
+         */</span>
+        <span class="kt">void</span> <span class="nf">updatePassword</span><span class="o">(</span><span class="n">String</span> <span class="n">old_password</span><span class="o">,</span> <span class="n">String</span> <span class="n">new_password</span><span class="o">);</span>
+        <span class="cm">/**
+         * 手机绑定：/api/1.0/user/phone/bind
+         */</span>
+        <span class="kt">void</span> <span class="nf">bindPhone</span><span class="o">(</span><span class="n">String</span> <span class="n">phone</span><span class="o">,</span> <span class="n">String</span> <span class="n">code</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">);</span>
+        <span class="cm">/**
+         * 手机解绑：/api/1.0/user/phone/unbind
+         */</span>
+        <span class="kt">void</span> <span class="nf">unbindPhone</span><span class="o">(</span><span class="n">String</span> <span class="n">phone</span><span class="o">,</span> <span class="n">String</span> <span class="n">code</span><span class="o">);</span>
+        <span class="cm">/**
+         * 获取个人资料：/api/1.0/user/profile
+         */</span>
+        <span class="kt">void</span> <span class="nf">profile</span><span class="o">();</span>
+        
+    <span class="o">}</span>
+
+    <span class="kd">interface</span> <span class="nc">View</span> <span class="o">{</span>
+        <span class="cm">/**
+         * 注册结果
+         *
+         * @param signInResult
+         */</span>
+        <span class="kt">void</span> <span class="nf">onSignUpFinish</span><span class="o">(</span><span class="n">SignInResult</span> <span class="n">signInResult</span><span class="o">);</span>
+        <span class="cm">/**
+         * 登录结果
+         *
+         * @param signInResult
+         */</span>
+        <span class="kt">void</span> <span class="nf">onSignInFinish</span><span class="o">(</span><span class="n">SignInResult</span> <span class="n">signInResult</span><span class="o">);</span>
+        <span class="cm">/**
+         * 手机绑定结果
+         *
+         * @param result
+         */</span>
+        <span class="kt">void</span> <span class="nf">onBindPhoneFinish</span><span class="o">(</span><span class="n">APIResult</span> <span class="n">result</span><span class="o">);</span>
+        <span class="cm">/**
+         * 获取个人资料
+         *
+         * @param result
+         */</span>
+        <span class="kt">void</span> <span class="nf">onRequestProfileFinish</span><span class="o">(</span><span class="n">ProfileResult</span> <span class="n">result</span><span class="o">);</span>
+        <span class="cm">/**
+         * 获取个人资料
+         *
+         * @param result 更新结果
+         */</span>
+        <span class="kt">void</span> <span class="nf">onUpdateProfileFinish</span><span class="o">(</span><span class="n">APIResult</span> <span class="n">result</span><span class="o">);</span>
+        <span class="cm">/**
+         * 出错回调
+         *
+         * @param code
+         * @param msg
+         */</span>
+        <span class="kt">void</span> <span class="nf">onError</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="n">String</span> <span class="n">msg</span><span class="o">);</span>
+      
+      	<span class="kt">void</span> <span class="nf">onFinish</span><span class="o">();</span>
+      
+      	<span class="kt">void</span> <span class="nf">onBegin</span><span class="o">();</span>
+
+    <span class="o">}</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>首先，根据 API 设计 Contract 接口，在这里定义接口请求方法和回调方法。例如我们这个登录模块，就可以定义一个 <code class="highlighter-rouge">AuthContract</code> 协议接口，在这个<code class="highlighter-rouge">Contract</code>里面又管理着 <code class="highlighter-rouge">Presenter</code> 和 <code class="highlighter-rouge">View</code> 接口，分别代表具体 API 请求方法和数据回调方法。其中在 <code class="highlighter-rouge">View</code> 接口中定义了几个通用的回调<code class="highlighter-rouge">onBegin</code>,<code class="highlighter-rouge">onFinish </code>,<code class="highlighter-rouge">onError</code>,分别代表请求开始、结束、出错等几种状态，其它方法就是具体 API 返回的数据回调了。</p>
+
+<p>这个 <code class="highlighter-rouge">Contract</code> 接口设计思路是源于<a href="https://github.com/googlesamples/android-architecture/blob/todo-mvp-clean/todoapp/app/src/main/java/com/example/android/architecture/blueprints/todoapp/tasks/TasksContract.java">googlesamples/android-architecture</a> 。这样的好处我认为就是很好的管理这个模块中的众多的接口和回调方法，而维护者一看就一目了然，非常清晰。</p>
+
+<p>然后，实现一个 <code class="highlighter-rouge">Contract</code> 接口中的 <code class="highlighter-rouge">View</code> 接口。其实是空实现。</p>
+
+<h4 id="authcallback">AuthCallback</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>
+<span class="cm">/**
+ * Created by wecodexyz@gmail.com on 2017/10/14 下午6:53.
+ * GitHub - https://github.com/wecodexyz
+ * Description: 授权登录以及用户相关接口回调类
+ */</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">AuthCallback</span> <span class="kd">implements</span> <span class="n">AuthContract</span><span class="o">.</span><span class="na">View</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSignUpFinish</span><span class="o">(</span><span class="n">SignInResult</span> <span class="n">signInResult</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSignInFinish</span><span class="o">(</span><span class="n">SignInResult</span> <span class="n">signInResult</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSignOutFinish</span><span class="o">(</span><span class="n">APIResult</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onUpdatePasswordFinish</span><span class="o">(</span><span class="n">APIResult</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onBindPhoneFinish</span><span class="o">(</span><span class="n">APIResult</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onUnbindPhoneFinish</span><span class="o">(</span><span class="n">APIResult</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onRequestProfileFinish</span><span class="o">(</span><span class="n">ProfileResult</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onUpdateProfileFinish</span><span class="o">(</span><span class="n">APIResult</span> <span class="n">result</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onError</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="n">String</span> <span class="n">msg</span><span class="o">)</span> <span class="o">{</span>
+
+    <span class="o">}</span>
+  	
+  	<span class="nd">@Override</span>
+  	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFinish</span><span class="o">(){</span>
+        
+    <span class="o">}</span>
+  	
+  	<span class="nd">@Override</span>
+  	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">onBegin</span><span class="o">(){</span>
+        
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>为什么要提供一个空实现的类呢？其实为了方便使用。想想你使用过的<code class="highlighter-rouge">WebViewChrome</code> 的接口回调。</p>
+
+<p>最后，我们实现 <code class="highlighter-rouge">Contract</code> 中的 <code class="highlighter-rouge">Presenter</code> 接口了。这个就是我们这个模块化接口的核心类了。</p>
+
+<h4 id="authmanager">AuthManager</h4>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/**
+ * Created by wecodexyz@gmail.com on 2017/10/14 下午6:55.
+ * GitHub - https://github.com/wecodexyz
+ * Description:
+ */</span>
+
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">AuthManager</span> <span class="kd">implements</span> <span class="n">AuthContract</span><span class="o">.</span><span class="na">Presenter</span> <span class="o">{</span>
+
+    <span class="kd">private</span> <span class="n">Context</span> <span class="n">mContext</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="n">List</span><span class="o">&lt;</span><span class="n">AuthCallback</span><span class="o">&gt;</span> <span class="n">mAuthCallbacks</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="n">SignInResult</span> <span class="n">mSignInResult</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="n">AuthDBHelper</span> <span class="n">mAuthDBHelper</span><span class="o">;</span>
+
+    <span class="kd">private</span> <span class="nf">AuthManager</span><span class="o">()</span> <span class="o">{</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">Holder</span> <span class="o">{</span>
+        <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">AuthManager</span> <span class="n">INSTANCE</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AuthManager</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">AuthManager</span> <span class="nf">get</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">Holder</span><span class="o">.</span><span class="na">INSTANCE</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**
+     * 在Application中进行初始化
+     *
+     * @param context application context
+     */</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">init</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">mContext</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="na">getApplicationContext</span><span class="o">();</span>
+        <span class="c1">//获取本地登录信息</span>
+        <span class="n">mAuthDBHelper</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AuthDBHelper</span><span class="o">(</span><span class="n">mContext</span><span class="o">);</span>
+
+        <span class="n">mSignInResult</span> <span class="o">=</span> <span class="n">mAuthDBHelper</span><span class="o">.</span><span class="na">loadSignInFromCache</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="cm">/**
+     * 是否已登录授权
+     *
+     * @return
+     */</span>
+    <span class="kd">public</span> <span class="kt">boolean</span> <span class="nf">isAuth</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">mSignInResult</span> <span class="o">!=</span> <span class="kc">null</span> <span class="o">&amp;&amp;</span> <span class="n">mSignInResult</span><span class="o">.</span><span class="na">isStatus</span><span class="o">();</span>
+    <span class="o">}</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">registerCallback</span><span class="o">(</span><span class="n">AuthCallback</span> <span class="n">authCallback</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mAuthCallbacks</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="n">mAuthCallbacks</span> <span class="o">=</span> <span class="k">new</span> <span class="n">ArrayList</span><span class="o">&lt;&gt;();</span>
+        <span class="o">}</span>
+        <span class="n">mAuthCallbacks</span><span class="o">.</span><span class="na">add</span><span class="o">(</span><span class="n">authCallback</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">unregisterCallback</span><span class="o">(</span><span class="n">AuthCallback</span> <span class="n">authCallback</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">mAuthCallbacks</span><span class="o">.</span><span class="na">remove</span><span class="o">(</span><span class="n">authCallback</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">clearCallbacks</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">mAuthCallbacks</span> <span class="o">==</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="n">mAuthCallbacks</span><span class="o">.</span><span class="na">clear</span><span class="o">();</span>
+    <span class="o">}</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">signIn</span><span class="o">(</span><span class="n">String</span> <span class="n">account</span><span class="o">,</span> <span class="n">String</span> <span class="n">password</span><span class="o">,</span> <span class="nd">@AuthContract</span><span class="o">.</span><span class="na">SignInType</span> <span class="kt">int</span> <span class="n">type</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">HashMap</span><span class="o">&lt;</span><span class="n">String</span><span class="o">,</span> <span class="n">String</span><span class="o">&gt;</span> <span class="n">params</span> <span class="o">=</span> <span class="k">new</span> <span class="n">HashMap</span><span class="o">&lt;&gt;();</span>
+        <span class="k">if</span> <span class="o">(!</span><span class="n">TextUtils</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">(</span><span class="n">account</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">params</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"account"</span><span class="o">,</span> <span class="n">account</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="k">if</span> <span class="o">(!</span><span class="n">TextUtils</span><span class="o">.</span><span class="na">isEmpty</span><span class="o">(</span><span class="n">password</span><span class="o">))</span> <span class="o">{</span>
+            <span class="n">params</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"password"</span><span class="o">,</span> <span class="n">password</span><span class="o">);</span>
+        <span class="o">}</span>
+        <span class="n">params</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="s">"type"</span><span class="o">,</span> <span class="n">String</span><span class="o">.</span><span class="na">valueOf</span><span class="o">(</span><span class="n">type</span><span class="o">));</span>
+
+        <span class="n">SignInRequest</span> <span class="n">request</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SignInRequest</span><span class="o">(</span><span class="n">mContext</span><span class="o">);</span>
+        <span class="n">request</span><span class="o">.</span><span class="na">addParams</span><span class="o">(</span><span class="n">params</span><span class="o">);</span>
+        <span class="n">request</span><span class="o">.</span><span class="na">request</span><span class="o">()</span>
+                <span class="o">.</span><span class="na">observeOn</span><span class="o">(</span><span class="n">AndroidSchedulers</span><span class="o">.</span><span class="na">mainThread</span><span class="o">())</span>
+                <span class="o">.</span><span class="na">subscribeOn</span><span class="o">(</span><span class="n">Schedulers</span><span class="o">.</span><span class="na">io</span><span class="o">())</span>
+          		<span class="o">.</span><span class="na">doOnSubscribe</span><span class="o">(</span><span class="k">new</span> <span class="n">Consumer</span><span class="o">&lt;</span><span class="n">Subscription</span><span class="o">&gt;()</span> <span class="o">{</span>
+                    <span class="nd">@Override</span>
+                    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">accept</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="n">Subscription</span> <span class="n">subscription</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+                        <span class="k">for</span> <span class="o">(</span><span class="n">AuthCallback</span> <span class="n">callback</span> <span class="o">:</span> <span class="n">mCallbacks</span><span class="o">)</span> <span class="o">{</span>
+                            <span class="n">callback</span><span class="o">.</span><span class="na">onBegin</span><span class="o">();</span>
+                        <span class="o">}</span>
+                    <span class="o">}</span>
+                <span class="o">})</span>
+                <span class="o">.</span><span class="na">doFinally</span><span class="o">(</span><span class="k">new</span> <span class="n">Action</span><span class="o">()</span> <span class="o">{</span>
+                    <span class="nd">@Override</span>
+                    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">run</span><span class="o">()</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+                        <span class="k">for</span> <span class="o">(</span><span class="n">AuthCallback</span> <span class="n">callback</span> <span class="o">:</span> <span class="n">mCallbacks</span><span class="o">)</span> <span class="o">{</span>
+                            <span class="n">callback</span><span class="o">.</span><span class="na">onFinish</span><span class="o">();</span>
+                        <span class="o">}</span>
+                    <span class="o">}</span>
+                <span class="o">})</span>
+                <span class="o">.</span><span class="na">doAfterNext</span><span class="o">(</span><span class="k">new</span> <span class="n">Consumer</span><span class="o">&lt;</span><span class="n">SignInResult</span><span class="o">&gt;()</span> <span class="o">{</span>
+                    <span class="nd">@Override</span>
+                    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">accept</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="n">SignInResult</span> <span class="n">signInResult</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+                        <span class="n">mAuthDBHelper</span><span class="o">.</span><span class="na">cacheSignIn</span><span class="o">(</span><span class="n">signInResult</span><span class="o">);</span>
+                    <span class="o">}</span>
+                <span class="o">})</span>
+                <span class="o">.</span><span class="na">subscribe</span><span class="o">(</span><span class="k">new</span> <span class="n">Consumer</span><span class="o">&lt;</span><span class="n">SignInResult</span><span class="o">&gt;()</span> <span class="o">{</span>
+                    <span class="nd">@Override</span>
+                    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">accept</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="n">SignInResult</span> <span class="n">signInResult</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+                        <span class="k">if</span> <span class="o">(</span><span class="n">signInResult</span><span class="o">.</span><span class="na">isStatus</span><span class="o">())</span> <span class="o">{</span>
+                            <span class="n">mSignInResult</span> <span class="o">=</span> <span class="n">signInResult</span><span class="o">;</span>
+                            <span class="n">UserInfo</span><span class="o">.</span><span class="na">fromSigninResult</span><span class="o">(</span><span class="n">mSignInResult</span><span class="o">);</span>
+                        <span class="o">}</span>
+                        <span class="k">for</span> <span class="o">(</span><span class="n">AuthCallback</span> <span class="n">callback</span> <span class="o">:</span> <span class="n">mAuthCallbacks</span><span class="o">)</span> <span class="o">{</span>
+                            <span class="n">callback</span><span class="o">.</span><span class="na">onSignInFinish</span><span class="o">(</span><span class="n">signInResult</span><span class="o">);</span>
+                        <span class="o">}</span>
+                    <span class="o">}</span>
+                <span class="o">},</span> <span class="k">new</span> <span class="n">Consumer</span><span class="o">&lt;</span><span class="n">Throwable</span><span class="o">&gt;()</span> <span class="o">{</span>
+                    <span class="nd">@Override</span>
+                    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">accept</span><span class="o">(</span><span class="nd">@NonNull</span> <span class="n">Throwable</span> <span class="n">throwable</span><span class="o">)</span> <span class="kd">throws</span> <span class="n">Exception</span> <span class="o">{</span>
+                        <span class="n">LogUtils</span><span class="o">.</span><span class="na">e</span><span class="o">(</span><span class="s">"sign in error -&gt; "</span> <span class="o">+</span> <span class="n">throwable</span><span class="o">);</span>
+                        <span class="n">callbackError</span><span class="o">(</span><span class="mi">110</span><span class="o">,</span> <span class="s">"sign in error"</span><span class="o">);</span>
+                    <span class="o">}</span>
+                <span class="o">});</span>
+    <span class="o">}</span>
+    <span class="c1">//接口太多这里只列举signup接口，其中接口类似...</span>
+
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p><code class="highlighter-rouge">AuthManager</code> 这个类设计单例模式。除了具体 API 实现接口还有以下几个方法</p>
+
+<ul>
+  <li>init 全局初始化方法。主要是为了保存 Application 上下文，因为接口请求会使用到。</li>
+  <li>registerCallback 注册回调。哪里使用，就哪里注册</li>
+  <li>unregisterCallback 取消注册回调。与上面方法对应使用，避免页面内存泄露</li>
+  <li>clearCallbacks 清除所有回调。</li>
+</ul>
+
+<p>具体的 API 实现中，我这里就使用了之前网络框架中的代码 SignInRequest。</p>
+
+<p>在 <code class="highlighter-rouge">AuthManager</code> 中还有一个 <code class="highlighter-rouge">AuthDBHelper</code> 类，这个是用户信息的缓存类。只要用户登录过了，那么下次就是直接取缓存中的登录信息就可以了。</p>
+
+<h3 id="0x02-整体结构">0x02 整体结构</h3>
+
+<p>预览以下整体的结构</p>
+
+<p><img src="../images/auth-arch.png" alt="Auth-arch" /></p>
+
+<p>与用户相关的API都放在此模块中进行管理，而其它模块进行使用就很方便了。</p>
+
+<p>首先，在Application中进行初始化</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	<span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onCreate</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">.</span><span class="na">onCreate</span><span class="o">();</span>
+        <span class="n">AuthManager</span><span class="o">.</span><span class="na">get</span><span class="o">().</span><span class="na">init</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>这个用法是不是与其它第三方 SDK 的使用类似呢？可以感受一下，其实这个也是之前提到的 SDK 设计思路。</p>
+
+<p>然后在需要调用接口的页面中，如LoginFragment</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code>	<span class="n">AuthCallback</span> <span class="n">mAuthCallback</span> <span class="o">=</span> <span class="k">new</span> <span class="n">AuthCallback</span><span class="o">()</span> <span class="o">{</span>
+        <span class="nd">@Override</span>
+        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onError</span><span class="o">(</span><span class="kt">int</span> <span class="n">code</span><span class="o">,</span> <span class="n">String</span> <span class="n">msg</span><span class="o">)</span> <span class="o">{</span>
+            <span class="c1">//请求出错</span>
+        <span class="o">}</span>
+      
+      	<span class="nd">@Override</span>
+      	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">onBegin</span><span class="o">(){</span>
+            <span class="c1">//请求开始</span>
+        <span class="o">}</span>
+	
+      	<span class="nd">@Override</span>
+      	<span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFinish</span><span class="o">(){</span>
+            <span class="c1">//请求结束</span>
+        <span class="o">}</span>
+      
+        <span class="nd">@Override</span>
+        <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSignInFinish</span><span class="o">(</span><span class="n">SignInResult</span> <span class="n">signInResult</span><span class="o">)</span> <span class="o">{</span>
+            <span class="kd">super</span><span class="o">.</span><span class="na">onSignInFinish</span><span class="o">(</span><span class="n">signInResult</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">signInResult</span><span class="o">.</span><span class="na">isStatus</span><span class="o">())</span> <span class="o">{</span>
+                <span class="c1">//登录成功</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+    <span class="o">};</span>
+	<span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onActivityCreated</span><span class="o">(</span><span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">.</span><span class="na">onActivityCreated</span><span class="o">(</span><span class="n">savedInstanceState</span><span class="o">);</span>
+        <span class="n">AuthManager</span><span class="o">.</span><span class="na">get</span><span class="o">().</span><span class="na">registerCallback</span><span class="o">(</span><span class="n">mAuthCallback</span><span class="o">);</span>
+    <span class="o">}</span>
+	<span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onDestroyView</span><span class="o">()</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">.</span><span class="na">onDestroyView</span><span class="o">();</span>
+        <span class="n">AuthManager</span><span class="o">.</span><span class="na">get</span><span class="o">().</span><span class="na">unregisterCallback</span><span class="o">(</span><span class="n">mAuthCallback</span><span class="o">);</span>
+    <span class="o">}</span>
+</code></pre></div></div>
+
+<p>这样用起来是不是很方便呢？</p>
+
+<p>目前在项中中除了 API 可以这样设计之外，还有其它一个功能只要各个模块都有可能经常使用到的都可以使用这样的思路。</p>
+
+<p>例如，我的 App 里很多页面都会用到获取本地音乐或者视频的列表。同样地，有以下几个类。</p>
+
+<p><img src="../images/media-arch.png" alt="media-arch" /></p>
+
+        
+        <div class="post_footer">
+          <p>Published on Jul 12, 2017 in categories 
+          
+          <a href="http://localhost:4000/categories/#模块化" title="模块化">模块化</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/App-%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B9%8B%E8%B7%AF-Repository%E6%A8%A1%E5%BC%8F">App 模块化之路——Repository模式</a>
+            </li>
+            
+            
+            <li>
+                <span>下一篇</span>
+                <a href="/App-%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B9%8B%E8%B7%AF-%E5%9C%A8%E5%B1%95%E7%A4%BA%E5%B1%82%E6%90%AD%E5%BB%BAMVP%E7%BB%93%E6%9E%84">App 模块化之路——在展示层搭建MVP结构</a>
+            </li>
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="http://localhost:4000/js/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/App-%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B9%8B%E8%B7%AF-%E4%BD%BF%E7%94%A8SDK%E7%9A%84%E6%80%9D%E8%B7%AF%E8%BF%9B%E8%A1%8C%E6%A8%A1%E5%9D%97%E5%8C%96%E8%AE%BE%E8%AE%A1%E6%8E%A5%E5%8F%A3',
+            owner: 'hylinux1024',
+            repo: 'hylinux1024.github.io',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+
