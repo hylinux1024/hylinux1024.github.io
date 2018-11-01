@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="content-type" content="text/html;charset=utf-8"/>
+        <meta name="keywords" content="模块化,架构" />
+        <meta name="description" content="面对越来越复杂的 App 需求，Google 官方发布了Android 框架组件库（Android Architecture Components ）。为开发者更好的开发 App 提供了非常好的样本。" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title> Android 框架组件(Android Architecture Components)使用指南  </title>
+        <link rel="stylesheet" href="http://localhost:4000/css/default.css" type="text/css" />
+        <link rel="stylesheet" href="http://localhost:4000/css/small.css" type="text/css" media="(max-width: 720px)"/>
+        <link rel="stylesheet" href="http://localhost:4000/css/syntax.css" type="text/css" />
+        <link rel="shortcut icon" href="http://localhost:4000/favicon.ico" type="image/x-icon" />
+        <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML' async></script>
+    </head>
+    <body>
+
+<div class="container">
+    <div class="nav">
+    <div class="nav_nav">
+        <a class="nav_a1" href="http://localhost:4000/">首页</a>
+        <a href="http://localhost:4000/categories/">分类</a>
+        <a class="nav_a1" href="http://localhost:4000/wiki/">维基</a>
+        <a href="http://localhost:4000/links/">链接</a>
+        <a class="nav_a1" href="http://localhost:4000/about/">关于</a>
+    </div>
+    <div class="nav_rss"><a href="http://localhost:4000/sitemap.xml" style="display:none;">SITEMAP</a><a href="http://localhost:4000/feed.xml" target="_blank">订阅</a></div>
+</div>
+
+    <div class="main">
+        <h2> Android 框架组件(Android Architecture Components)使用指南 </h2>
+        <p>面对越来越复杂的 App 需求，Google 官方发布了Android 框架组件库（Android Architecture Components ）。为开发者更好的开发 App 提供了非常好的样本。这个框架里的组件是配合 Android 组件生命周期的，所以它能够很好的规避组件生命周期管理的问题。今天我们就来看看这个库的使用。</p>
+
+<h4 id="0x00-通用的框架准则">0x00 通用的框架准则</h4>
+
+<p>官方建议在架构 App 的时候遵循以下两个准则：</p>
+
+<ol>
+  <li>
+    <p><strong>关注分离</strong></p>
+
+    <p>其中早期开发 App 最常见的做法是在 Activity 或者 Fragment 中写了大量的逻辑代码，导致 Activity 或 Fragment 中的代码很臃肿，十分不易维护。现在很多 App 开发者都注意到了这个问题，所以前两年 MVP 结构就非常有市场，目前普及率也很高。</p>
+  </li>
+  <li>
+    <p><strong>模型驱动UI</strong></p>
+
+    <p>模型持久化的好处就是：即使系统回收了 App 的资源用户也不会丢失数据，而且在网络不稳定的情况下 App 依然可以正常地运行。从而保证了 App 的用户体验。</p>
+  </li>
+</ol>
+
+<h4 id="0x01-app-框架组件">0x01 App 框架组件</h4>
+
+<p>框架提供了以下几个核心组件，我们将通过一个实例来说明这几个组件的使用。</p>
+
+<ul>
+  <li>ViewModel</li>
+  <li>LiveData</li>
+  <li>Room</li>
+</ul>
+
+<p>假设要实现一个用户信息展示页面。这个用户信息是通过REST API 从后台获取的。</p>
+
+<h4 id="0x02-建立ui">0x02 建立UI</h4>
+
+<p>我们使用 fragment (UserProfileFragment.java) 来实现用户信息的展示页面。为了驱动 UI，我们的数据模型需要持有以下两个数据元素</p>
+
+<ul>
+  <li><strong>用户ID</strong>: 用户的唯一标识。可以通过 fragment 的 arguments 参数进行传递这个信息。这样做的好处就是如果系统销毁了应用，这个参数会被保存并且下次重新启动时可以恢复之前的数据。</li>
+  <li><strong>用户对象数据</strong>：POJO 持有用户数据。</li>
+</ul>
+
+<p>我们要创建 <strong>ViewModel</strong> 对象用于保存以上数据。</p>
+
+<p>那什么是 ViewModel 呢？</p>
+
+<blockquote>
+  <p>A <strong>ViewModel</strong> provides the data for a specific UI component, such as a fragment or activity, and handles the communication with the business part of data handling, such as calling other components to load the data or forwarding user modifications. The ViewModel does not know about the View and is not affected by configuration changes such as recreating an activity due to rotation.</p>
+</blockquote>
+
+<p>ViewModel 是一个框架组件。它为 UI 组件 (fragment或activity) 提供数据，并且可以调用其它组件加载数据或者转发用户指令。ViewModel 不会关心 UI 长什么样，也不会受到 UI 组件配置改变的影响，例如不会受旋转屏幕后 activity 重新启动的影响。因此它是一个与 UI 组件无关的。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserProfileViewModel</span> <span class="kd">extends</span> <span class="n">ViewModel</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="n">String</span> <span class="n">userId</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">User</span> <span class="n">user</span><span class="o">;</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">init</span><span class="o">(</span><span class="n">String</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">userId</span> <span class="o">=</span> <span class="n">userId</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="kd">public</span> <span class="n">User</span> <span class="nf">getUser</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">user</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserProfileFragment</span> <span class="kd">extends</span> <span class="n">LifecycleFragment</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">static</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">UID_KEY</span> <span class="o">=</span> <span class="s">"uid"</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">UserProfileViewModel</span> <span class="n">viewModel</span><span class="o">;</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onActivityCreated</span><span class="o">(</span><span class="nd">@Nullable</span> <span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+        <span class="kd">super</span><span class="o">.</span><span class="na">onActivityCreated</span><span class="o">(</span><span class="n">savedInstanceState</span><span class="o">);</span>
+        <span class="n">String</span> <span class="n">userId</span> <span class="o">=</span> <span class="n">getArguments</span><span class="o">().</span><span class="na">getString</span><span class="o">(</span><span class="n">UID_KEY</span><span class="o">);</span>
+        <span class="n">viewModel</span> <span class="o">=</span> <span class="n">ViewModelProviders</span><span class="o">.</span><span class="na">of</span><span class="o">(</span><span class="k">this</span><span class="o">).</span><span class="na">get</span><span class="o">(</span><span class="n">UserProfileViewModel</span><span class="o">.</span><span class="na">class</span><span class="o">);</span>
+        <span class="n">viewModel</span><span class="o">.</span><span class="na">init</span><span class="o">(</span><span class="n">userId</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="n">View</span> <span class="nf">onCreateView</span><span class="o">(</span><span class="n">LayoutInflater</span> <span class="n">inflater</span><span class="o">,</span>
+                <span class="nd">@Nullable</span> <span class="n">ViewGroup</span> <span class="n">container</span><span class="o">,</span> <span class="nd">@Nullable</span> <span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">inflater</span><span class="o">.</span><span class="na">inflate</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">layout</span><span class="o">.</span><span class="na">user_profile</span><span class="o">,</span> <span class="n">container</span><span class="o">,</span> <span class="kc">false</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>需要的是：由于框架组件目前还处于预览版本，这里<code class="highlighter-rouge">UserProfileFragment</code> 是继承于 <code class="highlighter-rouge">LifecycleFragment</code> 而不是 <code class="highlighter-rouge">Fragment</code>。待正式发布版本之后 Android Support 包中的 <code class="highlighter-rouge">Fragment</code> 就会默认实现 <code class="highlighter-rouge">LifecycleOwner</code> 接口。而 <code class="highlighter-rouge">LifecycleFragment</code> 也是实现了 <code class="highlighter-rouge">LifecycleOwner</code> 接口的。即正式版本发布时 Support 包中的 UI 组件类就是支持框架组件的。</p>
+
+<p>现在已经有了 UI 组件和 ViewModel，那么我们如何将它们进行连接呢？这时候就需要用到 LiveData 组件了。</p>
+
+<blockquote>
+  <p><strong>LiveData</strong> is an observable data holder. It lets the components in your app observe <a href="https://developer.android.com/reference/android/arch/lifecycle/LiveData.html"><code class="highlighter-rouge">LiveData</code></a> objects for changes without creating explicit and rigid dependency paths between them. LiveData also respects the lifecycle state of your app components (activities, fragments, services) and does the right thing to prevent object leaking so that your app does not consume more memory.</p>
+</blockquote>
+
+<p>LiveData 的使用有点像 RxJava。因此完全可以使用 RxJava 来替代 LiveData 组件。</p>
+
+<p>现在我们修改一下 <code class="highlighter-rouge">UserProfileViewModel</code> 类</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserProfileViewModel</span> <span class="kd">extends</span> <span class="n">ViewModel</span> <span class="o">{</span>
+    <span class="o">...</span>
+    <span class="kd">private</span> <span class="n">LiveData</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">user</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="n">LiveData</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="nf">getUser</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="n">user</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>将 <code class="highlighter-rouge">User user</code> 替换成  <code class="highlighter-rouge">LiveData&lt;User&gt; user</code></p>
+
+<p>然后再修改 <code class="highlighter-rouge">UserProfileFragment</code> 类中</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Override</span>
+<span class="kd">public</span> <span class="kt">void</span> <span class="nf">onActivityCreated</span><span class="o">(</span><span class="nd">@Nullable</span> <span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="o">)</span> <span class="o">{</span>
+    <span class="kd">super</span><span class="o">.</span><span class="na">onActivityCreated</span><span class="o">(</span><span class="n">savedInstanceState</span><span class="o">);</span>
+    <span class="n">viewModel</span><span class="o">.</span><span class="na">getUser</span><span class="o">().</span><span class="na">observe</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">user</span> <span class="o">-&gt;</span> <span class="o">{</span>
+      <span class="c1">// update UI</span>
+    <span class="o">});</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>当用户数据发生改变时，就会通知 UI 进行更新。ViewModel 与 UI 组件的交互就是这么简单。</p>
+
+<p>但细心的朋友可能发现了：fragment 在 <code class="highlighter-rouge">onActivityCreated</code> 方法中添加了相应的监听，但是没有在其它对应的生命周期中移除监听。有经验的朋友就会觉得这是不是有可能会发生引用泄露问题呢？其实不然，LiveData 组件内部已经为开发者做了这些事情。即 LiveData 会再正确的生命周期进行回调。</p>
+
+<h4 id="0x03-获取数据">0x03 获取数据</h4>
+
+<p>现在已经成功的把 ViewModel 与 UI 组件（fragment）进行了通信。那么 ViewModel 又是如何获取数据的呢？</p>
+
+<p>假设我们的数据是通过REST API 从后天获取的。我们使用 <a href="http://square.github.io/retrofit/">Retrofit</a> 库实现网络请求。</p>
+
+<p>以下是请求网络接口 <code class="highlighter-rouge">Webservice</code></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">Webservice</span> <span class="o">{</span>
+    <span class="cm">/**
+     * @GET declares an HTTP GET request
+     * @Path("user") annotation on the userId parameter marks it as a
+     * replacement for the {user} placeholder in the @GET path
+     */</span>
+    <span class="nd">@GET</span><span class="o">(</span><span class="s">"/users/{user}"</span><span class="o">)</span>
+    <span class="n">Call</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="nf">getUser</span><span class="o">(</span><span class="nd">@Path</span><span class="o">(</span><span class="s">"user"</span><span class="o">)</span> <span class="n">String</span> <span class="n">userId</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>ViewModel 可以引用 <code class="highlighter-rouge">Webservice</code> 接口，但是这样做违背了我们在上文提到的<strong>关注分离</strong>准则。因为我们推荐使用 <code class="highlighter-rouge">Repository</code> 模型对 <code class="highlighter-rouge">Webservice</code> 进行封装。</p>
+
+<blockquote>
+  <p><strong>Repository</strong> modules are responsible for handling data operations. They provide a clean API to the rest of the app. They know where to get the data from and what API calls to make when data is updated. You can consider them as mediators between different data sources (persistent model, web service, cache, etc.).</p>
+</blockquote>
+
+<p>关于 Repository 模式可以参考我的上一篇《App 组件化/模块化之路——Repository模式》</p>
+
+<p>以下是使用 Repository 封装 <code class="highlighter-rouge">WebService</code></p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserRepository</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="n">Webservice</span> <span class="n">webservice</span><span class="o">;</span>
+    <span class="c1">// ...</span>
+    <span class="kd">public</span> <span class="n">LiveData</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="nf">getUser</span><span class="o">(</span><span class="kt">int</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// This is not an optimal implementation, we'll fix it below</span>
+        <span class="kd">final</span> <span class="n">MutableLiveData</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">data</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MutableLiveData</span><span class="o">&lt;&gt;();</span>
+        <span class="n">webservice</span><span class="o">.</span><span class="na">getUser</span><span class="o">(</span><span class="n">userId</span><span class="o">).</span><span class="na">enqueue</span><span class="o">(</span><span class="k">new</span> <span class="n">Callback</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onResponse</span><span class="o">(</span><span class="n">Call</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">call</span><span class="o">,</span> <span class="n">Response</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">response</span><span class="o">)</span> <span class="o">{</span>
+                <span class="c1">// error case is left out for brevity</span>
+                <span class="n">data</span><span class="o">.</span><span class="na">setValue</span><span class="o">(</span><span class="n">response</span><span class="o">.</span><span class="na">body</span><span class="o">());</span>
+            <span class="o">}</span>
+        <span class="o">});</span>
+        <span class="k">return</span> <span class="n">data</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>使用 Respository 模式抽象数据源接口，也可以很方便地替换其它数据。这样 ViewModel 也不用知道数据源到底是来自哪里。</p>
+
+<h4 id="0x04-组件间的依赖管理">0x04 组件间的依赖管理</h4>
+
+<p>从上文我们知道 <code class="highlighter-rouge">UserRepository</code> 类需要有一个 <code class="highlighter-rouge">WebService</code> 实例才能工作。我们可以直接创建它，但这么做我们就必须知道它的依赖，而且会由很多重复的创建对象的代码。这时候我们可以使用依赖注入。本例中我们将使用 Dagger 2 来管理依赖。</p>
+
+<h4 id="0x05-连接-viewmodel-和-repository">0x05 连接 ViewModel 和 Repository</h4>
+
+<p>修改 <code class="highlighter-rouge">UserProfileViewModel</code> 类，引用 Repository 并且通过 Dagger 2 对 Repository 的依赖进行管理。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserProfileViewModel</span> <span class="kd">extends</span> <span class="n">ViewModel</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="n">LiveData</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">user</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="n">UserRepository</span> <span class="n">userRepo</span><span class="o">;</span>
+
+    <span class="nd">@Inject</span> <span class="c1">// UserRepository parameter is provided by Dagger 2</span>
+    <span class="kd">public</span> <span class="nf">UserProfileViewModel</span><span class="o">(</span><span class="n">UserRepository</span> <span class="n">userRepo</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">userRepo</span> <span class="o">=</span> <span class="n">userRepo</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">init</span><span class="o">(</span><span class="n">String</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">if</span> <span class="o">(</span><span class="k">this</span><span class="o">.</span><span class="na">user</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="c1">// ViewModel is created per Fragment so</span>
+            <span class="c1">// we know the userId won't change</span>
+            <span class="k">return</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">userRepo</span><span class="o">.</span><span class="na">getUser</span><span class="o">(</span><span class="n">userId</span><span class="o">);</span>
+    <span class="o">}</span>
+    <span class="kd">public</span> <span class="n">LiveData</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="nf">getUser</span><span class="o">()</span> <span class="o">{</span>
+        <span class="k">return</span> <span class="k">this</span><span class="o">.</span><span class="na">user</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="0x06-缓存数据">0x06 缓存数据</h4>
+
+<p>前面我们实现的 Repository 是只有一个网络数据源的。这样做每次进入用户信息页面都需要去查询网络，用户需要等待，体验不好。因此在 Repository 中加一个缓存数据。</p>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Singleton</span>  <span class="c1">// informs Dagger that this class should be constructed once</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserRepository</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="n">Webservice</span> <span class="n">webservice</span><span class="o">;</span>
+    <span class="c1">// simple in memory cache, details omitted for brevity</span>
+    <span class="kd">private</span> <span class="n">UserCache</span> <span class="n">userCache</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="n">LiveData</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="nf">getUser</span><span class="o">(</span><span class="n">String</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">LiveData</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">cached</span> <span class="o">=</span> <span class="n">userCache</span><span class="o">.</span><span class="na">get</span><span class="o">(</span><span class="n">userId</span><span class="o">);</span>
+        <span class="k">if</span> <span class="o">(</span><span class="n">cached</span> <span class="o">!=</span> <span class="kc">null</span><span class="o">)</span> <span class="o">{</span>
+            <span class="k">return</span> <span class="n">cached</span><span class="o">;</span>
+        <span class="o">}</span>
+
+        <span class="kd">final</span> <span class="n">MutableLiveData</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">data</span> <span class="o">=</span> <span class="k">new</span> <span class="n">MutableLiveData</span><span class="o">&lt;&gt;();</span>
+        <span class="n">userCache</span><span class="o">.</span><span class="na">put</span><span class="o">(</span><span class="n">userId</span><span class="o">,</span> <span class="n">data</span><span class="o">);</span>
+        <span class="c1">// this is still suboptimal but better than before.</span>
+        <span class="c1">// a complete implementation must also handle the error cases.</span>
+        <span class="n">webservice</span><span class="o">.</span><span class="na">getUser</span><span class="o">(</span><span class="n">userId</span><span class="o">).</span><span class="na">enqueue</span><span class="o">(</span><span class="k">new</span> <span class="n">Callback</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;()</span> <span class="o">{</span>
+            <span class="nd">@Override</span>
+            <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onResponse</span><span class="o">(</span><span class="n">Call</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">call</span><span class="o">,</span> <span class="n">Response</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">response</span><span class="o">)</span> <span class="o">{</span>
+                <span class="n">data</span><span class="o">.</span><span class="na">setValue</span><span class="o">(</span><span class="n">response</span><span class="o">.</span><span class="na">body</span><span class="o">());</span>
+            <span class="o">}</span>
+        <span class="o">});</span>
+        <span class="k">return</span> <span class="n">data</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<h4 id="0x07-持久化数据-room-组件">0x07 持久化数据 （Room 组件）</h4>
+
+<p>Android 框架提供了 Room 组件，为 App 数据持久化提供了解决方案。</p>
+
+<blockquote>
+  <p><strong>Room</strong> is an object mapping library that provides local data persistence with minimal boilerplate code. At compile time, it validates each query against the schema, so that broken SQL queries result in compile time errors instead of runtime failures. Room abstracts away some of the underlying implementation details of working with raw SQL tables and queries. It also allows observing changes to the database data (including collections and join queries), exposing such changes via <em>LiveData</em> objects. In addition, it explicitly defines thread constraints that address common issues such as accessing storage on the main thread.</p>
+</blockquote>
+
+<p>Room 组件提供了数据库操作，配合 LiveData 使用可以监听数据库的变化，进而更新 UI 组件。</p>
+
+<p>要使用 Room 组件，需要以下步骤：</p>
+
+<ul>
+  <li>使用注解 <code class="highlighter-rouge">@Entity</code> 定义实体</li>
+  <li>创建 <code class="highlighter-rouge">RoomDatabase</code> 子类</li>
+  <li>创建数据访问接口（DAO）</li>
+  <li>在 <code class="highlighter-rouge">RoomDatabase</code> 中引用 DAO</li>
+</ul>
+
+<ol>
+  <li><strong>用注解 <code class="highlighter-rouge">@Entity</code> 定义实体类</strong></li>
+</ol>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Entity</span>
+<span class="kd">class</span> <span class="nc">User</span> <span class="o">{</span>
+  <span class="nd">@PrimaryKey</span>
+  <span class="kd">private</span> <span class="kt">int</span> <span class="n">id</span><span class="o">;</span>
+  <span class="kd">private</span> <span class="n">String</span> <span class="n">name</span><span class="o">;</span>
+  <span class="kd">private</span> <span class="n">String</span> <span class="n">lastName</span><span class="o">;</span>
+  <span class="c1">// getters and setters for fields</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<ol>
+  <li><strong>创建 <code class="highlighter-rouge">RoomDatabase</code>子类</strong></li>
+</ol>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Database</span><span class="o">(</span><span class="n">entities</span> <span class="o">=</span> <span class="o">{</span><span class="n">User</span><span class="o">.</span><span class="na">class</span><span class="o">},</span> <span class="n">version</span> <span class="o">=</span> <span class="mi">1</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">MyDatabase</span> <span class="kd">extends</span> <span class="n">RoomDatabase</span> <span class="o">{</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>需要注意的是 <code class="highlighter-rouge">MyDatabase</code> 是抽象类，Room 组件为我们提供具体的实现。</p>
+
+<ol>
+  <li><strong>创建 DAO</strong>
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Dao</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">UserDao</span> <span class="o">{</span>
+ <span class="nd">@Insert</span><span class="o">(</span><span class="n">onConflict</span> <span class="o">=</span> <span class="n">REPLACE</span><span class="o">)</span>
+ <span class="kt">void</span> <span class="nf">save</span><span class="o">(</span><span class="n">User</span> <span class="n">user</span><span class="o">);</span>
+ <span class="nd">@Query</span><span class="o">(</span><span class="s">"SELECT * FROM user WHERE id = :userId"</span><span class="o">)</span>
+ <span class="n">LiveData</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="nf">load</span><span class="o">(</span><span class="n">String</span> <span class="n">userId</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+  </li>
+  <li><strong>在 <code class="highlighter-rouge">RoomDatabase</code> 中引用 DAO</strong>
+    <div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Database</span><span class="o">(</span><span class="n">entities</span> <span class="o">=</span> <span class="o">{</span><span class="n">User</span><span class="o">.</span><span class="na">class</span><span class="o">},</span> <span class="n">version</span> <span class="o">=</span> <span class="mi">1</span><span class="o">)</span>
+<span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">MyDatabase</span> <span class="kd">extends</span> <span class="n">RoomDatabase</span> <span class="o">{</span>
+ <span class="kd">public</span> <span class="kd">abstract</span> <span class="n">UserDao</span> <span class="nf">userDao</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre></div>    </div>
+    <p>现在有了 Room 组件，那么我们可以修改 <code class="highlighter-rouge">UserRepository</code> 类</p>
+  </li>
+</ol>
+
+<div class="language-java highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nd">@Singleton</span>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">UserRepository</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Webservice</span> <span class="n">webservice</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">UserDao</span> <span class="n">userDao</span><span class="o">;</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="n">Executor</span> <span class="n">executor</span><span class="o">;</span>
+
+    <span class="nd">@Inject</span>
+    <span class="kd">public</span> <span class="nf">UserRepository</span><span class="o">(</span><span class="n">Webservice</span> <span class="n">webservice</span><span class="o">,</span> <span class="n">UserDao</span> <span class="n">userDao</span><span class="o">,</span> <span class="n">Executor</span> <span class="n">executor</span><span class="o">)</span> <span class="o">{</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">webservice</span> <span class="o">=</span> <span class="n">webservice</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">userDao</span> <span class="o">=</span> <span class="n">userDao</span><span class="o">;</span>
+        <span class="k">this</span><span class="o">.</span><span class="na">executor</span> <span class="o">=</span> <span class="n">executor</span><span class="o">;</span>
+    <span class="o">}</span>
+
+    <span class="kd">public</span> <span class="n">LiveData</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="nf">getUser</span><span class="o">(</span><span class="n">String</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">refreshUser</span><span class="o">(</span><span class="n">userId</span><span class="o">);</span>
+        <span class="c1">// return a LiveData directly from the database.</span>
+        <span class="k">return</span> <span class="n">userDao</span><span class="o">.</span><span class="na">load</span><span class="o">(</span><span class="n">userId</span><span class="o">);</span>
+    <span class="o">}</span>
+
+    <span class="kd">private</span> <span class="kt">void</span> <span class="nf">refreshUser</span><span class="o">(</span><span class="kd">final</span> <span class="n">String</span> <span class="n">userId</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">executor</span><span class="o">.</span><span class="na">execute</span><span class="o">(()</span> <span class="o">-&gt;</span> <span class="o">{</span>
+            <span class="c1">// running in a background thread</span>
+            <span class="c1">// check if user was fetched recently</span>
+            <span class="kt">boolean</span> <span class="n">userExists</span> <span class="o">=</span> <span class="n">userDao</span><span class="o">.</span><span class="na">hasUser</span><span class="o">(</span><span class="n">FRESH_TIMEOUT</span><span class="o">);</span>
+            <span class="k">if</span> <span class="o">(!</span><span class="n">userExists</span><span class="o">)</span> <span class="o">{</span>
+                <span class="c1">// refresh the data</span>
+                <span class="n">Response</span> <span class="n">response</span> <span class="o">=</span> <span class="n">webservice</span><span class="o">.</span><span class="na">getUser</span><span class="o">(</span><span class="n">userId</span><span class="o">).</span><span class="na">execute</span><span class="o">();</span>
+                <span class="c1">// TODO check for error etc.</span>
+                <span class="c1">// Update the database.The LiveData will automatically refresh so</span>
+                <span class="c1">// we don't need to do anything else here besides updating the database</span>
+                <span class="n">userDao</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="n">response</span><span class="o">.</span><span class="na">body</span><span class="o">());</span>
+            <span class="o">}</span>
+        <span class="o">});</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div></div>
+
+<p>目前为止我们的代码就基本完成了。UI 组件通过 ViewModel 访问数据，而 ViewModel 通过 LiveData 监听数据的变化，并且使用 Repository 模式封装数据源。这些数据源可以是网络数据，缓存以及持久化数据。</p>
+
+<h4 id="0x08-框架结构图">0x08 框架结构图</h4>
+
+<p><img src="../images/final-architecture.png" alt="final architecture" /></p>
+
+<h4 id="0x09-参考文档">0x09 参考文档</h4>
+
+<p>https://developer.android.com/topic/libraries/architecture/guide.html#recommended_app_architecture</p>
+
+<p>https://github.com/googlesamples/android-architecture-components</p>
+
+        
+        <div class="post_footer">
+          <p>Published on Aug 03, 2017 in categories 
+          
+          <a href="http://localhost:4000/categories/#模块化" title="模块化">模块化</a>&nbsp;
+          
+          <p>
+        </div>
+        
+        <ul class="prev_next">
+            
+            <li>
+                <span>上一篇</span>
+                <a href="/App-%E6%A8%A1%E5%9D%97%E5%8C%96%E4%B9%8B%E8%B7%AF-%E5%9C%A8%E5%B1%95%E7%A4%BA%E5%B1%82%E6%90%AD%E5%BB%BAMVP%E7%BB%93%E6%9E%84">App 模块化之路——在展示层搭建MVP结构</a>
+            </li>
+            
+            
+            <li>
+                <span>下一篇</span>
+                <a href="/linear-regression">机器学习之线性回归</a>
+            </li>
+            
+        </ul>
+        <hr>
+<div class="bdsharebuttonbox"><a href="#" class="bds_more" data-cmd="more"></a><a href="#" class="bds_qzone" data-cmd="qzone" title="分享到QQ空间"></a><a href="#" class="bds_tsina" data-cmd="tsina" title="分享到新浪微博"></a><a href="#" class="bds_tqq" data-cmd="tqq" title="分享到腾讯微博"></a><a href="#" class="bds_renren" data-cmd="renren" title="分享到人人网"></a><a href="#" class="bds_weixin" data-cmd="weixin" title="分享到微信"></a></div>
+<script>window._bd_share_config={"common":{"bdSnsKey":{},"bdText":"","bdMini":"2","bdMiniList":false,"bdPic":"","bdStyle":"1","bdSize":"16"},"share":{}};with(document)0[(getElementsByTagName('head')[0]||body).appendChild(createElement('script')).src='http://bdimg.share.baidu.com/static/api/js/share.js?v=89860593.js?cdnversion='+~(-new Date()/36e5)];</script>
+
+        
+
+  
+
+  
+        <div id="container"></div>
+        <link rel="stylesheet" href="https://imsun.github.io/gitment/style/default.css">
+        <script src="http://localhost:4000/js/gitment.browser.js"></script>
+        <script>
+        var gitment = new Gitment({
+            id: '/Android-%E6%A1%86%E6%9E%B6%E7%BB%84%E4%BB%B6(Android-Architecture-Components)%E4%BD%BF%E7%94%A8%E6%8C%87%E5%8D%97',
+            owner: 'hylinux1024',
+            repo: 'hylinux1024.github.io',
+            oauth: {
+                client_id: 'c79c9ae57765adcce459',
+                client_secret: '09264b1c3c58033878872c924196898c9931a8e5',
+            },
+        })
+        gitment.render('container')
+        </script>
+  
+
+
+    </div>
+</div>
+<center><p style="font-size:0.5em;">Powered by <a href="http://jekyllrb.com">Jekyll</a> and Theme by <a href="http://github.com/mzlogin/jekyll-theme-solid">solid</a></p></center>
+    </body>
+</html>
+
