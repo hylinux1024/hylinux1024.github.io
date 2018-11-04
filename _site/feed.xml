@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-11-03T19:11:38+08:00</updated><id>http://localhost:4000/</id><title type="html">Thinking Tech</title><author><name>hylinux</name></author><entry><title type="html">源码分析Retrofit请求流程</title><link href="http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Retrofit%E8%AF%B7%E6%B1%82%E6%B5%81%E7%A8%8B" rel="alternate" type="text/html" title="源码分析Retrofit请求流程" /><published>2018-11-03T00:00:00+08:00</published><updated>2018-11-03T00:00:00+08:00</updated><id>http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Retrofit%E8%AF%B7%E6%B1%82%E6%B5%81%E7%A8%8B</id><content type="html" xml:base="http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Retrofit%E8%AF%B7%E6%B1%82%E6%B5%81%E7%A8%8B">&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Retrofit&lt;/code&gt; 是 &lt;code class=&quot;highlighter-rouge&quot;&gt;square&lt;/code&gt; 公司的另一款广泛流行的网络请求框架。前面的一篇文章《源码分析OKHttp执行过程》已经对 &lt;code class=&quot;highlighter-rouge&quot;&gt;OkHttp&lt;/code&gt; 网络请求框架有一个大概的了解。今天同样地对 &lt;code class=&quot;highlighter-rouge&quot;&gt;Retrofit&lt;/code&gt; 的源码进行走读，对其底层的实现逻辑做到心中有数。&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.7.4">Jekyll</generator><link href="http://localhost:4000/feed.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2018-11-04T12:50:43+08:00</updated><id>http://localhost:4000/</id><title type="html">Thinking Tech</title><author><name>hylinux</name></author><entry><title type="html">源码分析Retrofit请求流程</title><link href="http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Retrofit%E8%AF%B7%E6%B1%82%E6%B5%81%E7%A8%8B" rel="alternate" type="text/html" title="源码分析Retrofit请求流程" /><published>2018-11-03T00:00:00+08:00</published><updated>2018-11-03T00:00:00+08:00</updated><id>http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Retrofit%E8%AF%B7%E6%B1%82%E6%B5%81%E7%A8%8B</id><content type="html" xml:base="http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90Retrofit%E8%AF%B7%E6%B1%82%E6%B5%81%E7%A8%8B">&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Retrofit&lt;/code&gt; 是 &lt;code class=&quot;highlighter-rouge&quot;&gt;square&lt;/code&gt; 公司的另一款广泛流行的网络请求框架。前面的一篇文章《源码分析OKHttp执行过程》已经对 &lt;code class=&quot;highlighter-rouge&quot;&gt;OkHttp&lt;/code&gt; 网络请求框架有一个大概的了解。今天同样地对 &lt;code class=&quot;highlighter-rouge&quot;&gt;Retrofit&lt;/code&gt; 的源码进行走读，对其底层的实现逻辑做到心中有数。&lt;/p&gt;
 
 &lt;h4 id=&quot;0x00-基本用法&quot;&gt;0x00 基本用法&lt;/h4&gt;
 
@@ -461,81 +461,41 @@
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Retrofit&lt;/code&gt; 其实一种更加高级的网络应用框架，通过代理模式简化了接口的定义，无需提供接口的具体实现就可以完成网络接口请求的执行。它的底层实际上是封装了 &lt;code class=&quot;highlighter-rouge&quot;&gt;okhttp&lt;/code&gt; 的执行过程，也把对网络的操作进行了封装，而对于程序猿来说只需要关注业务逻辑，对网络请求的具体实现不必关心。&lt;/p&gt;
 
-&lt;p&gt;例如在本文开头的实例中我们只需要定义接口，定义实体类，其他工作都交给了 &lt;code class=&quot;highlighter-rouge&quot;&gt;Retrofit&lt;/code&gt; ，接下来就是&lt;code class=&quot;highlighter-rouge&quot;&gt;Magic&lt;/code&gt;。&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">Retrofit 是 square 公司的另一款广泛流行的网络请求框架。前面的一篇文章《源码分析OKHttp执行过程》已经对 OkHttp 网络请求框架有一个大概的了解。今天同样地对 Retrofit 的源码进行走读，对其底层的实现逻辑做到心中有数。</summary></entry><entry><title type="html">一份程序猿单词列表（updating）</title><link href="http://localhost:4000/%E4%B8%80%E4%BB%BD%E7%A8%8B%E5%BA%8F%E7%8C%BF%E5%8D%95%E8%AF%8D%E5%88%97%E8%A1%A8-updating" rel="alternate" type="text/html" title="一份程序猿单词列表（updating）" /><published>2018-11-03T00:00:00+08:00</published><updated>2018-11-03T00:00:00+08:00</updated><id>http://localhost:4000/%E4%B8%80%E4%BB%BD%E7%A8%8B%E5%BA%8F%E7%8C%BF%E5%8D%95%E8%AF%8D%E5%88%97%E8%A1%A8(updating)</id><content type="html" xml:base="http://localhost:4000/%E4%B8%80%E4%BB%BD%E7%A8%8B%E5%BA%8F%E7%8C%BF%E5%8D%95%E8%AF%8D%E5%88%97%E8%A1%A8-updating">&lt;p&gt;以下单词是个人平时阅读英文文档时遇到的一些“生”单词，该文档将持续更新，可以持续关注&lt;a href=&quot;https://github.com/hylinux1024/word-list-for-programmer&quot;&gt;https://github.com/hylinux1024/word-list-for-programmer&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;例如在本文开头的实例中我们只需要定义接口，定义实体类，其他工作都交给了 &lt;code class=&quot;highlighter-rouge&quot;&gt;Retrofit&lt;/code&gt; ，接下来就是&lt;code class=&quot;highlighter-rouge&quot;&gt;Magic&lt;/code&gt;。&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">Retrofit 是 square 公司的另一款广泛流行的网络请求框架。前面的一篇文章《源码分析OKHttp执行过程》已经对 OkHttp 网络请求框架有一个大概的了解。今天同样地对 Retrofit 的源码进行走读，对其底层的实现逻辑做到心中有数。</summary></entry><entry><title type="html">一份程序猿单词列表（updating）</title><link href="http://localhost:4000/%E4%B8%80%E4%BB%BD%E7%A8%8B%E5%BA%8F%E7%8C%BF%E5%8D%95%E8%AF%8D%E5%88%97%E8%A1%A8-updating" rel="alternate" type="text/html" title="一份程序猿单词列表（updating）" /><published>2018-11-03T00:00:00+08:00</published><updated>2018-11-03T00:00:00+08:00</updated><id>http://localhost:4000/%E4%B8%80%E4%BB%BD%E7%A8%8B%E5%BA%8F%E7%8C%BF%E5%8D%95%E8%AF%8D%E5%88%97%E8%A1%A8(updating)</id><content type="html" xml:base="http://localhost:4000/%E4%B8%80%E4%BB%BD%E7%A8%8B%E5%BA%8F%E7%8C%BF%E5%8D%95%E8%AF%8D%E5%88%97%E8%A1%A8-updating">&lt;p&gt;以下单词是个人平时阅读英文文档时遇到的一些“生”单词。这些单词是在平时中积累下来的，也都是通过Google进行翻译的，所以有些翻译可能不是特别准确，毕竟不是字典，只作为平时的一个积累，偶尔翻阅，扩展自己的单词量。&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hierarchy&lt;/code&gt; 等级制度；层级；n；&lt;/p&gt;
+&lt;p&gt;该文档将持续更新，可以关注&lt;a href=&quot;https://github.com/hylinux1024/word-list-for-programmer&quot;&gt;https://github.com/hylinux1024/word-list-for-programmer&lt;/a&gt;&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;coroutines&lt;/code&gt; 协同程序；n；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;backend&lt;/code&gt; 后端；n；&lt;code class=&quot;highlighter-rouge&quot;&gt;backend developer&lt;/code&gt; 后端开发人员；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;primitive&lt;/code&gt; 原语；n；原始的；adj；&lt;code class=&quot;highlighter-rouge&quot;&gt;primitive man&lt;/code&gt; 原始人；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;pragmatic&lt;/code&gt; 务实的；adj；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;inversion&lt;/code&gt; 倒转；颠倒；n；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;overlap&lt;/code&gt; 叠加；v；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;pipeline&lt;/code&gt; 管道；n；&lt;code class=&quot;highlighter-rouge&quot;&gt;to lay a gas pipeline&lt;/code&gt; 铺设煤气管道；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;impede&lt;/code&gt; 阻碍；妨碍；拖延；v；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;profile&lt;/code&gt; 侧面；轮廓；n；&lt;code class=&quot;highlighter-rouge&quot;&gt;profiling&lt;/code&gt; 剖析；描绘…轮廓；v；&lt;code class=&quot;highlighter-rouge&quot;&gt;profiler&lt;/code&gt; 探查(器)、检测器；n；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;payload&lt;/code&gt; 装载量；有效载荷；n；&lt;code class=&quot;highlighter-rouge&quot;&gt;network payloads&lt;/code&gt; 网络负载；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;entrepreneurship&lt;/code&gt; 创业；n；&lt;/p&gt;
+&lt;h4 id=&quot;a&quot;&gt;A&lt;/h4&gt;
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;a variety of&lt;/code&gt; 各种各样的；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;scenario&lt;/code&gt; 剧本；概要；场景；n；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;aggressively&lt;/code&gt; 积极地；侵略地；激烈地；adv；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;miniature&lt;/code&gt; 微型；雏形；adj；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;affiliate&lt;/code&gt; 使率属；v；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;facilitate&lt;/code&gt; 促进；使…便利；v；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;amortized&lt;/code&gt; 摊销；分期付款；v；&lt;code class=&quot;highlighter-rouge&quot;&gt;amortized constant time&lt;/code&gt; 均摊不变时间；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;keystroke&lt;/code&gt; 按键；n；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;accidental&lt;/code&gt; 偶然；偶发；非主要的；adj；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;semantics&lt;/code&gt; 语义(学)；n；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;arbitrary&lt;/code&gt; 武断的；adj；&lt;code class=&quot;highlighter-rouge&quot;&gt;arbitrary number&lt;/code&gt; 任意数字；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;likewise&lt;/code&gt; 同样地；adv；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;architecture&lt;/code&gt; 框架；n；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;facility&lt;/code&gt; 场所；n；&lt;code class=&quot;highlighter-rouge&quot;&gt;a health-care facility&lt;/code&gt; 保健中心；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;augment&lt;/code&gt; 增加；v；&lt;/p&gt;
+
+&lt;h4 id=&quot;b&quot;&gt;B&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;backend&lt;/code&gt; 后端；n；&lt;code class=&quot;highlighter-rouge&quot;&gt;backend developer&lt;/code&gt; 后端开发人员；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;hierarchy&lt;/code&gt; 等级制度；层级；n；&lt;/p&gt;
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;blend&lt;/code&gt; 混合；v；&lt;code class=&quot;highlighter-rouge&quot;&gt;to blend A and B&lt;/code&gt; 把A和B混合起来；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;aggressively&lt;/code&gt; 积极地；侵略地；激烈地；adv；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dramatically&lt;/code&gt; 显著地；戏剧性地；adv；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;analysis&lt;/code&gt; 分析；n；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;inherently&lt;/code&gt; 内在的；adv；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gratuitous&lt;/code&gt; 不必要的；无理由的；免费的；adj；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;specification&lt;/code&gt; 规范；n；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;encapsulate&lt;/code&gt; 封装；v；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;interpolate&lt;/code&gt; 插入；添加；v；&lt;/p&gt;
-
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;bootcamp&lt;/code&gt; 训练营；集训；n；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;interoperability&lt;/code&gt;互通性；n；&lt;/p&gt;
+&lt;h4 id=&quot;c&quot;&gt;C&lt;/h4&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;verbosity&lt;/code&gt; 啰嗦；冗长；n；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;traverse the list&lt;/code&gt; 遍历列表；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;formulate&lt;/code&gt; 构想；v；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;portfolio&lt;/code&gt; 公事包；投资组合；n；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;interstitial&lt;/code&gt; 空隙的；间质性；n；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;affiliate&lt;/code&gt; 使率属；v；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;coroutines&lt;/code&gt; 协程；n；&lt;/p&gt;
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;creepy&lt;/code&gt; 使人心里发毛的；adj；&lt;/p&gt;
 
@@ -543,35 +503,51 @@
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;credentials&lt;/code&gt; 证书；凭据；n；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;stale&lt;/code&gt; 陈旧；不新鲜；adj；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;contrive&lt;/code&gt; 设法促成；v；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;lower latency&lt;/code&gt; 低延迟；&lt;/p&gt;
+&lt;h4 id=&quot;d&quot;&gt;D&lt;/h4&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;utterly&lt;/code&gt; 完全；万般；adj；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;decouples&lt;/code&gt; 解耦；v；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;withhold&lt;/code&gt; 扣押；保留；v；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;dramatically&lt;/code&gt; 显著地；戏剧性地；adv；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;augment&lt;/code&gt; 增加；v；&lt;/p&gt;
+&lt;h4 id=&quot;e&quot;&gt;E&lt;/h4&gt;
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;exemplary&lt;/code&gt; 可作楷模的；adv；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;Contrive&lt;/code&gt; 设法促成；v；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;encapsulate&lt;/code&gt; 封装；v；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;simultaneously&lt;/code&gt; 同时；adv；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;entrepreneurship&lt;/code&gt; 创业；n；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;permits&lt;/code&gt; 容许；许可；v；&lt;/p&gt;
+&lt;h4 id=&quot;f&quot;&gt;F&lt;/h4&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;unsynchronized&lt;/code&gt; 不同步；adj；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;formulate&lt;/code&gt; 构想；v；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;amortized&lt;/code&gt; 摊销；分期付款；v；&lt;code class=&quot;highlighter-rouge&quot;&gt;amortized constant time&lt;/code&gt; 均摊不变时间；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;facility&lt;/code&gt; 场所；n；&lt;code class=&quot;highlighter-rouge&quot;&gt;a health-care facility&lt;/code&gt; 保健中心；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;accidental&lt;/code&gt; 偶然；偶发；非主要的；adj；&lt;/p&gt;
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;facilitate&lt;/code&gt; 促进；使…便利；v；&lt;/p&gt;
+
+&lt;h4 id=&quot;g&quot;&gt;G&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;gratuitous&lt;/code&gt; 不必要的；无理由的；免费的；adj；&lt;/p&gt;
+
+&lt;h4 id=&quot;h&quot;&gt;H&lt;/h4&gt;
+
+&lt;h4 id=&quot;i&quot;&gt;I&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;inherently&lt;/code&gt; 内在的；adv；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;impede&lt;/code&gt; 阻碍；妨碍；拖延；v；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;inversion&lt;/code&gt; 倒转；颠倒；n；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;interoperability&lt;/code&gt;互通性；n；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;interpolate&lt;/code&gt; 插入；添加；v；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;interstitial&lt;/code&gt; 空隙的；间质性；n；&lt;/p&gt;
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;in the absence of&lt;/code&gt; 在缺少…之下；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;arbitrary&lt;/code&gt; 武断的；adj；&lt;code class=&quot;highlighter-rouge&quot;&gt;arbitrary number&lt;/code&gt; 任意数字；&lt;/p&gt;
-
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;architecture&lt;/code&gt; 框架；n；&lt;/p&gt;
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;interchangeable&lt;/code&gt; 通用；adj；&lt;/p&gt;
 
@@ -579,13 +555,91 @@
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;infrastructure&lt;/code&gt; 基础设施；n；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;unmodifiable&lt;/code&gt; 不可修改；adj；&lt;/p&gt;
+&lt;h4 id=&quot;j&quot;&gt;J&lt;/h4&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mutate&lt;/code&gt; 变异；v；&lt;/p&gt;
+&lt;h4 id=&quot;k&quot;&gt;K&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;keystroke&lt;/code&gt; 按键；n；&lt;/p&gt;
+
+&lt;h4 id=&quot;l&quot;&gt;L&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;likewise&lt;/code&gt; 同样地；adv；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;lower latency&lt;/code&gt; 低延迟；&lt;/p&gt;
+
+&lt;h4 id=&quot;m&quot;&gt;M&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;miniature&lt;/code&gt; 微型；雏形；adj；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;mutate&lt;/code&gt; 变化；v；&lt;/p&gt;
+
+&lt;h4 id=&quot;n&quot;&gt;N&lt;/h4&gt;
+
+&lt;h4 id=&quot;o&quot;&gt;O&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;overlap&lt;/code&gt; 叠加；v；&lt;/p&gt;
+
+&lt;h4 id=&quot;p&quot;&gt;P&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;primitive&lt;/code&gt; 原语；n；原始的；adj；&lt;code class=&quot;highlighter-rouge&quot;&gt;primitive man&lt;/code&gt; 原始人；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;pragmatic&lt;/code&gt; 务实的；adj；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;permits&lt;/code&gt; 容许；许可；v；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;pipeline&lt;/code&gt; 管道；n；&lt;code class=&quot;highlighter-rouge&quot;&gt;to lay a gas pipeline&lt;/code&gt; 铺设煤气管道；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;profile&lt;/code&gt; 侧面；轮廓；n；&lt;code class=&quot;highlighter-rouge&quot;&gt;profiling&lt;/code&gt; 剖析；描绘…轮廓；v；&lt;code class=&quot;highlighter-rouge&quot;&gt;profiler&lt;/code&gt; 探查(器)、检测器；n；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;payload&lt;/code&gt; 装载量；有效载荷；n；&lt;code class=&quot;highlighter-rouge&quot;&gt;network payloads&lt;/code&gt; 网络负载；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;portfolio&lt;/code&gt; 公事包；投资组合；n；&lt;/p&gt;
+
+&lt;h4 id=&quot;q&quot;&gt;Q&lt;/h4&gt;
+
+&lt;h4 id=&quot;r&quot;&gt;R&lt;/h4&gt;
+
+&lt;h4 id=&quot;s&quot;&gt;S&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;scenario&lt;/code&gt; 剧本；概要；场景；n；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;semantics&lt;/code&gt; 语义(学)；n；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;specification&lt;/code&gt; 规范；n；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;stale&lt;/code&gt; 陈旧；不新鲜；adj；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;simultaneously&lt;/code&gt; 同时；adv；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;spin&lt;/code&gt; 转动；v；&lt;/p&gt;
+
+&lt;h4 id=&quot;t&quot;&gt;T&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;traverse the list&lt;/code&gt; 遍历列表；&lt;/p&gt;
+
+&lt;h4 id=&quot;u&quot;&gt;U&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;utterly&lt;/code&gt; 完全；万般；adj；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;unsynchronized&lt;/code&gt; 不同步；adj；&lt;/p&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;unmodifiable&lt;/code&gt; 不可修改；adj；&lt;/p&gt;
 
 &lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;unadulterated&lt;/code&gt; 纯正的；adj；&lt;/p&gt;
 
-&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;spin&lt;/code&gt; 转动；v；&lt;/p&gt;</content><author><name>hylinux</name></author><summary type="html">以下单词是个人平时阅读英文文档时遇到的一些“生”单词，该文档将持续更新，可以持续关注https://github.com/hylinux1024/word-list-for-programmer</summary></entry><entry><title type="html">源码分析OKHttp的执行过程</title><link href="http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90OKHttp%E7%9A%84%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B" rel="alternate" type="text/html" title="源码分析OKHttp的执行过程" /><published>2018-10-27T00:00:00+08:00</published><updated>2018-10-27T00:00:00+08:00</updated><id>http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90OKHttp%E7%9A%84%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B</id><content type="html" xml:base="http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90OKHttp%E7%9A%84%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B">&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;OKHttp&lt;/code&gt; 是目前 &lt;code class=&quot;highlighter-rouge&quot;&gt;Android&lt;/code&gt; 平台主流的网络请求的基础框架。因此我们有必要对其源码进行阅读学习，了解其内部的原理、项目结构、以及请求的执行过程。&lt;/p&gt;
+&lt;h4 id=&quot;v&quot;&gt;V&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;verbosity&lt;/code&gt; 啰嗦；冗长；n；&lt;/p&gt;
+
+&lt;h4 id=&quot;w&quot;&gt;W&lt;/h4&gt;
+
+&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;withhold&lt;/code&gt; 扣押；保留；v；&lt;/p&gt;
+
+&lt;h4 id=&quot;x&quot;&gt;X&lt;/h4&gt;
+
+&lt;h4 id=&quot;y&quot;&gt;Y&lt;/h4&gt;
+
+&lt;h4 id=&quot;z&quot;&gt;Z&lt;/h4&gt;</content><author><name>hylinux</name></author><summary type="html">以下单词是个人平时阅读英文文档时遇到的一些“生”单词。这些单词是在平时中积累下来的，也都是通过Google进行翻译的，所以有些翻译可能不是特别准确，毕竟不是字典，只作为平时的一个积累，偶尔翻阅，扩展自己的单词量。</summary></entry><entry><title type="html">源码分析OKHttp的执行过程</title><link href="http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90OKHttp%E7%9A%84%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B" rel="alternate" type="text/html" title="源码分析OKHttp的执行过程" /><published>2018-10-27T00:00:00+08:00</published><updated>2018-10-27T00:00:00+08:00</updated><id>http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90OKHttp%E7%9A%84%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B</id><content type="html" xml:base="http://localhost:4000/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90OKHttp%E7%9A%84%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B">&lt;p&gt;&lt;code class=&quot;highlighter-rouge&quot;&gt;OKHttp&lt;/code&gt; 是目前 &lt;code class=&quot;highlighter-rouge&quot;&gt;Android&lt;/code&gt; 平台主流的网络请求的基础框架。因此我们有必要对其源码进行阅读学习，了解其内部的原理、项目结构、以及请求的执行过程。&lt;/p&gt;
 
 &lt;p&gt;它的项目地址为：https://github.com/square/okhttp&lt;/p&gt;
 
